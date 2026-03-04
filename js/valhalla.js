@@ -29,20 +29,84 @@ function decodePolyline(encoded) {
 }
 
 /**
- * Call Valhalla trace_attributes to get route with way IDs
- * @param {Array} points - [{lat, lon, type: 'stop'|'waypoint'}, ...]
- * @returns {Object} { edges, shape, wayIds, error }
+ * Encode coordinates to Valhalla polyline (precision 6)
+ */
+function encodePolyline(coords) {
+    let encoded = '';
+    let prevLat = 0;
+    let prevLon = 0;
+    for (const [lat, lon] of coords) {
+        const latInt = Math.round(lat * 1e6);
+        const lonInt = Math.round(lon * 1e6);
+        encoded += encodeValue(latInt - prevLat);
+        encoded += encodeValue(lonInt - prevLon);
+        prevLat = latInt;
+        prevLon = lonInt;
+    }
+    return encoded;
+}
+
+function encodeValue(value) {
+    value = value < 0 ? ~(value << 1) : (value << 1);
+    let encoded = '';
+    while (value >= 0x20) {
+        encoded += String.fromCharCode((0x20 | (value & 0x1f)) + 63);
+        value >>= 5;
+    }
+    encoded += String.fromCharCode(value + 63);
+    return encoded;
+}
+
+/**
+ * Two-step approach: /route for geometry, /trace_attributes for way IDs
+ * Step 1: Get route geometry (dense polyline) via /route
+ * Step 2: Feed that geometry to /trace_attributes to get way IDs
  */
 async function getRouteFromValhalla(points) {
-    const shape = points.map(p => ({ lat: p.lat, lon: p.lon }));
+    const locations = points.map(p => ({ lat: p.lat, lon: p.lon }));
 
     try {
-        const response = await fetch(`${VALHALLA_URL}/trace_attributes`, {
+        // Step 1: Get route geometry
+        const routeResponse = await fetch(`${VALHALLA_URL}/route`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                shape: shape,
-                costing: 'bus',
+                locations: locations,
+                costing: 'auto',
+                directions_options: { units: 'kilometers' }
+            })
+        });
+
+        const routeData = await routeResponse.json();
+        if (routeData.error) {
+            return { error: routeData.error };
+        }
+
+        const routeShape = routeData.trip.legs[0].shape;
+        const routeCoords = decodePolyline(routeShape);
+        const summary = routeData.trip.summary;
+
+        // Step 2: Use the dense route geometry to get way IDs via trace_attributes
+        // Sample points from the route (every Nth point to keep it manageable)
+        const step = Math.max(1, Math.floor(routeCoords.length / 100));
+        const sampledCoords = [];
+        for (let i = 0; i < routeCoords.length; i += step) {
+            sampledCoords.push(routeCoords[i]);
+        }
+        // Always include last point
+        const last = routeCoords[routeCoords.length - 1];
+        if (sampledCoords[sampledCoords.length - 1] !== last) {
+            sampledCoords.push(last);
+        }
+
+        const sampledShape = sampledCoords.map(c => ({ lat: c[0], lon: c[1] }));
+
+        const traceResponse = await fetch(`${VALHALLA_URL}/trace_attributes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                shape: sampledShape,
+                costing: 'auto',
                 shape_match: 'map_snap',
                 filters: {
                     attributes: [
@@ -58,38 +122,29 @@ async function getRouteFromValhalla(points) {
             })
         });
 
-        const data = await response.json();
+        const traceData = await traceResponse.json();
 
-        if (data.error) {
-            // Retry with 'auto' costing if 'bus' fails
-            const retryResponse = await fetch(`${VALHALLA_URL}/trace_attributes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    shape: shape,
-                    costing: 'auto',
-                    shape_match: 'map_snap',
-                    filters: {
-                        attributes: [
-                            'edge.way_id',
-                            'edge.names',
-                            'edge.length',
-                            'edge.begin_shape_index',
-                            'edge.end_shape_index',
-                            'shape'
-                        ],
-                        action: 'include'
-                    }
-                })
-            });
-            const retryData = await retryResponse.json();
-            if (retryData.error) {
-                return { error: retryData.error };
-            }
-            return processValhallaResponse(retryData);
+        if (traceData.error) {
+            // If trace_attributes fails, return route geometry without way IDs
+            console.warn('trace_attributes failed, using route geometry only:', traceData.error);
+            return {
+                edges: [],
+                shape: routeCoords,
+                wayIds: [],
+                distance: summary.length,
+                time: summary.time,
+                error: null,
+                warning: 'Ruta calculada pero sin way IDs. ' + traceData.error
+            };
         }
 
-        return processValhallaResponse(data);
+        const result = processValhallaResponse(traceData);
+        // Use route shape for display (smoother) but trace_attributes for way IDs
+        result.shape = routeCoords;
+        result.distance = summary.length;
+        result.time = summary.time;
+        return result;
+
     } catch (err) {
         return { error: `Error de conexión con Valhalla: ${err.message}` };
     }
@@ -100,10 +155,6 @@ async function getRouteFromValhalla(points) {
  */
 function processValhallaResponse(data) {
     const edges = data.edges || [];
-    const shapeEncoded = data.shape || '';
-
-    // Decode polyline for map display
-    const shapeCoords = shapeEncoded ? decodePolyline(shapeEncoded) : [];
 
     // Deduplicate consecutive way IDs
     const wayIds = [];
@@ -122,43 +173,8 @@ function processValhallaResponse(data) {
 
     return {
         edges: edges,
-        shape: shapeCoords,
+        shape: [],
         wayIds: wayIds,
         error: null
     };
-}
-
-/**
- * Get a simple route (for preview, without way IDs)
- */
-async function getRoutePreview(points) {
-    const locations = points.map(p => ({ lat: p.lat, lon: p.lon }));
-
-    try {
-        const response = await fetch(`${VALHALLA_URL}/route`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                locations: locations,
-                costing: 'auto',
-                directions_options: { units: 'kilometers' }
-            })
-        });
-
-        const data = await response.json();
-        if (data.error) return { error: data.error };
-
-        const leg = data.trip.legs[0];
-        const shape = decodePolyline(leg.shape);
-        const summary = data.trip.summary;
-
-        return {
-            shape: shape,
-            distance: summary.length,
-            time: summary.time,
-            error: null
-        };
-    } catch (err) {
-        return { error: `Error de conexión: ${err.message}` };
-    }
 }

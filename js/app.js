@@ -255,8 +255,14 @@ async function calculateRoute() {
         map.fitBounds(state.routeLayer.getBounds(), { padding: [50, 50] });
     }
 
-    const totalKm = result.wayIds.reduce((sum, w) => sum + w.length, 0).toFixed(1);
-    setStatus(`Ruta calculada: ${result.wayIds.length} vías, ${totalKm} km`, 'success');
+    const totalKm = (result.distance || result.wayIds.reduce((sum, w) => sum + w.length, 0)).toFixed(1);
+    let statusMsg = `Ruta calculada: ${totalKm} km, ${result.wayIds.length} vías OSM`;
+    if (result.warning) {
+        statusMsg += ` (${result.warning})`;
+        setStatus(statusMsg, 'loading');
+    } else {
+        setStatus(statusMsg, 'success');
+    }
     updateButtons();
 }
 
