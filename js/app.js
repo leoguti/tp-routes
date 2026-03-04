@@ -6,7 +6,8 @@ const state = {
     routeLayer: null,    // Leaflet polyline
     wayIds: [],          // From Valhalla
     mode: 'stop',        // 'stop' or 'waypoint'
-    nextId: 1
+    nextId: 1,
+    dragSrcIdx: null     // For drag & drop reordering
 };
 
 // Map setup
@@ -33,6 +34,44 @@ const waypointIcon = L.divIcon({
     iconAnchor: [7, 7]
 });
 
+// Haversine distance in km
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/**
+ * Find the best insertion index for a new point.
+ * Inserts between the two consecutive points where adding it
+ * increases total distance the least (i.e., it's "on the way").
+ */
+function findBestInsertionIndex(lat, lon) {
+    if (state.points.length < 2) return state.points.length;
+
+    let bestIdx = state.points.length;
+    let bestCost = Infinity;
+
+    for (let i = 0; i < state.points.length - 1; i++) {
+        const a = state.points[i];
+        const b = state.points[i + 1];
+        // Cost = (dist A→new + dist new→B) - dist A→B
+        // Lower cost = new point fits better between A and B
+        const directDist = haversine(a.lat, a.lon, b.lat, b.lon);
+        const detourDist = haversine(a.lat, a.lon, lat, lon) + haversine(lat, lon, b.lat, b.lon);
+        const cost = detourDist - directDist;
+        if (cost < bestCost) {
+            bestCost = cost;
+            bestIdx = i + 1;
+        }
+    }
+    return bestIdx;
+}
+
 // Mode switching
 function setMode(mode) {
     state.mode = mode;
@@ -51,11 +90,13 @@ function updateInstructions() {
     const el = document.getElementById('instructions');
     const count = state.points.filter(p => p.type === 'stop').length;
     if (count === 0) {
-        el.textContent = 'Haz clic en el mapa para agregar la primera parada';
+        el.textContent = 'Clic en el mapa: agregar parada de INICIO';
+    } else if (count === 1) {
+        el.textContent = 'Clic en el mapa: agregar parada de DESTINO';
     } else if (state.mode === 'stop') {
-        el.textContent = 'Clic = agregar parada | Presiona W para cambiar a modo waypoint';
+        el.textContent = 'Clic = agregar parada intermedia (se inserta en orden) | W = modo waypoint';
     } else {
-        el.textContent = 'Clic = agregar waypoint (punto de paso) | Presiona S para cambiar a modo parada';
+        el.textContent = 'Clic = agregar waypoint | S = modo parada';
     }
 }
 
@@ -76,7 +117,7 @@ function addPoint(lat, lon, type, name) {
         marker
     };
 
-    // Drag handler
+    // Drag handler on map
     marker.on('dragend', function (e) {
         const pos = e.target.getLatLng();
         point.lat = pos.lat;
@@ -101,13 +142,36 @@ function addPoint(lat, lon, type, name) {
         });
     }
 
-    state.points.push(point);
+    // Smart insertion: first two go at end, after that insert in best position
+    if (state.points.length < 2) {
+        state.points.push(point);
+    } else {
+        const idx = findBestInsertionIndex(lat, lon);
+        state.points.splice(idx, 0, point);
+    }
+
+    renumberStops();
     updateStopList();
     updateButtons();
     updateInstructions();
     clearRoute();
 
     return point;
+}
+
+// Move point up/down in list
+function movePoint(id, direction) {
+    const idx = state.points.findIndex(p => p.id === id);
+    if (idx === -1) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= state.points.length) return;
+
+    // Swap
+    [state.points[idx], state.points[newIdx]] = [state.points[newIdx], state.points[idx]];
+
+    renumberStops();
+    updateStopList();
+    clearRoute();
 }
 
 // Remove point
@@ -119,7 +183,14 @@ function removePoint(id) {
     map.removeLayer(point.marker);
     state.points.splice(idx, 1);
 
-    // Renumber stops
+    renumberStops();
+    updateStopList();
+    updateButtons();
+    clearRoute();
+}
+
+// Renumber stop icons and default names
+function renumberStops() {
     let stopNum = 1;
     for (const p of state.points) {
         if (p.type === 'stop') {
@@ -130,10 +201,6 @@ function removePoint(id) {
             stopNum++;
         }
     }
-
-    updateStopList();
-    updateButtons();
-    clearRoute();
 }
 
 // Update sidebar stop list
@@ -141,9 +208,44 @@ function updateStopList() {
     const list = document.getElementById('stop-list');
     list.innerHTML = '';
 
-    for (const point of state.points) {
+    state.points.forEach((point, index) => {
         const li = document.createElement('li');
+        li.draggable = true;
+        li.dataset.index = index;
 
+        // Drag & drop handlers
+        li.addEventListener('dragstart', (e) => {
+            state.dragSrcIdx = index;
+            li.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        li.addEventListener('dragend', () => {
+            li.style.opacity = '1';
+        });
+        li.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            li.style.borderTop = '2px solid #4a90d9';
+        });
+        li.addEventListener('dragleave', () => {
+            li.style.borderTop = '';
+        });
+        li.addEventListener('drop', (e) => {
+            e.preventDefault();
+            li.style.borderTop = '';
+            const fromIdx = state.dragSrcIdx;
+            const toIdx = index;
+            if (fromIdx === toIdx) return;
+
+            const [moved] = state.points.splice(fromIdx, 1);
+            state.points.splice(toIdx, 0, moved);
+
+            renumberStops();
+            updateStopList();
+            clearRoute();
+        });
+
+        // Number badge
         const num = document.createElement('span');
         if (point.type === 'stop') {
             const stopIdx = state.points.filter(p => p.type === 'stop').indexOf(point) + 1;
@@ -154,6 +256,7 @@ function updateStopList() {
             num.textContent = 'W';
         }
 
+        // Name input
         const nameInput = document.createElement('input');
         nameInput.className = 'stop-name';
         nameInput.value = point.name;
@@ -162,12 +265,22 @@ function updateStopList() {
             point.name = nameInput.value;
         });
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'stop-delete';
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.title = 'Eliminar';
-        deleteBtn.addEventListener('click', () => removePoint(point.id));
+        // Up/down buttons
+        const upBtn = document.createElement('button');
+        upBtn.className = 'stop-delete';
+        upBtn.innerHTML = '&#9650;';
+        upBtn.title = 'Subir';
+        upBtn.disabled = index === 0;
+        upBtn.addEventListener('click', () => movePoint(point.id, -1));
 
+        const downBtn = document.createElement('button');
+        downBtn.className = 'stop-delete';
+        downBtn.innerHTML = '&#9660;';
+        downBtn.title = 'Bajar';
+        downBtn.disabled = index === state.points.length - 1;
+        downBtn.addEventListener('click', () => movePoint(point.id, 1));
+
+        // Locate button
         const locateBtn = document.createElement('button');
         locateBtn.className = 'stop-delete';
         locateBtn.innerHTML = '&#8982;';
@@ -177,12 +290,21 @@ function updateStopList() {
             point.marker.openPopup();
         });
 
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'stop-delete';
+        deleteBtn.innerHTML = '&times;';
+        deleteBtn.title = 'Eliminar';
+        deleteBtn.addEventListener('click', () => removePoint(point.id));
+
         li.appendChild(num);
         li.appendChild(nameInput);
+        li.appendChild(upBtn);
+        li.appendChild(downBtn);
         li.appendChild(locateBtn);
         li.appendChild(deleteBtn);
         list.appendChild(li);
-    }
+    });
 }
 
 // Update button states
@@ -192,7 +314,6 @@ function updateButtons() {
     document.getElementById('btn-download').disabled = state.wayIds.length === 0;
     document.getElementById('btn-clear').disabled = state.points.length === 0;
 
-    // Update counter
     const stopCount = stops.length;
     const wpCount = state.points.filter(p => p.type === 'waypoint').length;
     let text = `${stopCount} parada${stopCount !== 1 ? 's' : ''}`;
@@ -338,4 +459,4 @@ document.getElementById('btn-mode-waypoint').addEventListener('click', () => set
 // Init
 updateButtons();
 updateInstructions();
-setStatus('Haz clic en el mapa para agregar paradas. Presiona W para modo waypoint.', '');
+setStatus('Primero pon la parada de INICIO, luego la de DESTINO. Después agrega intermedias.', '');
