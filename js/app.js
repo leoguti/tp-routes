@@ -104,7 +104,7 @@ function updateInstructions() {
 function addPoint(lat, lon, type, name) {
     const id = state.nextId++;
     const stopCount = state.points.filter(p => p.type === 'stop').length;
-    const defaultName = type === 'stop' ? `Parada ${stopCount + 1}` : '';
+    const defaultName = '';
 
     const marker = L.marker([lat, lon], {
         icon: type === 'stop' ? createStopIcon(stopCount + 1) : waypointIcon,
@@ -189,15 +189,12 @@ function removePoint(id) {
     clearRoute();
 }
 
-// Renumber stop icons and default names
+// Renumber stop icons only (don't rename)
 function renumberStops() {
     let stopNum = 1;
     for (const p of state.points) {
         if (p.type === 'stop') {
             p.marker.setIcon(createStopIcon(stopNum));
-            if (p.name.match(/^Parada \d+$/)) {
-                p.name = `Parada ${stopNum}`;
-            }
             stopNum++;
         }
     }
@@ -260,21 +257,29 @@ function updateStopList() {
         const nameInput = document.createElement('input');
         nameInput.className = 'stop-name';
         nameInput.value = point.name;
-        nameInput.placeholder = point.type === 'stop' ? 'Nombre de la parada' : 'Waypoint';
+        const stopIdx = state.points.filter(p => p.type === 'stop').indexOf(point) + 1;
+        const totalStops = state.points.filter(p => p.type === 'stop').length;
+        if (point.type === 'stop') {
+            if (stopIdx === 1) nameInput.placeholder = 'Nombre del ORIGEN';
+            else if (stopIdx === totalStops) nameInput.placeholder = 'Nombre del DESTINO';
+            else nameInput.placeholder = 'Nombre de parada intermedia';
+        } else {
+            nameInput.placeholder = 'Waypoint (punto de paso)';
+        }
         nameInput.addEventListener('change', () => {
             point.name = nameInput.value;
         });
 
         // Up/down buttons
         const upBtn = document.createElement('button');
-        upBtn.className = 'stop-delete';
+        upBtn.className = 'stop-btn';
         upBtn.innerHTML = '&#9650;';
         upBtn.title = 'Subir';
         upBtn.disabled = index === 0;
         upBtn.addEventListener('click', () => movePoint(point.id, -1));
 
         const downBtn = document.createElement('button');
-        downBtn.className = 'stop-delete';
+        downBtn.className = 'stop-btn';
         downBtn.innerHTML = '&#9660;';
         downBtn.title = 'Bajar';
         downBtn.disabled = index === state.points.length - 1;
@@ -282,8 +287,8 @@ function updateStopList() {
 
         // Locate button
         const locateBtn = document.createElement('button');
-        locateBtn.className = 'stop-delete';
-        locateBtn.innerHTML = '&#8982;';
+        locateBtn.className = 'stop-btn';
+        locateBtn.innerHTML = '&#9678;';
         locateBtn.title = 'Centrar en mapa';
         locateBtn.addEventListener('click', () => {
             map.setView([point.lat, point.lon], 16);
@@ -292,9 +297,9 @@ function updateStopList() {
 
         // Delete button
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'stop-delete';
+        deleteBtn.className = 'stop-btn delete-btn';
         deleteBtn.innerHTML = '&times;';
-        deleteBtn.title = 'Eliminar';
+        deleteBtn.title = 'Eliminar punto';
         deleteBtn.addEventListener('click', () => removePoint(point.id));
 
         li.appendChild(num);
