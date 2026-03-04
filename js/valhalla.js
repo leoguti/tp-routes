@@ -1,5 +1,5 @@
 // Valhalla API integration
-const VALHALLA_URL = 'http://146.190.158.122:8080';
+const VALHALLA_URL = 'https://valhalla.busboy.app';
 
 /**
  * Decode a Valhalla encoded polyline (precision 6)
