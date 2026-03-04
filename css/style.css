@@ -29,7 +29,7 @@ body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-di
 
 /* Sidebar */
 #sidebar {
-    width: 340px;
+    width: 300px;
     background: #f8f9fa;
     border-right: 1px solid #dee2e6;
     display: flex;
@@ -105,11 +105,14 @@ body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-di
 }
 #stop-list li .stop-name {
     flex: 1;
+    min-width: 0;
     border: none;
     background: transparent;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     padding: 2px 4px;
     border-radius: 3px;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 #stop-list li .stop-name:focus {
     background: #fff3cd;

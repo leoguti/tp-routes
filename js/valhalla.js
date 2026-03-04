@@ -82,8 +82,11 @@ async function getRouteFromValhalla(points) {
             return { error: routeData.error };
         }
 
-        const routeShape = routeData.trip.legs[0].shape;
-        const routeCoords = decodePolyline(routeShape);
+        // Combine all legs into one polyline
+        let routeCoords = [];
+        for (const leg of routeData.trip.legs) {
+            routeCoords = routeCoords.concat(decodePolyline(leg.shape));
+        }
         const summary = routeData.trip.summary;
 
         // Step 2: Use the dense route geometry to get way IDs via trace_attributes
