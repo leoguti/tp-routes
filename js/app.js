@@ -389,21 +389,21 @@ function clearRoute() {
     updateButtons();
 }
 
-// Auto-recalculate route when points change
+// Auto-recalculate route when points change (without moving the map)
 let recalcTimer = null;
 function autoRecalculate() {
     clearRoute();
     if (state.points.length >= 2) {
         clearTimeout(recalcTimer);
-        recalcTimer = setTimeout(() => calculateRoute(), 400);
+        recalcTimer = setTimeout(() => calculateRoute(false), 400);
     }
 }
 
 // Calculate route via Valhalla
-async function calculateRoute() {
+async function calculateRoute(fitMap = true) {
     if (state.points.length < 2) return;
 
-    setStatus('Calculando ruta con Valhalla...', 'loading');
+    setStatus('Calculando ruta...', 'loading');
     document.getElementById('btn-calculate').disabled = true;
 
     const points = state.points.map(p => ({
@@ -432,8 +432,8 @@ async function calculateRoute() {
 
     state.wayIds = result.wayIds;
 
-    // Fit map to route
-    if (latLngs.length > 0) {
+    // Only fit map on manual calculate, not on auto-recalculate
+    if (fitMap && latLngs.length > 0) {
         map.fitBounds(state.routeLayer.getBounds(), { padding: [50, 50] });
     }
 
