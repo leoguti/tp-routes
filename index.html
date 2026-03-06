@@ -21,32 +21,29 @@
                 <h3>Datos de la Ruta</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Referencia</label>
-                        <input type="text" id="route-ref" placeholder="Ej: T01">
+                        <label>Referencia *</label>
+                        <input type="text" id="route-ref" placeholder="Ej: T01" required>
                     </div>
                     <div class="form-group">
-                        <label>Operador</label>
-                        <input type="text" id="route-operator" placeholder="Ej: Coflonorte">
+                        <label>Operador *</label>
+                        <input type="text" id="route-operator" placeholder="Ej: Coflonorte" required>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Nombre de la ruta</label>
-                    <input type="text" id="route-name" placeholder="Ej: Tunja - Duitama por Paipa">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Desde</label>
-                        <input type="text" id="route-from" placeholder="Origen">
+                        <label>Desde *</label>
+                        <input type="text" id="route-from" placeholder="Origen" required>
                     </div>
                     <div class="form-group">
-                        <label>Hasta</label>
-                        <input type="text" id="route-to" placeholder="Destino">
+                        <label>Hasta *</label>
+                        <input type="text" id="route-to" placeholder="Destino" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Red</label>
-                    <input type="text" id="route-network" placeholder="Ej: Transporte Intermunicipal Boyacá" value="Transporte Intermunicipal Boyacá">
+                    <label>Red *</label>
+                    <input type="text" id="route-network" placeholder="Ej: Transporte Intermunicipal Boyacá" value="Transporte Intermunicipal Boyacá" required>
                 </div>
+                <div id="route-name-preview" style="font-size:0.75rem;color:#6c757d;margin-top:4px;"></div>
             </div>
 
             <!-- Mode selector -->

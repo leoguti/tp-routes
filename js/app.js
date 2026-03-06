@@ -414,26 +414,39 @@ async function calculateRoute() {
 
 // Download .osm file
 function downloadOsm() {
-    const routeInfo = {
-        ref: document.getElementById('route-ref').value,
-        name: document.getElementById('route-name').value,
-        from: document.getElementById('route-from').value,
-        to: document.getElementById('route-to').value,
-        operator: document.getElementById('route-operator').value,
-        network: document.getElementById('route-network').value
-    };
+    const ref = document.getElementById('route-ref').value.trim();
+    const from = document.getElementById('route-from').value.trim();
+    const to = document.getElementById('route-to').value.trim();
+    const operator = document.getElementById('route-operator').value.trim();
+    const network = document.getElementById('route-network').value.trim();
 
-    // Auto-generate name if empty
-    if (!routeInfo.name && routeInfo.from && routeInfo.to) {
-        routeInfo.name = `Bus ${routeInfo.ref || ''}: ${routeInfo.from} => ${routeInfo.to}`.trim();
+    // Validate required fields
+    const missing = [];
+    if (!ref) missing.push('Referencia');
+    if (!operator) missing.push('Operador');
+    if (!network) missing.push('Red');
+    if (!from) missing.push('Desde');
+    if (!to) missing.push('Hasta');
+    if (missing.length > 0) {
+        setStatus(`Faltan campos obligatorios: ${missing.join(', ')}`, 'error');
+        return;
     }
+
+    const routeInfo = {
+        ref,
+        name: `${ref} - ${from} - ${to}`,
+        from,
+        to,
+        operator,
+        network
+    };
 
     const stops = state.points
         .filter(p => p.type === 'stop')
         .map(p => ({ lat: p.lat, lon: p.lon, name: p.name }));
 
     const osmContent = generateOsmFile(routeInfo, stops, state.wayIds);
-    const filename = `ruta_${routeInfo.ref || 'nueva'}_${routeInfo.from || 'A'}_${routeInfo.to || 'B'}.osm`
+    const filename = `ruta_${ref}_${from}_${to}.osm`
         .replace(/\s+/g, '_').toLowerCase();
 
     downloadFile(osmContent, filename);
@@ -480,6 +493,22 @@ document.getElementById('btn-download').addEventListener('click', downloadOsm);
 document.getElementById('btn-clear').addEventListener('click', clearAll);
 document.getElementById('btn-mode-stop').addEventListener('click', () => setMode('stop'));
 document.getElementById('btn-mode-waypoint').addEventListener('click', () => setMode('waypoint'));
+
+// Update route name preview when fields change
+function updateRouteNamePreview() {
+    const ref = document.getElementById('route-ref').value.trim();
+    const from = document.getElementById('route-from').value.trim();
+    const to = document.getElementById('route-to').value.trim();
+    const preview = document.getElementById('route-name-preview');
+    if (ref || from || to) {
+        preview.textContent = `Nombre: ${ref || '?'} - ${from || '?'} - ${to || '?'}`;
+    } else {
+        preview.textContent = '';
+    }
+}
+document.getElementById('route-ref').addEventListener('input', updateRouteNamePreview);
+document.getElementById('route-from').addEventListener('input', updateRouteNamePreview);
+document.getElementById('route-to').addEventListener('input', updateRouteNamePreview);
 
 // Init
 updateButtons();
