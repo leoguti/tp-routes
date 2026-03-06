@@ -303,8 +303,9 @@ function updateStopList() {
             else if (stopIdx === stops.length) num.style.background = '#8e44ad';
             num.textContent = stopIdx;
         } else {
+            const wpIdx = state.points.filter(p => p.type === 'waypoint').indexOf(point) + 1;
             num.className = 'stop-number waypoint';
-            num.textContent = 'W';
+            num.textContent = 'W' + wpIdx;
         }
 
         // Name input
