@@ -66,12 +66,15 @@ function createStopIcon(number, role) {
     });
 }
 
-const waypointIcon = L.divIcon({
-    className: '',
-    html: '<div class="waypoint-marker"></div>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
-});
+// Waypoint icon factory
+function createWaypointIcon(number) {
+    return L.divIcon({
+        className: '',
+        html: `<div class="waypoint-marker">W${number}</div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+    });
+}
 
 // Haversine distance in km
 function haversine(lat1, lon1, lat2, lon2) {
@@ -145,8 +148,9 @@ function addPoint(lat, lon, type, name) {
     const stopCount = state.points.filter(p => p.type === 'stop').length;
     const defaultName = '';
 
+    const wpCount = state.points.filter(p => p.type === 'waypoint').length;
     const marker = L.marker([lat, lon], {
-        icon: type === 'stop' ? createStopIcon(stopCount + 1) : waypointIcon,
+        icon: type === 'stop' ? createStopIcon(stopCount + 1) : createWaypointIcon(wpCount + 1),
         draggable: true
     }).addTo(map);
 
@@ -228,10 +232,11 @@ function removePoint(id) {
     autoRecalculate();
 }
 
-// Renumber stop icons with start/end colors
+// Renumber stop and waypoint icons
 function renumberStops() {
     const stops = state.points.filter(p => p.type === 'stop');
     let stopNum = 1;
+    let wpNum = 1;
     for (const p of state.points) {
         if (p.type === 'stop') {
             let role = 'intermediate';
@@ -239,6 +244,9 @@ function renumberStops() {
             else if (stopNum === stops.length) role = 'end';
             p.marker.setIcon(createStopIcon(stopNum, role));
             stopNum++;
+        } else {
+            p.marker.setIcon(createWaypointIcon(wpNum));
+            wpNum++;
         }
     }
 }
