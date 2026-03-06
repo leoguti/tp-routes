@@ -17,11 +17,14 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
 }).addTo(map);
 
-// Stop icon factory
-function createStopIcon(number) {
+// Stop icon factory — green=start, purple=end, red=intermediate
+function createStopIcon(number, role) {
+    let color = '#e74c3c';
+    if (role === 'start') color = '#27ae60';
+    if (role === 'end') color = '#8e44ad';
     return L.divIcon({
         className: '',
-        html: `<div class="stop-marker">${number}</div>`,
+        html: `<div class="stop-marker" style="background:${color}">${number}</div>`,
         iconSize: [28, 28],
         iconAnchor: [14, 14]
     });
@@ -122,7 +125,7 @@ function addPoint(lat, lon, type, name) {
         const pos = e.target.getLatLng();
         point.lat = pos.lat;
         point.lon = pos.lng;
-        clearRoute();
+        autoRecalculate();
     });
 
     // Click to select/edit
@@ -154,7 +157,7 @@ function addPoint(lat, lon, type, name) {
     updateStopList();
     updateButtons();
     updateInstructions();
-    clearRoute();
+    autoRecalculate();
 
     return point;
 }
@@ -171,7 +174,7 @@ function movePoint(id, direction) {
 
     renumberStops();
     updateStopList();
-    clearRoute();
+    autoRecalculate();
 }
 
 // Remove point
@@ -186,15 +189,19 @@ function removePoint(id) {
     renumberStops();
     updateStopList();
     updateButtons();
-    clearRoute();
+    autoRecalculate();
 }
 
-// Renumber stop icons only (don't rename)
+// Renumber stop icons with start/end colors
 function renumberStops() {
+    const stops = state.points.filter(p => p.type === 'stop');
     let stopNum = 1;
     for (const p of state.points) {
         if (p.type === 'stop') {
-            p.marker.setIcon(createStopIcon(stopNum));
+            let role = 'intermediate';
+            if (stopNum === 1) role = 'start';
+            else if (stopNum === stops.length) role = 'end';
+            p.marker.setIcon(createStopIcon(stopNum, role));
             stopNum++;
         }
     }
@@ -239,14 +246,17 @@ function updateStopList() {
 
             renumberStops();
             updateStopList();
-            clearRoute();
+            autoRecalculate();
         });
 
         // Number badge
         const num = document.createElement('span');
         if (point.type === 'stop') {
-            const stopIdx = state.points.filter(p => p.type === 'stop').indexOf(point) + 1;
+            const stops = state.points.filter(p => p.type === 'stop');
+            const stopIdx = stops.indexOf(point) + 1;
             num.className = 'stop-number';
+            if (stopIdx === 1) num.style.background = '#27ae60';
+            else if (stopIdx === stops.length) num.style.background = '#8e44ad';
             num.textContent = stopIdx;
         } else {
             num.className = 'stop-number waypoint';
@@ -341,6 +351,16 @@ function clearRoute() {
     }
     state.wayIds = [];
     updateButtons();
+}
+
+// Auto-recalculate route when points change
+let recalcTimer = null;
+function autoRecalculate() {
+    clearRoute();
+    if (state.points.length >= 2) {
+        clearTimeout(recalcTimer);
+        recalcTimer = setTimeout(() => calculateRoute(), 400);
+    }
 }
 
 // Calculate route via Valhalla
