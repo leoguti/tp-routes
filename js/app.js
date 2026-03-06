@@ -10,33 +10,48 @@ const state = {
     dragSrcIdx: null     // For drag & drop reordering
 };
 
-// Boyacá PBF bounding box
-const BOYACA_BOUNDS = L.latLngBounds(
-    L.latLng(4.9, -74.8),  // southwest
-    L.latLng(7.2, -72.0)   // northeast
+// Active region
+const activeRegionKey = getCurrentRegion();
+const activeRegion = REGIONS[activeRegionKey];
+
+// Region bounds
+const regionBounds = L.latLngBounds(
+    L.latLng(activeRegion.bounds[0][0], activeRegion.bounds[0][1]),
+    L.latLng(activeRegion.bounds[1][0], activeRegion.bounds[1][1])
 );
 
-// Map setup — locked to Boyacá region
+// Map setup — locked to active region
 const map = L.map('map', {
     zoomControl: true,
-    maxBounds: BOYACA_BOUNDS.pad(0.1),
+    maxBounds: regionBounds.pad(0.1),
     maxBoundsViscosity: 1.0,
     minZoom: 8
-}).setView([5.5353, -73.3678], 13);
+}).setView(activeRegion.center, activeRegion.zoom);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19
 }).addTo(map);
 
-// Draw Boyacá boundary rectangle
-L.rectangle(BOYACA_BOUNDS, {
+// Draw region boundary rectangle
+L.rectangle(regionBounds, {
     color: '#4a90d9',
     weight: 2,
     fillOpacity: 0,
     dashArray: '8, 4',
     interactive: false
 }).addTo(map);
+
+// Populate region selector
+const regionSelect = document.getElementById('region-select');
+for (const [key, region] of Object.entries(REGIONS)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = region.name;
+    opt.selected = key === activeRegionKey;
+    regionSelect.appendChild(opt);
+}
+regionSelect.addEventListener('change', (e) => switchRegion(e.target.value));
 
 // Stop icon factory — green=start, purple=end, red=intermediate
 function createStopIcon(number, role) {
@@ -530,6 +545,9 @@ function updateRouteNamePreview() {
 document.getElementById('route-ref').addEventListener('input', updateRouteNamePreview);
 document.getElementById('route-from').addEventListener('input', updateRouteNamePreview);
 document.getElementById('route-to').addEventListener('input', updateRouteNamePreview);
+
+// Set default network from region
+document.getElementById('route-network').value = activeRegion.defaultNetwork;
 
 // Init
 updateButtons();
