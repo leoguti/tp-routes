@@ -10,11 +10,32 @@ const state = {
     dragSrcIdx: null     // For drag & drop reordering
 };
 
-// Map setup
-const map = L.map('map', { zoomControl: true }).setView([5.5353, -73.3678], 13);
+// Boyacá PBF bounding box
+const BOYACA_BOUNDS = L.latLngBounds(
+    L.latLng(4.9, -74.8),  // southwest
+    L.latLng(7.2, -72.0)   // northeast
+);
+
+// Map setup — locked to Boyacá region
+const map = L.map('map', {
+    zoomControl: true,
+    maxBounds: BOYACA_BOUNDS.pad(0.1),
+    maxBoundsViscosity: 1.0,
+    minZoom: 8
+}).setView([5.5353, -73.3678], 13);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19
+}).addTo(map);
+
+// Draw Boyacá boundary rectangle
+L.rectangle(BOYACA_BOUNDS, {
+    color: '#4a90d9',
+    weight: 2,
+    fillOpacity: 0,
+    dashArray: '8, 4',
+    interactive: false
 }).addTo(map);
 
 // Stop icon factory — green=start, purple=end, red=intermediate
