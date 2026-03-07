@@ -69,6 +69,8 @@ async function loadStats() {
         document.getElementById('stat-no-stops').textContent = c.routes_no_stops;
         document.getElementById('stat-valid').textContent = c.routes_valid || '0';
         document.getElementById('stat-no-ref').textContent = c.routes_no_ref;
+        document.getElementById('stat-gaps').textContent = c.routes_gaps || '0';
+        document.getElementById('stat-dupes').textContent = c.routes_dupes || '0';
 
         const opSelect = document.getElementById('filter-operator');
         data.operators.forEach(o => {
@@ -117,11 +119,27 @@ async function loadRelations() {
     }
 }
 
+function hasGaps(r) {
+    return r.ptv2_errors && r.ptv2_errors.some(e => e.includes('brecha'));
+}
+function hasDuplicates(r) {
+    return r.ptv2_errors && r.ptv2_errors.some(e => e.includes('duplicada'));
+}
+
 function renderRelationsList() {
     const search = document.getElementById('filter-search').value.toLowerCase();
     const list = document.getElementById('relations-list');
 
+    const issue = document.getElementById('filter-issue').value;
+
     const filtered = allRelations.filter(r => {
+        // Issue filter
+        if (issue === 'gaps' && !hasGaps(r)) return false;
+        if (issue === 'dupes' && !hasDuplicates(r)) return false;
+        if (issue === 'no-stops' && r.stop_count > 0) return false;
+        if (issue === 'valid' && !r.ptv2_valid) return false;
+
+        // Text search
         if (!search) return true;
         return [r.ref, r.name, r.from, r.to, r.operator].some(
             v => v && v.toLowerCase().includes(search)
@@ -145,6 +163,8 @@ function renderRelationsList() {
                     ${r.operator ? `<span class="rel-tag op">${r.operator}</span>` : ''}
                     ${r.stop_count === 0 ? '<span class="rel-tag warn">sin paradas</span>' : `<span class="rel-tag ok">${r.stop_count} paradas</span>`}
                     <span class="rel-tag">${r.way_count} vias</span>
+                    ${hasGaps(r) ? '<span class="rel-tag error">discontinua</span>' : ''}
+                    ${hasDuplicates(r) ? '<span class="rel-tag warn">duplicados</span>' : ''}
                     ${r.ptv2_errors && r.ptv2_errors.length > 0 ? `<span class="rel-tag warn">${r.ptv2_errors.length} errores</span>` : ''}
                 </div>
             </div>
@@ -292,6 +312,38 @@ async function loadGeometry(osmId, rel) {
             }
         }).addTo(routeLayer);
 
+        // Detect and mark gaps with red X markers
+        const wayFeatures = geojson.features.filter(f =>
+            f.geometry.type === 'LineString' && f.properties.type === 'way'
+        );
+        for (let i = 0; i < wayFeatures.length - 1; i++) {
+            const coordsA = wayFeatures[i].geometry.coordinates;
+            const coordsB = wayFeatures[i + 1].geometry.coordinates;
+            const aLast = coordsA[coordsA.length - 1];
+            const aFirst = coordsA[0];
+            const bFirst = coordsB[0];
+            const bLast = coordsB[coordsB.length - 1];
+
+            const eps = 0.0000001;
+            const eq = (a, b) => Math.abs(a[0]-b[0]) < eps && Math.abs(a[1]-b[1]) < eps;
+            const connected = eq(aLast,bFirst) || eq(aLast,bLast) || eq(aFirst,bFirst) || eq(aFirst,bLast);
+
+            if (!connected) {
+                // Mark the gap midpoint with a red icon
+                const midLat = (aLast[1] + bFirst[1]) / 2;
+                const midLon = (aLast[0] + bFirst[0]) / 2;
+                const gapMarker = L.marker([midLat, midLon], {
+                    icon: L.divIcon({
+                        className: 'gap-marker',
+                        html: '<div class="gap-icon">GAP</div>',
+                        iconSize: [36, 18],
+                        iconAnchor: [18, 9]
+                    })
+                }).bindPopup(`<b>Brecha de continuidad</b><br>Entre way/${wayFeatures[i].properties.id} y way/${wayFeatures[i+1].properties.id}`);
+                gapMarker.addTo(routeLayer);
+            }
+        }
+
         if (bounds.isValid()) {
             map.fitBounds(bounds, { padding: [60, 60] });
         }
@@ -328,6 +380,7 @@ document.addEventListener('keydown', (e) => {
 // Filter handlers
 document.getElementById('filter-operator').addEventListener('change', loadRelations);
 document.getElementById('filter-network').addEventListener('change', loadRelations);
+document.getElementById('filter-issue').addEventListener('change', renderRelationsList);
 document.getElementById('filter-search').addEventListener('input', renderRelationsList);
 
 // Init

@@ -14,6 +14,8 @@ module.exports = async function handler(req, res) {
                 count(*) FILTER (WHERE network IS NULL AND osm_type = 'route') as routes_no_network,
                 count(*) FILTER (WHERE ref IS NULL AND osm_type = 'route') as routes_no_ref,
                 count(*) FILTER (WHERE ptv2_valid = true AND osm_type = 'route') as routes_valid,
+                count(*) FILTER (WHERE osm_type = 'route' AND ptv2_errors::text LIKE '%brecha%') as routes_gaps,
+                count(*) FILTER (WHERE osm_type = 'route' AND ptv2_errors::text LIKE '%duplicada%') as routes_dupes,
                 count(*) as total
             FROM relations WHERE region = $1
         `, [region]);

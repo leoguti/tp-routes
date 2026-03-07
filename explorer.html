@@ -49,6 +49,14 @@
                             <span class="stat-value" id="stat-no-ref">-</span>
                             <span class="stat-label">Sin ref</span>
                         </div>
+                        <div class="stat-card warn">
+                            <span class="stat-value" id="stat-gaps">-</span>
+                            <span class="stat-label">Discontinuas</span>
+                        </div>
+                        <div class="stat-card warn">
+                            <span class="stat-value" id="stat-dupes">-</span>
+                            <span class="stat-label">Con duplicados</span>
+                        </div>
                     </div>
                     <div id="last-sync" class="text-muted"></div>
                 </div>
@@ -64,6 +72,16 @@
                 <div class="form-group">
                     <label>Red</label>
                     <select id="filter-network"><option value="">Todas</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Problema</label>
+                    <select id="filter-issue">
+                        <option value="">Todos</option>
+                        <option value="gaps">Discontinuas</option>
+                        <option value="dupes">Con duplicados</option>
+                        <option value="no-stops">Sin paradas</option>
+                        <option value="valid">PTv2 validas</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Buscar</label>

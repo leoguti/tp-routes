@@ -5,16 +5,20 @@
  * Usage: node scripts/validate-ptv2.js --region boyaca
  *
  * PTv2 checks:
- * - Has ref tag
- * - Has name tag
- * - Has from/to tags
- * - Has operator tag
- * - Has network tag
- * - Has public_transport:version = 2
- * - Has at least 1 stop member (role=stop)
- * - Has at least 1 way member
- * - Has a parent route_master
- * - Members are ordered: stops first, then ways (PTv2 convention)
+ * Tag checks:
+ *   - Has ref, name, from, to, operator, network tags
+ *   - Has public_transport:version = 2
+ *   - Has route tag
+ * Structure checks:
+ *   - Has at least 1 stop member (role=stop)
+ *   - Has at least 1 way member
+ *   - Has a parent route_master
+ *   - Members ordered: stops first, then ways (PTv2 convention)
+ * Geometry checks (inspired by JOSM PT_Assistant):
+ *   - Way continuity: consecutive ways share endpoint nodes
+ *   - Gap count and locations
+ *   - Duplicate ways in relation
+ *   - Duplicate stops in relation
  */
 require('dotenv').config();
 const { Client } = require('pg');
@@ -22,11 +26,18 @@ const path = require('path');
 
 const REGIONS = require(path.join(__dirname, '..', 'regions.json'));
 
-function validateRelation(relation, members) {
+// Coordinate comparison tolerance (~1cm)
+const COORD_EPSILON = 0.0000001;
+
+function coordsEqual(a, b) {
+    return Math.abs(a[0] - b[0]) < COORD_EPSILON && Math.abs(a[1] - b[1]) < COORD_EPSILON;
+}
+
+function validateRelation(relation, members, geometry) {
     const errors = [];
     const tags = typeof relation.tags === 'string' ? JSON.parse(relation.tags) : (relation.tags || {});
 
-    // Required tags
+    // === TAG CHECKS ===
     if (!relation.ref) errors.push('sin ref');
     if (!relation.name) errors.push('sin name');
     if (!relation.from) errors.push('sin from');
@@ -34,23 +45,16 @@ function validateRelation(relation, members) {
     if (!relation.operator) errors.push('sin operator');
     if (!relation.network) errors.push('sin network');
 
-    // PTv2 tag
     if (tags['public_transport:version'] !== '2') errors.push('sin public_transport:version=2');
-
-    // Route type tag
     if (!tags['route']) errors.push('sin route tag');
 
-    // Stops
+    // === STRUCTURE CHECKS ===
     if (relation.stop_count === 0) {
         errors.push('sin paradas (stop members)');
     }
-
-    // Ways
     if (relation.way_count === 0) {
         errors.push('sin vias (way members)');
     }
-
-    // Route master
     if (!relation.route_master_id) {
         errors.push('sin route_master');
     }
@@ -74,6 +78,86 @@ function validateRelation(relation, members) {
         }
     }
 
+    // === DUPLICATE CHECKS ===
+    // Duplicate ways
+    const wayMembers = members.filter(m => m.member_type === 'way' && m.role === '');
+    const wayIds = wayMembers.map(m => m.member_osm_id);
+    const wayIdSet = new Set();
+    const duplicateWays = new Set();
+    for (const id of wayIds) {
+        if (wayIdSet.has(id)) duplicateWays.add(id);
+        wayIdSet.add(id);
+    }
+    if (duplicateWays.size > 0) {
+        errors.push(`${duplicateWays.size} via(s) duplicada(s): ${[...duplicateWays].join(', ')}`);
+    }
+
+    // Duplicate stops
+    const stopMembers = members.filter(m =>
+        m.role === 'stop' || m.role === 'stop_entry_only' || m.role === 'stop_exit_only'
+    );
+    const stopIds = stopMembers.map(m => m.member_osm_id);
+    const stopIdSet = new Set();
+    const duplicateStops = new Set();
+    for (const id of stopIds) {
+        if (stopIdSet.has(id)) duplicateStops.add(id);
+        stopIdSet.add(id);
+    }
+    if (duplicateStops.size > 0) {
+        errors.push(`${duplicateStops.size} parada(s) duplicada(s)`);
+    }
+
+    // === GEOMETRY / CONTINUITY CHECKS ===
+    if (geometry) {
+        const geojson = typeof geometry === 'string' ? JSON.parse(geometry) : geometry;
+        const wayFeatures = (geojson.features || []).filter(f =>
+            f.geometry.type === 'LineString' && f.properties.type === 'way'
+        );
+
+        if (wayFeatures.length >= 2) {
+            const gaps = [];
+
+            for (let i = 0; i < wayFeatures.length - 1; i++) {
+                const coordsA = wayFeatures[i].geometry.coordinates;
+                const coordsB = wayFeatures[i + 1].geometry.coordinates;
+
+                const a_first = coordsA[0];
+                const a_last = coordsA[coordsA.length - 1];
+                const b_first = coordsB[0];
+                const b_last = coordsB[coordsB.length - 1];
+
+                // Check if any endpoint of way A matches any endpoint of way B
+                const connected =
+                    coordsEqual(a_last, b_first) ||
+                    coordsEqual(a_last, b_last) ||
+                    coordsEqual(a_first, b_first) ||
+                    coordsEqual(a_first, b_last);
+
+                if (!connected) {
+                    gaps.push({
+                        index: i,
+                        wayA: wayFeatures[i].properties.id,
+                        wayB: wayFeatures[i + 1].properties.id
+                    });
+                }
+            }
+
+            if (gaps.length > 0) {
+                errors.push(`${gaps.length} brecha(s) de continuidad`);
+                // Report first 3 gaps with way IDs
+                const detail = gaps.slice(0, 3).map(g =>
+                    `gap entre way/${g.wayA} y way/${g.wayB}`
+                );
+                for (const d of detail) {
+                    errors.push(d);
+                }
+                if (gaps.length > 3) {
+                    errors.push(`... y ${gaps.length - 3} brechas mas`);
+                }
+            }
+        }
+    }
+
     return {
         valid: errors.length === 0,
         errors
@@ -91,15 +175,15 @@ async function main() {
     const client = new Client({ connectionString: process.env.DATABASE_URL });
     await client.connect();
 
-    // Get all route relations
+    // Get all route relations (including cached geometry)
     const { rows: relations } = await client.query(
-        "SELECT * FROM relations WHERE region = $1 AND osm_type = 'route' ORDER BY ref",
+        "SELECT *, geometry FROM relations WHERE region = $1 AND osm_type = 'route' ORDER BY ref",
         [regionArg]
     );
 
     console.log(`Validando ${relations.length} rutas en ${region.name}...\n`);
 
-    const summary = { valid: 0, invalid: 0, errorCounts: {} };
+    const summary = { valid: 0, invalid: 0, errorCounts: {}, gapRoutes: 0 };
 
     for (const rel of relations) {
         // Get members for this relation
@@ -108,7 +192,7 @@ async function main() {
             [rel.osm_id]
         );
 
-        const result = validateRelation(rel, members);
+        const result = validateRelation(rel, members, rel.geometry);
 
         // Update DB
         await client.query(
@@ -120,9 +204,12 @@ async function main() {
             summary.valid++;
         } else {
             summary.invalid++;
+            let hasGap = false;
             for (const err of result.errors) {
                 summary.errorCounts[err] = (summary.errorCounts[err] || 0) + 1;
+                if (err.includes('brecha')) hasGap = true;
             }
+            if (hasGap) summary.gapRoutes++;
         }
     }
 
@@ -130,6 +217,7 @@ async function main() {
     console.log('=== Resultado de validacion PTv2 ===');
     console.log(`  Validas:   ${summary.valid}/${relations.length}`);
     console.log(`  Invalidas: ${summary.invalid}/${relations.length}`);
+    console.log(`  Con brechas de continuidad: ${summary.gapRoutes}`);
     console.log(`\n--- Errores mas comunes ---`);
 
     const sorted = Object.entries(summary.errorCounts).sort((a, b) => b[1] - a[1]);
