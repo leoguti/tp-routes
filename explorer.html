@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP Routes - Explorador</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/explorer.css" />
+</head>
+<body>
+    <div id="header">
+        <h1><a href="/" style="color:white;text-decoration:none;">TP Routes</a></h1>
+        <nav>
+            <a href="/">Editor</a>
+            <a href="/explorer.html" class="active">Explorador</a>
+        </nav>
+        <select id="region-select"></select>
+    </div>
+
+    <div id="layout">
+        <div id="sidebar">
+            <!-- Stats panel -->
+            <div class="panel" id="stats-panel">
+                <h3>Resumen</h3>
+                <div id="stats-loading">Cargando...</div>
+                <div id="stats-content" style="display:none;">
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <span class="stat-value" id="stat-routes">-</span>
+                            <span class="stat-label">Rutas</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="stat-masters">-</span>
+                            <span class="stat-label">Masters</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="stat-stops">-</span>
+                            <span class="stat-label">Paradas</span>
+                        </div>
+                        <div class="stat-card warn">
+                            <span class="stat-value" id="stat-no-stops">-</span>
+                            <span class="stat-label">Sin paradas</span>
+                        </div>
+                        <div class="stat-card ok">
+                            <span class="stat-value" id="stat-valid">-</span>
+                            <span class="stat-label">PTv2 validas</span>
+                        </div>
+                        <div class="stat-card warn">
+                            <span class="stat-value" id="stat-no-ref">-</span>
+                            <span class="stat-label">Sin ref</span>
+                        </div>
+                    </div>
+                    <div id="last-sync" class="text-muted"></div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="panel">
+                <h3>Filtros</h3>
+                <div class="form-group">
+                    <label>Operador</label>
+                    <select id="filter-operator"><option value="">Todos</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Red</label>
+                    <select id="filter-network"><option value="">Todas</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Buscar</label>
+                    <input type="text" id="filter-search" placeholder="ref, nombre, from, to...">
+                </div>
+            </div>
+
+            <!-- Relations list -->
+            <div class="panel" id="relations-panel">
+                <h3>Relaciones <span id="relations-count" class="badge">0</span></h3>
+                <div id="relations-list"></div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <!-- Detail panel (hidden by default) -->
+        <div id="detail-panel" style="display:none;">
+            <button id="detail-close" class="close-btn">&times;</button>
+            <h3 id="detail-title">-</h3>
+            <div id="detail-content"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/explorer.js"></script>
+</body>
+</html>

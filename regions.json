@@ -1,0 +1,24 @@
+{
+  "boyaca": {
+    "name": "Boyacá, Colombia",
+    "center": [5.5353, -73.3678],
+    "zoom": 13,
+    "bounds": [[4.4, -74.8], [7.2, -72.0]],
+    "bbox": [-74.8, 4.4, -72.0, 7.2],
+    "overpassArea": "Boyacá",
+    "overpassAdminLevel": "4",
+    "defaultNetwork": "Transporte Intermunicipal Boyacá",
+    "country": "CO"
+  },
+  "cochabamba": {
+    "name": "Cochabamba, Bolivia",
+    "center": [-17.3935, -66.1570],
+    "zoom": 13,
+    "bounds": [[-17.709721, -66.440262], [-17.261759, -65.577835]],
+    "bbox": [-66.440262, -17.709721, -65.577835, -17.261759],
+    "overpassArea": "Cochabamba",
+    "overpassAdminLevel": "4",
+    "defaultNetwork": "Transporte Público Cochabamba",
+    "country": "BO"
+  }
+}
