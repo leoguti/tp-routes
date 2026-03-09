@@ -118,33 +118,40 @@ function validateRelation(relation, members, geometry) {
             const gaps = [];
 
             for (let i = 0; i < wayFeatures.length - 1; i++) {
-                const coordsA = wayFeatures[i].geometry.coordinates;
-                const coordsB = wayFeatures[i + 1].geometry.coordinates;
+                const propsA = wayFeatures[i].properties;
+                const propsB = wayFeatures[i + 1].properties;
 
-                const a_first = coordsA[0];
-                const a_last = coordsA[coordsA.length - 1];
-                const b_first = coordsB[0];
-                const b_last = coordsB[coordsB.length - 1];
+                let connected = false;
 
-                // Check if any endpoint of way A matches any endpoint of way B
-                const connected =
-                    coordsEqual(a_last, b_first) ||
-                    coordsEqual(a_last, b_last) ||
-                    coordsEqual(a_first, b_first) ||
-                    coordsEqual(a_first, b_last);
+                // Prefer node ID comparison (exact, no false positives)
+                if (propsA.firstNode && propsA.lastNode && propsB.firstNode && propsB.lastNode) {
+                    connected =
+                        propsA.lastNode === propsB.firstNode ||
+                        propsA.lastNode === propsB.lastNode ||
+                        propsA.firstNode === propsB.firstNode ||
+                        propsA.firstNode === propsB.lastNode;
+                } else {
+                    // Fallback to coordinate comparison
+                    const coordsA = wayFeatures[i].geometry.coordinates;
+                    const coordsB = wayFeatures[i + 1].geometry.coordinates;
+                    connected =
+                        coordsEqual(coordsA[coordsA.length - 1], coordsB[0]) ||
+                        coordsEqual(coordsA[coordsA.length - 1], coordsB[coordsB.length - 1]) ||
+                        coordsEqual(coordsA[0], coordsB[0]) ||
+                        coordsEqual(coordsA[0], coordsB[coordsB.length - 1]);
+                }
 
                 if (!connected) {
                     gaps.push({
                         index: i,
-                        wayA: wayFeatures[i].properties.id,
-                        wayB: wayFeatures[i + 1].properties.id
+                        wayA: propsA.id,
+                        wayB: propsB.id
                     });
                 }
             }
 
             if (gaps.length > 0) {
                 errors.push(`${gaps.length} brecha(s) de continuidad`);
-                // Report first 3 gaps with way IDs
                 const detail = gaps.slice(0, 3).map(g =>
                     `gap entre way/${g.wayA} y way/${g.wayB}`
                 );

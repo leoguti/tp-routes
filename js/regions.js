@@ -1,4 +1,6 @@
 // Region definitions
+const VALHALLA_URL = 'https://valhalla.busboy.app';
+
 const REGIONS = {
     boyaca: {
         name: 'Boyacá, Colombia',

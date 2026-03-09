@@ -1,5 +1,5 @@
 // Valhalla API integration
-const VALHALLA_URL = 'https://valhalla.busboy.app';
+// VALHALLA_URL is defined in regions.js (loaded before this file)
 
 /**
  * Decode a Valhalla encoded polyline (precision 6)

@@ -57,10 +57,16 @@ function buildGeoJSON(data) {
     for (const wm of wayMembers) {
         const way = ways.find(w => w.id === wm.ref);
         if (way?.geometry) {
+            const props = { type: 'way', id: way.id };
+            // Store first/last node IDs for continuity checking
+            if (way.nodes && way.nodes.length >= 2) {
+                props.firstNode = way.nodes[0];
+                props.lastNode = way.nodes[way.nodes.length - 1];
+            }
             features.push({
                 type: 'Feature',
                 geometry: { type: 'LineString', coordinates: way.geometry.map(p => [p.lon, p.lat]) },
-                properties: { type: 'way', id: way.id }
+                properties: props
             });
         }
     }
@@ -108,7 +114,7 @@ async function main() {
         process.stdout.write(`  [${i+1}/${rows.length}] ${r.ref || r.osm_id} ${r.name || ''} ... `);
 
         try {
-            const query = `[out:json][timeout:60];relation(${r.osm_id});(._;>;);out geom;`;
+            const query = `[out:json][timeout:60];relation(${r.osm_id});(._;>;);out body geom;`;
             const data = await overpassPost(query);
             const geojson = buildGeoJSON(data);
 

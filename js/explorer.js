@@ -247,7 +247,7 @@ function showDetailPanel(r) {
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <a href="${osmUrl}" target="_blank" class="action-btn">OSM</a>
                 <a href="${josmUrl}" class="action-btn">JOSM</a>
-                <a href="/?region=${currentRegion}" class="action-btn">Editar</a>
+                <a href="/edit.html?relation=${osmId}&region=${currentRegion}" class="action-btn" style="background:#e74c3c;color:white;">Editar Ruta</a>
             </div>
         </div>
 
@@ -312,21 +312,31 @@ async function loadGeometry(osmId, rel) {
             }
         }).addTo(routeLayer);
 
-        // Detect and mark gaps with red X markers
+        // Detect and mark gaps with red markers
         const wayFeatures = geojson.features.filter(f =>
             f.geometry.type === 'LineString' && f.properties.type === 'way'
         );
         for (let i = 0; i < wayFeatures.length - 1; i++) {
+            const pA = wayFeatures[i].properties;
+            const pB = wayFeatures[i + 1].properties;
             const coordsA = wayFeatures[i].geometry.coordinates;
             const coordsB = wayFeatures[i + 1].geometry.coordinates;
             const aLast = coordsA[coordsA.length - 1];
-            const aFirst = coordsA[0];
             const bFirst = coordsB[0];
-            const bLast = coordsB[coordsB.length - 1];
 
-            const eps = 0.0000001;
-            const eq = (a, b) => Math.abs(a[0]-b[0]) < eps && Math.abs(a[1]-b[1]) < eps;
-            const connected = eq(aLast,bFirst) || eq(aLast,bLast) || eq(aFirst,bFirst) || eq(aFirst,bLast);
+            let connected;
+            if (pA.firstNode && pA.lastNode && pB.firstNode && pB.lastNode) {
+                // Node ID comparison (exact)
+                connected = pA.lastNode === pB.firstNode || pA.lastNode === pB.lastNode ||
+                            pA.firstNode === pB.firstNode || pA.firstNode === pB.lastNode;
+            } else {
+                // Fallback to coordinate comparison
+                const aFirst = coordsA[0];
+                const bLast = coordsB[coordsB.length - 1];
+                const eps = 0.0000001;
+                const eq = (a, b) => Math.abs(a[0]-b[0]) < eps && Math.abs(a[1]-b[1]) < eps;
+                connected = eq(aLast,bFirst) || eq(aLast,bLast) || eq(aFirst,bFirst) || eq(aFirst,bLast);
+            }
 
             if (!connected) {
                 // Mark the gap midpoint with a red icon

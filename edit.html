@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP Routes - Editar Ruta</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .legend { position: absolute; bottom: 20px; right: 10px; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000; font-size: 0.75rem; }
+        .legend-item { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+        .legend-line { width: 24px; height: 3px; border-radius: 2px; }
+        .match-info { padding: 8px 12px; background: #f8f9fa; border-radius: 6px; font-size: 0.8rem; margin-top: 8px; }
+        .match-good { border-left: 3px solid #27ae60; }
+        .match-warn { border-left: 3px solid #e67e22; }
+        .match-bad { border-left: 3px solid #e74c3c; }
+        #loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; font-size: 1.1rem; color: #555; }
+        .wp-count-control { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+        .wp-count-control input[type=range] { flex: 1; }
+        .wp-count-control span { font-size: 0.8rem; min-width: 30px; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>TP Routes <span style="font-size:0.7rem;opacity:0.7;">Editar Ruta</span></h1>
+        <select id="region-select" style="padding:4px 8px;border-radius:4px;border:none;font-size:0.8rem;background:#2a2a4e;color:white;cursor:pointer;"></select>
+        <span id="mode-indicator" class="mode-indicator waypoint-mode">Modo: Waypoint</span>
+    </div>
+
+    <div id="main">
+        <div id="sidebar">
+            <!-- Route info (pre-filled from existing relation) -->
+            <div class="panel">
+                <h3 id="panel-title">Cargando ruta...</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Referencia *</label>
+                        <input type="text" id="route-ref" placeholder="Ej: T01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Operador *</label>
+                        <input type="text" id="route-operator" placeholder="Ej: Coflonorte" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Desde *</label>
+                        <input type="text" id="route-from" placeholder="Origen" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hasta *</label>
+                        <input type="text" id="route-to" placeholder="Destino" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Red *</label>
+                    <input type="text" id="route-network" required>
+                </div>
+                <input type="hidden" id="relation-osm-id" value="">
+                <div id="route-name-preview" style="font-size:0.75rem;color:#6c757d;margin-top:4px;"></div>
+            </div>
+
+            <!-- Waypoint density control -->
+            <div class="panel">
+                <h3>Waypoints</h3>
+                <div class="wp-count-control">
+                    <span>Menos</span>
+                    <input type="range" id="wp-density" min="10" max="60" value="30" step="5">
+                    <span>Mas</span>
+                </div>
+                <div style="font-size:0.75rem;color:#6c757d;">
+                    <span id="wp-count-label">0 waypoints</span> |
+                    Sensibilidad de giro: <span id="wp-angle-label">30</span>&deg;
+                </div>
+                <div id="match-info" class="match-info" style="display:none;"></div>
+            </div>
+
+            <!-- Mode selector -->
+            <div class="panel">
+                <h3>Modo de edicion</h3>
+                <div class="form-row">
+                    <button class="btn btn-danger" id="btn-mode-stop" style="flex:1">Parada (S)</button>
+                    <button class="btn btn-primary" id="btn-mode-waypoint" style="flex:1">Waypoint (W)</button>
+                </div>
+                <div style="font-size:0.75rem;color:#6c757d;margin-top:6px;">
+                    Parada = donde el bus se detiene<br>
+                    Waypoint = punto de paso para guiar la ruta
+                </div>
+            </div>
+
+            <!-- Points list -->
+            <div class="panel" style="flex:1;overflow-y:auto;">
+                <h3>Puntos <span id="point-count" style="font-weight:400;text-transform:none;">0 paradas</span></h3>
+                <ul id="stop-list"></ul>
+            </div>
+
+            <!-- Actions -->
+            <div class="panel">
+                <button class="btn btn-primary" id="btn-calculate" disabled>Recalcular Ruta (Enter)</button>
+                <button class="btn btn-success" id="btn-download" disabled>Descargar .osm</button>
+                <button class="btn btn-outline" id="btn-reset-waypoints">Resetear Waypoints</button>
+                <a id="btn-back" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none;">Volver al Explorer</a>
+            </div>
+
+            <!-- Status -->
+            <div id="status"></div>
+        </div>
+
+        <div id="map">
+            <div id="instructions">Cargando ruta existente...</div>
+            <div id="loading-overlay">Cargando ruta desde la base de datos...</div>
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item"><div class="legend-line" style="background:#3388ff;"></div> Ruta original (OSM)</div>
+                <div class="legend-item"><div class="legend-line" style="background:#e74c3c;"></div> Ruta calculada (Valhalla)</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/regions.js"></script>
+    <script src="js/valhalla.js"></script>
+    <script src="js/osm-export.js"></script>
+    <script src="js/smart-waypoints.js"></script>
+    <script src="js/edit-route.js"></script>
+</body>
+</html>
