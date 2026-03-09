@@ -273,6 +273,7 @@ function clearRoute() {
 
 let recalcTimer = null;
 function autoRecalculate() {
+    if (window._suppressRecalc) return;
     clearRoute();
     if (state.points.length >= 2) {
         clearTimeout(recalcTimer);
@@ -280,16 +281,43 @@ function autoRecalculate() {
     }
 }
 
+// Add point without triggering auto-recalculate
+function addPointSilent(lat, lon, type, name) {
+    const id = state.nextId++;
+    const stopCount = state.points.filter(p => p.type === 'stop').length;
+    const wpCount = state.points.filter(p => p.type === 'waypoint').length;
+
+    const marker = L.marker([lat, lon], {
+        icon: type === 'stop' ? createStopIcon(stopCount + 1) : createWaypointIcon(wpCount + 1),
+        draggable: true
+    }).addTo(map);
+
+    const point = { id, lat, lon, type, name: name || '', marker };
+
+    marker.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        point.lat = pos.lat;
+        point.lon = pos.lng;
+        autoRecalculate();
+    });
+
+    state.points.push(point);
+    return point;
+}
+
 async function calculateRoute(fitMap = false) {
     if (state.points.length < 2) return;
-    setStatus('Calculando ruta con Valhalla...', 'loading');
+    setStatus(`Calculando ruta con Valhalla (${state.points.length} puntos)...`, 'loading');
     document.getElementById('btn-calculate').disabled = true;
 
     const points = state.points.map(p => ({ lat: p.lat, lon: p.lon, type: p.type }));
+
+    console.log(`[Editor v2] Calling Valhalla with ${points.length} points, URL: ${VALHALLA_URL}`);
     const result = await getRouteFromValhalla(points);
+    console.log('[Editor v2] Valhalla result:', result);
 
     if (result.error) {
-        setStatus(`Error: ${result.error}`, 'error');
+        setStatus(`Error Valhalla: ${result.error}`, 'error');
         document.getElementById('btn-calculate').disabled = false;
         return;
     }
@@ -430,7 +458,7 @@ function resetWaypoints() {
     updateButtons();
 }
 
-// Load smart waypoints from geojson
+// Load smart waypoints from geojson (without triggering recalculation for each one)
 function loadSmartWaypoints(geojson) {
     const angle = parseInt(document.getElementById('wp-density').value) || 30;
     const waypoints = extractSmartWaypoints(geojson, {
@@ -439,11 +467,38 @@ function loadSmartWaypoints(geojson) {
         minDistance: 100
     });
 
-    document.getElementById('wp-count-label').textContent = `${waypoints.length} waypoints`;
+    // Valhalla has a limit of ~20 locations per request; cap waypoints
+    const MAX_WAYPOINTS = 20;
+    let finalWaypoints = waypoints;
+    if (waypoints.length > MAX_WAYPOINTS) {
+        // Downsample: keep first, last, and evenly spaced intermediate
+        finalWaypoints = [waypoints[0]];
+        const step = (waypoints.length - 1) / (MAX_WAYPOINTS - 1);
+        for (let i = 1; i < MAX_WAYPOINTS - 1; i++) {
+            finalWaypoints.push(waypoints[Math.round(i * step)]);
+        }
+        finalWaypoints.push(waypoints[waypoints.length - 1]);
+    }
+
+    document.getElementById('wp-count-label').textContent = `${finalWaypoints.length} waypoints`;
     document.getElementById('wp-angle-label').textContent = angle;
 
-    for (const wp of waypoints) {
-        addPoint(wp.lat, wp.lon, 'waypoint');
+    // Suppress auto-recalculate while bulk-adding
+    const savedAutoRecalc = autoRecalculate;
+    window._suppressRecalc = true;
+
+    for (const wp of finalWaypoints) {
+        addPointSilent(wp.lat, wp.lon, 'waypoint');
+    }
+
+    window._suppressRecalc = false;
+    renumberStops();
+    updateStopList();
+    updateButtons();
+
+    // Single recalculate after all waypoints are added
+    if (state.points.length >= 2) {
+        calculateRoute(false);
     }
 }
 
