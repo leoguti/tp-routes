@@ -467,27 +467,13 @@ function loadSmartWaypoints(geojson) {
         minDistance: 100
     });
 
-    // Valhalla has a limit of ~20 locations per request; cap waypoints
-    const MAX_WAYPOINTS = 20;
-    let finalWaypoints = waypoints;
-    if (waypoints.length > MAX_WAYPOINTS) {
-        // Downsample: keep first, last, and evenly spaced intermediate
-        finalWaypoints = [waypoints[0]];
-        const step = (waypoints.length - 1) / (MAX_WAYPOINTS - 1);
-        for (let i = 1; i < MAX_WAYPOINTS - 1; i++) {
-            finalWaypoints.push(waypoints[Math.round(i * step)]);
-        }
-        finalWaypoints.push(waypoints[waypoints.length - 1]);
-    }
-
-    document.getElementById('wp-count-label').textContent = `${finalWaypoints.length} waypoints`;
+    document.getElementById('wp-count-label').textContent = `${waypoints.length} waypoints`;
     document.getElementById('wp-angle-label').textContent = angle;
 
     // Suppress auto-recalculate while bulk-adding
-    const savedAutoRecalc = autoRecalculate;
     window._suppressRecalc = true;
 
-    for (const wp of finalWaypoints) {
+    for (const wp of waypoints) {
         addPointSilent(wp.lat, wp.lon, 'waypoint');
     }
 

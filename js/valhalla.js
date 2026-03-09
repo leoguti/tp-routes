@@ -63,31 +63,62 @@ function encodeValue(value) {
  * Step 2: Feed that geometry to /trace_attributes to get way IDs
  */
 async function getRouteFromValhalla(points) {
+    const MAX_LOCATIONS = 20;
     const locations = points.map(p => ({ lat: p.lat, lon: p.lon }));
 
     try {
-        // Step 1: Get route geometry
-        const routeResponse = await fetch(`${VALHALLA_URL}/route`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                locations: locations,
-                costing: 'auto',
-                directions_options: { units: 'kilometers' }
-            })
-        });
-
-        const routeData = await routeResponse.json();
-        if (routeData.error) {
-            return { error: routeData.error };
-        }
-
-        // Combine all legs into one polyline
+        // If more than MAX_LOCATIONS, split into overlapping chunks
         let routeCoords = [];
-        for (const leg of routeData.trip.legs) {
-            routeCoords = routeCoords.concat(decodePolyline(leg.shape));
+        let totalLength = 0;
+        let totalTime = 0;
+
+        if (locations.length > MAX_LOCATIONS) {
+            const chunkSize = MAX_LOCATIONS - 1; // overlap by 1
+            for (let i = 0; i < locations.length - 1; i += chunkSize) {
+                const chunk = locations.slice(i, Math.min(i + chunkSize + 1, locations.length));
+                const res = await fetch(`${VALHALLA_URL}/route`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        locations: chunk,
+                        costing: 'auto',
+                        directions_options: { units: 'kilometers' }
+                    })
+                });
+                const data = await res.json();
+                if (data.error) return { error: data.error };
+
+                for (const leg of data.trip.legs) {
+                    const decoded = decodePolyline(leg.shape);
+                    // Skip first point of subsequent chunks (overlap)
+                    if (routeCoords.length > 0) decoded.shift();
+                    routeCoords = routeCoords.concat(decoded);
+                }
+                totalLength += data.trip.summary.length;
+                totalTime += data.trip.summary.time;
+            }
+        } else {
+            const routeResponse = await fetch(`${VALHALLA_URL}/route`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    locations: locations,
+                    costing: 'auto',
+                    directions_options: { units: 'kilometers' }
+                })
+            });
+
+            const routeData = await routeResponse.json();
+            if (routeData.error) return { error: routeData.error };
+
+            for (const leg of routeData.trip.legs) {
+                routeCoords = routeCoords.concat(decodePolyline(leg.shape));
+            }
+            totalLength = routeData.trip.summary.length;
+            totalTime = routeData.trip.summary.time;
         }
-        const summary = routeData.trip.summary;
+
+        const summary = { length: totalLength, time: totalTime };
 
         // Step 2: Use the dense route geometry to get way IDs via trace_attributes
         // Sample points from the route (every Nth point to keep it manageable)
