@@ -10,7 +10,9 @@ const state = {
     mode: 'waypoint',
     nextId: 1,
     dragSrcIdx: null,
-    relationOsmId: null
+    relationOsmId: null,
+    originLabel: null,     // Leaflet marker for "Origen" label
+    destinationLabel: null // Leaflet marker for "Destino" label
 };
 
 // Parse URL params
@@ -59,13 +61,45 @@ regionSelect.addEventListener('change', (e) => {
 // Icons (reuse from v0.1)
 function createStopIcon(number, role) {
     let color = '#e74c3c';
-    if (role === 'start') color = '#27ae60';
-    if (role === 'end') color = '#8e44ad';
+    let label = number;
+    if (role === 'start') { color = '#27ae60'; label = 'A'; }
+    if (role === 'end') { color = '#8e44ad'; label = 'B'; }
     return L.divIcon({
         className: '',
-        html: `<div class="stop-marker" style="background:${color}">${number}</div>`,
+        html: `<div class="stop-marker" style="background:${color}">${label}</div>`,
         iconSize: [28, 28], iconAnchor: [14, 14]
     });
+}
+
+function updateEndpointLabels() {
+    // Remove existing labels
+    if (state.originLabel) { map.removeLayer(state.originLabel); state.originLabel = null; }
+    if (state.destinationLabel) { map.removeLayer(state.destinationLabel); state.destinationLabel = null; }
+
+    const stops = state.points.filter(p => p.type === 'stop');
+    if (stops.length === 0) return;
+
+    const first = stops[0];
+    state.originLabel = L.marker([first.lat, first.lon], {
+        icon: L.divIcon({
+            className: 'endpoint-label origin',
+            html: 'ORIGEN',
+            iconSize: [50, 16], iconAnchor: [25, -10]
+        }),
+        interactive: false
+    }).addTo(map);
+
+    if (stops.length >= 2) {
+        const last = stops[stops.length - 1];
+        state.destinationLabel = L.marker([last.lat, last.lon], {
+            icon: L.divIcon({
+                className: 'endpoint-label destination',
+                html: 'DESTINO',
+                iconSize: [55, 16], iconAnchor: [27, -10]
+            }),
+            interactive: false
+        }).addTo(map);
+    }
 }
 
 function createWaypointIcon(number) {
@@ -130,6 +164,7 @@ function addPoint(lat, lon, type, name) {
         const pos = e.target.getLatLng();
         point.lat = pos.lat;
         point.lon = pos.lng;
+        updateEndpointLabels();
         autoRecalculate();
     });
 
@@ -191,6 +226,7 @@ function renumberStops() {
             wpNum++;
         }
     }
+    updateEndpointLabels();
 }
 
 function updateStopList() {
@@ -219,9 +255,9 @@ function updateStopList() {
             const stops = state.points.filter(p => p.type === 'stop');
             const si = stops.indexOf(point) + 1;
             num.className = 'stop-number';
-            if (si === 1) num.style.background = '#27ae60';
-            else if (si === stops.length) num.style.background = '#8e44ad';
-            num.textContent = si;
+            if (si === 1) { num.style.background = '#27ae60'; num.textContent = 'A'; num.title = 'Origen'; }
+            else if (si === stops.length && stops.length > 1) { num.style.background = '#8e44ad'; num.textContent = 'B'; num.title = 'Destino'; }
+            else { num.textContent = si; }
         } else {
             num.className = 'stop-number waypoint';
             num.textContent = 'W' + (state.points.filter(p => p.type === 'waypoint').indexOf(point) + 1);
@@ -230,7 +266,15 @@ function updateStopList() {
         const nameInput = document.createElement('input');
         nameInput.className = 'stop-name';
         nameInput.value = point.name;
-        nameInput.placeholder = point.type === 'stop' ? 'Nombre de parada' : 'Waypoint';
+        if (point.type === 'stop') {
+            const stops = state.points.filter(p => p.type === 'stop');
+            const si = stops.indexOf(point) + 1;
+            if (si === 1) nameInput.placeholder = 'Origen';
+            else if (si === stops.length && stops.length > 1) nameInput.placeholder = 'Destino';
+            else nameInput.placeholder = 'Nombre de parada';
+        } else {
+            nameInput.placeholder = 'Waypoint';
+        }
         nameInput.addEventListener('change', () => { point.name = nameInput.value; });
 
         const locateBtn = document.createElement('button');
@@ -298,6 +342,7 @@ function addPointSilent(lat, lon, type, name) {
         const pos = e.target.getLatLng();
         point.lat = pos.lat;
         point.lon = pos.lng;
+        updateEndpointLabels();
         autoRecalculate();
     });
 
@@ -324,7 +369,10 @@ async function calculateRoute(fitMap = false) {
 
     if (state.routeLayer) map.removeLayer(state.routeLayer);
     const latLngs = result.shape.map(c => [c[0], c[1]]);
-    state.routeLayer = L.polyline(latLngs, { color: '#e74c3c', weight: 5, opacity: 0.8 }).addTo(map);
+    state.routeLayer = L.polyline(latLngs, { color: '#e74c3c', weight: 5, opacity: 0.8 });
+    if (document.getElementById('toggle-valhalla-layer').checked) {
+        state.routeLayer.addTo(map);
+    }
     state.wayIds = result.wayIds;
 
     if (fitMap && latLngs.length > 0) {
@@ -572,6 +620,20 @@ document.getElementById('wp-density').addEventListener('input', (e) => {
 });
 document.getElementById('wp-density').addEventListener('change', () => {
     resetWaypoints();
+});
+
+// Layer toggles
+document.getElementById('toggle-osm-layer').addEventListener('change', (e) => {
+    if (state.originalLayer) {
+        if (e.target.checked) map.addLayer(state.originalLayer);
+        else map.removeLayer(state.originalLayer);
+    }
+});
+document.getElementById('toggle-valhalla-layer').addEventListener('change', (e) => {
+    if (state.routeLayer) {
+        if (e.target.checked) map.addLayer(state.routeLayer);
+        else map.removeLayer(state.routeLayer);
+    }
 });
 
 // Route name preview

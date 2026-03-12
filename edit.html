@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="css/style.css" />
     <style>
         .legend { position: absolute; bottom: 20px; right: 10px; background: white; padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000; font-size: 0.75rem; }
-        .legend-item { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+        .legend-item { display: flex; align-items: center; gap: 6px; margin: 3px 0; cursor: pointer; user-select: none; }
+        .legend-item input[type="checkbox"] { cursor: pointer; }
         .legend-line { width: 24px; height: 3px; border-radius: 2px; }
         .match-info { padding: 8px 12px; background: #f8f9fa; border-radius: 6px; font-size: 0.8rem; margin-top: 8px; }
         .match-good { border-left: 3px solid #27ae60; }
@@ -109,10 +110,16 @@
         <div id="map">
             <div id="instructions">Cargando ruta existente...</div>
             <div id="loading-overlay">Cargando ruta desde la base de datos...</div>
-            <!-- Legend -->
+            <!-- Legend with layer toggles -->
             <div class="legend">
-                <div class="legend-item"><div class="legend-line" style="background:#3388ff;"></div> Ruta original (OSM)</div>
-                <div class="legend-item"><div class="legend-line" style="background:#e74c3c;"></div> Ruta calculada (Valhalla)</div>
+                <label class="legend-item">
+                    <input type="checkbox" id="toggle-osm-layer" checked>
+                    <div class="legend-line" style="background:#3388ff;"></div> Ruta original (OSM)
+                </label>
+                <label class="legend-item">
+                    <input type="checkbox" id="toggle-valhalla-layer" checked>
+                    <div class="legend-line" style="background:#e74c3c;"></div> Ruta calculada (Valhalla)
+                </label>
             </div>
         </div>
     </div>
