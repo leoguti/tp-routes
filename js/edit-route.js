@@ -18,6 +18,7 @@ const state = {
 // Parse URL params
 const params = new URLSearchParams(window.location.search);
 const relationId = params.get('relation');
+const duplicateId = params.get('duplicate');
 const activeRegionKey = params.get('region') || getCurrentRegion();
 const activeRegion = REGIONS[activeRegionKey];
 
@@ -435,9 +436,10 @@ function downloadOsm() {
     const routeInfo = { ref, name: `${ref} - ${from} - ${to}`, from, to, operator, network };
     const stops = state.points.filter(p => p.type === 'stop').map(p => ({ lat: p.lat, lon: p.lon, name: p.name }));
 
-    // Use existing OSM ID for the relation (modify, not create)
-    const osmContent = generateOsmFileForExisting(routeInfo, stops, state.wayIds, osmId);
-    const filename = `ruta_${ref}_${from}_${to}.osm`.replace(/\s+/g, '_').toLowerCase();
+    // Use existing OSM ID if editing, or -1 for new route (duplicate/variant)
+    const osmContent = generateOsmFileForExisting(routeInfo, stops, state.wayIds, osmId || '-1');
+    const prefix = osmId ? 'ruta' : 'nueva_ruta';
+    const filename = `${prefix}_${ref}_${from}_${to}.osm`.replace(/\s+/g, '_').toLowerCase();
     downloadFile(osmContent, filename);
     setStatus(`Descargado: ${filename}`, 'success');
 }
@@ -449,7 +451,9 @@ function generateOsmFileForExisting(routeInfo, stops, wayIds, existingOsmId) {
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<osm version="0.6" generator="TP Routes Editor v2">\n';
     xml += '  <changeset>\n';
-    xml += `    <tag k="comment" v="Update bus route ${routeInfo.ref || ''} (${routeInfo.from || ''} - ${routeInfo.to || ''}) PTv2 #tp-routes"/>\n`;
+    const isNewRoute = !existingOsmId || existingOsmId === '-1';
+    const action = isNewRoute ? 'Add new' : 'Update';
+    xml += `    <tag k="comment" v="${action} bus route ${routeInfo.ref || ''} (${routeInfo.from || ''} - ${routeInfo.to || ''}) PTv2 #tp-routes"/>\n`;
     xml += `    <tag k="source" v="TP Routes - Editor v2"/>\n`;
     xml += `    <tag k="hashtags" v="#tp-routes"/>\n`;
     xml += '  </changeset>\n\n';
@@ -467,9 +471,10 @@ function generateOsmFileForExisting(routeInfo, stops, wayIds, existingOsmId) {
     }
     xml += '\n';
 
-    // Relation (modify existing)
+    // Relation (modify existing or create new)
     const relId = existingOsmId || '-1';
-    xml += `  <relation id="${relId}" action="modify">\n`;
+    const isNew = relId === '-1';
+    xml += `  <relation id="${relId}"${isNew ? '' : ' action="modify"'}>\n`;
     xml += '    <tag k="type" v="route"/>\n';
     xml += '    <tag k="route" v="bus"/>\n';
     xml += '    <tag k="public_transport:version" v="2"/>\n';
@@ -595,6 +600,86 @@ async function loadRelation(osmId) {
     }
 }
 
+// --- Load as duplicate (new route based on existing) ---
+async function loadAsDuplicate(osmId) {
+    try {
+        const detailRes = await fetch(`/api/relation/${osmId}?region=${activeRegionKey}`);
+        if (!detailRes.ok) throw new Error('No se pudo cargar la relacion');
+        const detail = await detailRes.json();
+
+        // Fill form but WITHOUT setting the OSM ID (this will be a new relation)
+        state.relationOsmId = null;
+        document.getElementById('relation-osm-id').value = '';
+        document.getElementById('route-ref').value = (detail.ref || '') + '-v';
+        document.getElementById('route-from').value = detail.from || '';
+        document.getElementById('route-to').value = detail.to || '';
+        document.getElementById('route-operator').value = detail.operator || '';
+        document.getElementById('route-network').value = detail.network || activeRegion.defaultNetwork;
+        document.getElementById('panel-title').innerHTML =
+            `<span style="color:#8e44ad;">DUPLICANDO:</span> ${detail.ref || ''} ${detail.name || 'Relacion ' + osmId}`;
+
+        // Fetch geometry from the source route
+        const geoRes = await fetch(`/api/geometry/${osmId}`);
+        if (!geoRes.ok) throw new Error('No se pudo cargar la geometria');
+        const geojson = await geoRes.json();
+        state.originalGeojson = geojson;
+
+        // Draw original route in blue (reference)
+        state.originalLayer = L.geoJSON(geojson, {
+            style: () => ({ color: '#3388ff', weight: 6, opacity: 0.5 }),
+            pointToLayer: (feature, latlng) => {
+                return L.circleMarker(latlng, {
+                    radius: 5, color: '#3388ff', fillColor: '#3388ff',
+                    fillOpacity: 0.5, weight: 1, interactive: false
+                });
+            },
+            interactive: false
+        }).addTo(map);
+
+        const bounds = state.originalLayer.getBounds();
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60] });
+
+        loadSmartWaypoints(geojson);
+
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.remove();
+
+        setStatus('Ruta duplicada. Modifica el recorrido para crear la variante.', 'success');
+        updateRouteNamePreview();
+
+    } catch (err) {
+        console.error(err);
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.textContent = `Error: ${err.message}`;
+        setStatus(`Error: ${err.message}`, 'error');
+    }
+}
+
+// Duplicate current route in-editor
+function duplicateCurrentRoute() {
+    // Clear the OSM relation ID so download creates a new relation
+    state.relationOsmId = null;
+    document.getElementById('relation-osm-id').value = '';
+
+    // Append -v to ref if not already a variant
+    const refInput = document.getElementById('route-ref');
+    if (!refInput.value.endsWith('-v')) {
+        refInput.value += '-v';
+    }
+
+    document.getElementById('panel-title').innerHTML =
+        `<span style="color:#8e44ad;">VARIANTE:</span> ${refInput.value} ${document.getElementById('route-from').value} - ${document.getElementById('route-to').value}`;
+
+    // Update URL to remove relation param (so refresh doesn't overwrite)
+    const newParams = new URLSearchParams(window.location.search);
+    newParams.delete('relation');
+    newParams.delete('duplicate');
+    history.replaceState(null, '', `?${newParams.toString()}`);
+
+    setStatus('Modo variante: modifica el recorrido y descarga como ruta nueva.', 'success');
+    updateRouteNamePreview();
+}
+
 // Map click
 map.on('click', (e) => addPoint(e.latlng.lat, e.latlng.lng, state.mode));
 
@@ -611,6 +696,7 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('btn-calculate').addEventListener('click', () => calculateRoute(false));
 document.getElementById('btn-download').addEventListener('click', downloadOsm);
 document.getElementById('btn-reset-waypoints').addEventListener('click', resetWaypoints);
+document.getElementById('btn-duplicate').addEventListener('click', duplicateCurrentRoute);
 document.getElementById('btn-mode-stop').addEventListener('click', () => setMode('stop'));
 document.getElementById('btn-mode-waypoint').addEventListener('click', () => setMode('waypoint'));
 
@@ -655,6 +741,8 @@ setMode('waypoint');
 
 if (relationId) {
     loadRelation(relationId);
+} else if (duplicateId) {
+    loadAsDuplicate(duplicateId);
 } else {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.textContent = 'No se especifico relacion. Usa ?relation=OSM_ID';

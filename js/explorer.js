@@ -248,6 +248,7 @@ function showDetailPanel(r) {
                 <a href="${osmUrl}" target="_blank" class="action-btn">OSM</a>
                 <a href="${josmUrl}" class="action-btn">JOSM</a>
                 <a href="/edit.html?relation=${osmId}&region=${currentRegion}" class="action-btn" style="background:#e74c3c;color:white;">Editar Ruta</a>
+                <a href="/edit.html?duplicate=${osmId}&region=${currentRegion}" class="action-btn" style="background:#8e44ad;color:white;">Duplicar</a>
             </div>
         </div>
 
