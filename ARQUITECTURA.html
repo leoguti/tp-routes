@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TP Routes — Arquitectura</title>
+    <title>TP Routes — Arquitectura v2.0</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, sans-serif; background: #0f1129; color: #e0e6f0; line-height: 1.6; }
 
-        /* Layout */
         #nav {
             position: fixed; top: 0; left: 0; width: 220px; height: 100vh;
             background: #0a0c1e; border-right: 1px solid rgba(255,255,255,.07);
@@ -16,72 +15,69 @@
         }
         #nav .logo { padding: 0 20px 20px; font-size: 1rem; font-weight: 700; color: white; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 12px; }
         #nav .logo span { color: #4a9eff; }
-        #nav a {
-            display: block; padding: 7px 20px; font-size: 0.82rem; color: #6878aa;
-            text-decoration: none; transition: color .15s, background .15s;
-        }
+        #nav .version { padding: 0 20px 12px; font-size: 0.7rem; color: #3a4a6a; }
+        #nav a { display: block; padding: 7px 20px; font-size: 0.82rem; color: #6878aa; text-decoration: none; transition: color .15s, background .15s; }
         #nav a:hover { color: white; background: rgba(255,255,255,.04); }
         #nav a.section { color: #8892bb; font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .6px; margin-top: 16px; padding-bottom: 4px; pointer-events: none; }
 
         #main { margin-left: 220px; padding: 48px 48px 80px; max-width: 860px; }
 
-        /* Sections */
         section { margin-bottom: 56px; }
         h1 { font-size: 2rem; font-weight: 800; color: white; margin-bottom: 8px; }
         h1 span { color: #4a9eff; }
-        .subtitle { color: #6878aa; font-size: 0.95rem; margin-bottom: 32px; }
+        .subtitle { color: #6878aa; font-size: 0.95rem; margin-bottom: 8px; }
+        .version-badge { display: inline-block; background: rgba(74,158,255,.15); border: 1px solid rgba(74,158,255,.3); color: #4a9eff; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-bottom: 28px; }
         h2 { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.07); }
         h3 { font-size: 0.95rem; font-weight: 700; color: #4a9eff; margin: 20px 0 8px; }
         p { color: #8892aa; font-size: 0.88rem; margin-bottom: 12px; }
 
-        /* Principles */
         .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-        .principle {
-            background: rgba(74,158,255,.07); border: 1px solid rgba(74,158,255,.15);
-            border-radius: 10px; padding: 16px;
-        }
+        .principle { background: rgba(74,158,255,.07); border: 1px solid rgba(74,158,255,.15); border-radius: 10px; padding: 16px; }
         .principle .num { font-size: 1.4rem; font-weight: 800; color: #4a9eff; margin-bottom: 4px; }
         .principle .text { font-size: 0.82rem; color: #8892aa; }
 
         /* Roles */
-        .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-        .role {
-            background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-            border-radius: 8px; padding: 14px;
-        }
-        .role-badge {
-            display: inline-block; padding: 2px 10px; border-radius: 12px;
-            font-size: 0.72rem; font-weight: 700; margin-bottom: 8px;
-        }
-        .role-viewer { background: rgba(108,117,125,.2); color: #aaa; }
+        .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .role { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 14px; }
+        .role-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-bottom: 8px; }
         .role-contributor { background: rgba(39,174,96,.2); color: #4edb8a; }
         .role-editor { background: rgba(74,158,255,.2); color: #4a9eff; }
         .role-admin { background: rgba(230,126,34,.2); color: #f39c12; }
+        .role h4 { color: white; font-size: 0.82rem; margin-bottom: 4px; }
         .role p { font-size: 0.78rem; color: #6878aa; margin: 0; }
 
-        /* Entity cards */
-        .entity {
-            background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
-            border-radius: 10px; padding: 18px 20px; margin-bottom: 12px;
-        }
-        .entity-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .entity-icon { font-size: 1.4rem; }
-        .entity-title { font-size: 0.95rem; font-weight: 700; color: white; }
-        .entity-table { font-size: 0.75rem; color: #8892aa; line-height: 1.2; }
-        .entity-sub { font-size: 0.78rem; color: #6878aa; margin-top: 8px; }
-        .entity-sub strong { color: #4a9eff; }
+        /* Flow */
+        .flow { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 20px 24px; font-family: monospace; font-size: 0.82rem; color: #8892aa; line-height: 2; }
+        .flow .highlight { color: #4a9eff; }
+        .flow .arrow { color: #3a4a6a; }
 
-        .fields { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .field {
-            background: rgba(255,255,255,.06); border-radius: 5px;
-            padding: 3px 9px; font-size: 0.72rem; color: #8892aa; font-family: monospace;
-        }
+        /* Entities */
+        .entity { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
+        .entity-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .entity-icon { font-size: 1.3rem; }
+        .entity-title { font-size: 0.95rem; font-weight: 700; color: white; }
+        .entity-sub { font-size: 0.78rem; color: #6878aa; margin-top: 8px; line-height: 1.5; }
+        .entity-sub strong { color: #4a9eff; }
+        .new-tag { display: inline-block; background: rgba(39,174,96,.2); color: #4edb8a; font-size: 0.65rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+        .changed-tag { display: inline-block; background: rgba(230,126,34,.2); color: #f39c12; font-size: 0.65rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+
+        .fields { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .field { background: rgba(255,255,255,.06); border-radius: 5px; padding: 3px 9px; font-size: 0.72rem; color: #8892aa; font-family: monospace; }
         .field.key { background: rgba(74,158,255,.15); color: #4a9eff; }
         .field.important { background: rgba(39,174,96,.15); color: #4edb8a; }
         .field.new { background: rgba(230,126,34,.15); color: #f39c12; }
 
+        /* Tasks */
+        .tasks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .task-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 14px; }
+        .task-card .tipo { font-family: monospace; font-size: 0.78rem; color: #4a9eff; margin-bottom: 6px; font-weight: 700; }
+        .task-card .desc { font-size: 0.78rem; color: #6878aa; margin-bottom: 6px; }
+        .task-card .quien { font-size: 0.72rem; }
+        .contributor-tag { color: #4edb8a; }
+        .editor-tag { color: #4a9eff; }
+
         /* Progress */
-        .progress-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .progress-table { width: 100%; border-collapse: collapse; }
         .progress-table th { text-align: left; font-size: 0.75rem; color: #6878aa; padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.07); }
         .progress-table td { font-size: 0.82rem; color: #8892aa; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
         .progress-table td:first-child { color: white; font-weight: 600; }
@@ -91,49 +87,28 @@
 
         /* Pages */
         .pages { display: grid; gap: 8px; }
-        .page-item {
-            display: flex; align-items: flex-start; gap: 12px;
-            background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
-            border-radius: 8px; padding: 12px 16px;
-        }
-        .page-url { font-family: monospace; font-size: 0.8rem; color: #4a9eff; min-width: 140px; }
+        .page-item { display: flex; align-items: flex-start; gap: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 8px; padding: 12px 16px; }
+        .page-url { font-family: monospace; font-size: 0.8rem; color: #4a9eff; min-width: 120px; }
         .page-desc { font-size: 0.82rem; color: #8892aa; }
 
         /* Tools */
-        .tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-        .tool {
-            background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
-            border-radius: 8px; padding: 14px;
-        }
-        .tool-name { font-weight: 700; color: white; font-size: 0.88rem; margin-bottom: 4px; }
+        .tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+        .tool { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 14px; }
+        .tool-name { font-weight: 700; color: white; font-size: 0.88rem; margin-bottom: 2px; }
         .tool-url { font-size: 0.72rem; color: #4a9eff; font-family: monospace; margin-bottom: 6px; }
         .tool p { font-size: 0.78rem; color: #6878aa; margin: 0; }
 
         /* Phases */
         .phases { display: grid; gap: 10px; }
-        .phase {
-            background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
-            border-radius: 10px; padding: 16px 18px;
-            display: flex; gap: 14px; align-items: flex-start;
-        }
-        .phase-num {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: rgba(74,158,255,.15); border: 1px solid rgba(74,158,255,.3);
-            color: #4a9eff; font-weight: 800; font-size: 0.9rem;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
+        .phase { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; }
+        .phase-num { width: 32px; height: 32px; border-radius: 50%; background: rgba(74,158,255,.15); border: 1px solid rgba(74,158,255,.3); color: #4a9eff; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .phase-num.active { background: #4a9eff; color: white; }
         .phase h3 { color: white; font-size: 0.9rem; margin: 0 0 4px; }
-        .phase p { margin: 0; font-size: 0.8rem; }
-        .phase ul { font-size: 0.8rem; color: #6878aa; padding-left: 16px; margin-top: 4px; }
+        .phase p { margin: 0 0 6px; font-size: 0.8rem; }
+        .phase ul { font-size: 0.8rem; color: #6878aa; padding-left: 16px; }
         .phase ul li { margin-bottom: 2px; }
+        .tag-now { display: inline-block; background: rgba(39,174,96,.2); color: #4edb8a; font-size: 0.68rem; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-left: 6px; }
 
-        /* Tag */
-        .tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; margin-left: 6px; vertical-align: middle; }
-        .tag-now { background: rgba(39,174,96,.2); color: #4edb8a; }
-        .tag-soon { background: rgba(74,158,255,.2); color: #4a9eff; }
-
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
@@ -141,6 +116,7 @@
         @media (max-width: 768px) {
             #nav { display: none; }
             #main { margin-left: 0; padding: 24px 16px; }
+            .tasks-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -148,247 +124,256 @@
 
 <nav id="nav">
     <div class="logo">TP <span>Routes</span></div>
+    <div class="version">Arquitectura v2.0 · Abril 2026</div>
     <a href="#vision" class="section">Visión</a>
     <a href="#vision">Qué es</a>
     <a href="#principios">Principios</a>
-    <a href="#roles">Roles</a>
+    <a href="#roles">Roles y flujo</a>
     <a href="#entidades" class="section">Datos</a>
     <a href="#entidades">Entidades</a>
+    <a href="#tareas">Tareas automáticas</a>
     <a href="#progreso">Progreso GTFS</a>
     <a href="#plataforma" class="section">Plataforma</a>
     <a href="#paginas">Páginas</a>
     <a href="#herramientas">Herramientas</a>
     <a href="#fases" class="section">Roadmap</a>
-    <a href="#fases">Fases</a>
+    <a href="#fases">5 fases</a>
     <br>
     <a href="/home.html" style="color:#4a9eff;margin-top:12px;">← Volver al sitio</a>
 </nav>
 
 <main id="main">
 
-    <!-- Visión -->
     <section id="vision">
         <h1>TP Routes <span>Arquitectura</span></h1>
-        <p class="subtitle">Plataforma colaborativa para generar datos GTFS de transporte público abierto — v1.0 · Abril 2026</p>
+        <p class="subtitle">Plataforma colaborativa para generar datos GTFS de transporte público abierto</p>
+        <div class="version-badge">v2.0 · Abril 2026</div>
 
         <h2>Visión</h2>
-        <p>Cualquier persona puede contribuir a mapear rutas de bus. El objetivo final es exportar un archivo <strong style="color:white">GTFS válido</strong> por región, que cualquier app de transporte pueda consumir.</p>
+        <p>Cualquier persona puede contribuir a mapear rutas de bus — <strong style="color:white">sin necesitar conocimientos de OSM</strong>. El objetivo final es exportar un archivo GTFS válido por región que cualquier app de transporte pueda consumir.</p>
         <p>Los datos vienen de tres fuentes: el <strong style="color:white">terminal de Tunja</strong> (rutas y tarifas), <strong style="color:white">OpenStreetMap</strong> (trazados y paradas ya mapeadas) y los <strong style="color:white">colaboradores</strong> que completan lo que falta.</p>
     </section>
 
-    <!-- Principios -->
     <section id="principios">
         <h2>Principios</h2>
         <div class="principles">
             <div class="principle"><div class="num">1</div><div class="text">La <strong>ruta</strong> es la unidad central — todo pertenece a una ruta</div></div>
             <div class="principle"><div class="num">2</div><div class="text"><strong>GTFS como destino</strong> — cada campo existe porque GTFS lo necesita</div></div>
-            <div class="principle"><div class="num">3</div><div class="text"><strong>Progreso visible</strong> — cada ruta tiene un % hacia GTFS listo</div></div>
-            <div class="principle"><div class="num">4</div><div class="text"><strong>Proponer → Aprobar</strong> — cualquiera contribuye, alguien aprueba</div></div>
-            <div class="principle"><div class="num">5</div><div class="text"><strong>Multi-región</strong> — Boyacá, Cochabamba, Kigali... cada una independiente</div></div>
-            <div class="principle"><div class="num">6</div><div class="text"><strong>Merge con OSM</strong> — las rutas del terminal se vinculan a las ya mapeadas</div></div>
+            <div class="principle"><div class="num">3</div><div class="text"><strong>No bloquear colaboración</strong> — contribuir sin saber OSM</div></div>
+            <div class="principle"><div class="num">4</div><div class="text"><strong>Progreso automático</strong> — el sistema calcula qué falta, sin tareas manuales</div></div>
+            <div class="principle"><div class="num">5</div><div class="text"><strong>Staging → Producción</strong> — datos del terminal pasan por revisión</div></div>
+            <div class="principle"><div class="num">6</div><div class="text"><strong>Multi-región</strong> — Boyacá, Cochabamba, Kigali... cada una independiente</div></div>
         </div>
     </section>
 
-    <!-- Roles -->
     <section id="roles">
-        <h2>Roles de usuario</h2>
-        <p>Por ahora sin restricción de acceso — el campo de rol existe pero no bloquea nada. Se activa en una fase posterior.</p>
+        <h2>Roles y flujo de colaboración</h2>
         <div class="roles">
             <div class="role">
-                <div class="role-badge role-viewer">viewer</div>
-                <p>Ver rutas, paradas y mapa. Solo lectura.</p>
-            </div>
-            <div class="role">
                 <div class="role-badge role-contributor">contributor</div>
-                <p>Agregar y editar rutas, paradas, tarifas, horarios. Los cambios quedan en revisión.</p>
+                <h4>Estudiantes / Funcionarios terminal</h4>
+                <p>Localizar coordenadas de paradas. Ingresar tarifas. Ingresar horarios. No necesitan saber OSM.</p>
             </div>
             <div class="role">
                 <div class="role-badge role-editor">editor</div>
-                <p>Aprobar cambios de contributors. Editar directamente sin revisión.</p>
+                <h4>Responsable de ruta</h4>
+                <p>Integra todo. Ordena paradas, traza con Valhalla, sube a OSM cuando está completo. Conoce OSM.</p>
             </div>
             <div class="role">
                 <div class="role-badge role-admin">admin</div>
-                <p>Todo lo anterior + gestión de usuarios, regiones y exportar GTFS.</p>
+                <h4>Coordinador del proyecto</h4>
+                <p>Analiza calidad del GTFS generado, valida y publica el feed. No revisa ruta por ruta.</p>
             </div>
         </div>
+
+        <div class="flow">
+<span class="highlight">Contributors</span><br>
+&nbsp;&nbsp;├── Localizan coordenadas de paradas<br>
+&nbsp;&nbsp;└── Ingresan tarifas e ingresar horarios<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">↓</span><br>
+<span class="highlight">Editor</span> (responsable de ruta)<br>
+&nbsp;&nbsp;├── Ordena paradas en la ruta<br>
+&nbsp;&nbsp;├── Genera trazado con Valhalla<br>
+&nbsp;&nbsp;└── Sube a OSM cuando está completo <span style="color:#3a5a3a">← sin esperar al admin</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">↓</span><br>
+<span class="highlight">Admin</span><br>
+&nbsp;&nbsp;└── Analiza GTFS completo → valida → publica feed
+        </div>
+
+        <p style="margin-top:12px;font-size:0.78rem;color:#3a4a6a">Por ahora sin restricción de acceso — los roles existen pero no bloquean. Se activan en fase posterior.</p>
     </section>
 
-    <!-- Entidades -->
     <section id="entidades">
         <h2>Entidades de datos</h2>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">🗺️</span><span class="entity-title">Región <code style="font-size:0.75rem;color:#6878aa">regions</code></span></div>
-            <p style="font-size:0.82rem">Contexto geográfico independiente. Cada región tiene su propio GTFS, su instancia de Valhalla y su configuración de Overpass.</p>
+            <div class="entity-header"><span class="entity-icon">🗺️</span><span class="entity-title">Región <code style="font-size:0.72rem;color:#6878aa">regions</code></span></div>
+            <p style="font-size:0.82rem">Contexto geográfico independiente. Cada región genera su propio GTFS, con su Valhalla y su Overpass.</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">nombre</span><span class="field">tipo</span><span class="field">país</span><span class="field">bounds</span><span class="field">centro_lat</span><span class="field">centro_lon</span><span class="field">valhalla_url</span><span class="field">overpass_area</span><span class="field">gtfs_agency_name</span>
+                <span class="field key">id</span><span class="field important">nombre</span><span class="field">tipo</span><span class="field">país</span><span class="field">bounds</span><span class="field">centro_lat</span><span class="field">centro_lon</span><span class="field">valhalla_url</span><span class="field">overpass_area</span><span class="field">gtfs_agency_timezone</span>
             </div>
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">🚌</span><span class="entity-title">Ruta <code style="font-size:0.75rem;color:#6878aa">routes</code> — entidad central</span></div>
-            <p style="font-size:0.82rem">Combinación única de origen + destino + operador dentro de una región. Todo lo demás (paradas, trazado, tarifas, horarios) pertenece a una ruta.</p>
+            <div class="entity-header"><span class="entity-icon">🏢</span><span class="entity-title">Operador <code style="font-size:0.72rem;color:#6878aa">operators</code> <span class="new-tag">NUEVO</span></span></div>
+            <p style="font-size:0.82rem">Empresa de transporte normalizada. Equivale a <code style="font-size:0.75rem">agency.txt</code> en GTFS. Evita duplicados por diferencias de escritura ("Autoboy" vs "AUTOBOY S.A.").</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">origen</span><span class="field important">destino</span><span class="field important">operador</span><span class="field">ref</span><span class="field">red</span><span class="field">color</span><span class="field">telefono</span><span class="field">resolucion</span><span class="field">tipo_servicio</span><span class="field important">estado</span><span class="field important">progreso_pct</span><span class="field new">osm_relation_id</span><span class="field new">osm_merged</span><span class="field new">terminal_route_id</span><span class="field">creado_por</span><span class="field">aprobado_por</span>
-            </div>
-            <div class="entity-sub"><strong>Merge con OSM:</strong> <code style="font-size:0.75rem">terminal_route_id</code> vincula con la importación del terminal. <code style="font-size:0.75rem">osm_relation_id</code> vincula con la relación OSM existente. El merge combina datos del terminal con trazado/paradas de OSM.</div>
-        </div>
-
-        <div class="entity">
-            <div class="entity-header"><span class="entity-icon">📍</span><span class="entity-title">Parada <code style="font-size:0.75rem;color:#6878aa">stops</code></span></div>
-            <p style="font-size:0.82rem">Parada física compartida entre múltiples rutas. Un terminal de municipio es una parada que usan todas las rutas que pasan por allí.</p>
-            <div class="fields">
-                <span class="field key">id</span><span class="field important">nombre</span><span class="field important">municipio</span><span class="field important">lat</span><span class="field important">lon</span><span class="field">tipo</span><span class="field">direccion</span><span class="field new">osm_node_id</span><span class="field">estado</span><span class="field">creado_por</span>
+                <span class="field key">id</span><span class="field important">nombre</span><span class="field">nombre_corto</span><span class="field">telefono</span><span class="field">email</span><span class="field">url</span><span class="field">gtfs_agency_id</span><span class="field">region_id</span>
             </div>
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">🔗</span><span class="entity-title">Paradas de ruta <code style="font-size:0.75rem;color:#6878aa">route_stops</code></span></div>
-            <p style="font-size:0.82rem">Orden de paradas dentro de una ruta específica. Una parada puede aparecer en múltiples rutas con diferente orden.</p>
+            <div class="entity-header"><span class="entity-icon">🚌</span><span class="entity-title">Ruta <code style="font-size:0.72rem;color:#6878aa">routes</code> — entidad central <span class="changed-tag">ACTUALIZADO</span></span></div>
+            <p style="font-size:0.82rem">Combinación única de origen + destino + operador + dirección. Ida y vuelta son la misma ruta GTFS con <code style="font-size:0.75rem">direction_id</code> diferente.</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">stop_id</span><span class="field important">orden</span><span class="field">tiempo_desde_inicio_min</span><span class="field">distancia_desde_inicio_km</span><span class="field">es_terminal_origen</span><span class="field">es_terminal_destino</span>
+                <span class="field key">id</span><span class="field important">origen</span><span class="field important">destino</span><span class="field important">operator_id</span><span class="field">ref</span><span class="field">red</span><span class="field">color</span><span class="field">resolucion</span><span class="field">tipo_servicio</span><span class="field new">direction</span><span class="field new">route_parent_id</span><span class="field important">estado</span><span class="field important">progreso_pct</span><span class="field important">responsable_id</span><span class="field">osm_relation_id</span><span class="field">osm_merged</span><span class="field">terminal_route_id</span>
+            </div>
+            <div class="entity-sub"><strong>direction:</strong> ida | vuelta &nbsp;·&nbsp; <strong>route_parent_id:</strong> agrupa ida y vuelta como misma ruta GTFS &nbsp;·&nbsp; <strong>terminal_route_id:</strong> FK a staging — saber de dónde vino</div>
+        </div>
+
+        <div class="entity">
+            <div class="entity-header"><span class="entity-icon">📍</span><span class="entity-title">Parada <code style="font-size:0.72rem;color:#6878aa">stops</code></span></div>
+            <p style="font-size:0.82rem">Punto físico compartido por múltiples rutas. El terminal de cada municipio es una parada que usan todas las rutas que pasan por allí.</p>
+            <div class="fields">
+                <span class="field key">id</span><span class="field important">nombre</span><span class="field important">municipio</span><span class="field important">lat</span><span class="field important">lon</span><span class="field">tipo</span><span class="field">direccion</span><span class="field">osm_node_id</span><span class="field">estado</span><span class="field">region_id</span><span class="field">creado_por</span>
             </div>
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">〰️</span><span class="entity-title">Trazado <code style="font-size:0.75rem;color:#6878aa">route_shapes</code></span></div>
-            <p style="font-size:0.82rem">Geometría de la ruta generada por Valhalla o importada de OSM. Un LineString GeoJSON que define el recorrido exacto por las calles.</p>
+            <div class="entity-header"><span class="entity-icon">🔗</span><span class="entity-title">Paradas de ruta <code style="font-size:0.72rem;color:#6878aa">route_stops</code></span></div>
+            <p style="font-size:0.82rem">Orden de paradas dentro de una ruta. Una parada puede aparecer en múltiples rutas con diferente secuencia.</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">geojson</span><span class="field">distancia_km</span><span class="field">generado_con</span><span class="field">valhalla_waypoints</span>
+                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">stop_id</span><span class="field important">orden</span><span class="field">tiempo_desde_inicio_min</span><span class="field">distancia_desde_inicio_km</span><span class="field">es_origen</span><span class="field">es_destino</span>
             </div>
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">💰</span><span class="entity-title">Tarifas <code style="font-size:0.75rem;color:#6878aa">route_fares</code></span></div>
-            <p style="font-size:0.82rem">Precio por tramo. En rutas intermunicipales el precio cambia según dónde sube y baja el pasajero.</p>
+            <div class="entity-header"><span class="entity-icon">〰️</span><span class="entity-title">Trazado <code style="font-size:0.72rem;color:#6878aa">route_shapes</code></span></div>
+            <p style="font-size:0.82rem">Geometría guardada en Postgres. <strong style="color:white">Postgres es fuente de verdad</strong> — OSM es destino de publicación, nunca fuente. Si la ruta existe en OSM se importa el shape al crear.</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">stop_origen_id</span><span class="field important">stop_destino_id</span><span class="field important">tarifa_cop</span><span class="field">moneda</span><span class="field">vigente_desde</span><span class="field">fuente</span>
+                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">geojson</span><span class="field">distancia_km</span><span class="field">generado_con</span><span class="field">valhalla_waypoints</span><span class="field">creada_en</span>
             </div>
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">🕐</span><span class="entity-title">Horarios <code style="font-size:0.75rem;color:#6878aa">route_schedules</code></span></div>
-            <p style="font-size:0.82rem">Días y horas de operación. Responsabilidad de los funcionarios del terminal — ellos ingresan y validan esta información.</p>
+            <div class="entity-header"><span class="entity-icon">💰</span><span class="entity-title">Tarifas <code style="font-size:0.72rem;color:#6878aa">route_fares</code></span></div>
+            <p style="font-size:0.82rem">Precio por tramo origen→destino. Por ahora solo desde Tunja. Tramos intermedios (Paipa→Sogamoso) se agregan en fases posteriores cuando los funcionarios los provean.</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">dias_operacion</span><span class="field important">primer_servicio</span><span class="field important">ultimo_servicio</span><span class="field important">frecuencia_min</span><span class="field">temporada</span><span class="field">fuente</span><span class="field">creado_por</span>
+                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">stop_origen_id</span><span class="field important">stop_destino_id</span><span class="field important">tarifa_cop</span><span class="field">moneda</span><span class="field">vigente_desde</span><span class="field">fuente</span><span class="field">creado_por</span>
             </div>
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">✅</span><span class="entity-title">Tareas <code style="font-size:0.75rem;color:#6878aa">tasks</code></span></div>
-            <p style="font-size:0.82rem">Sistema de asignación de trabajo pendiente. Cada tarea está asociada a una ruta o parada específica.</p>
+            <div class="entity-header"><span class="entity-icon">🕐</span><span class="entity-title">Horarios <code style="font-size:0.72rem;color:#6878aa">route_trips</code> <span class="changed-tag">ACTUALIZADO</span></span></div>
+            <p style="font-size:0.82rem">Salidas fijas para rutas intermunicipales — no frecuencias. Un registro por horario de salida. En Boyacá los buses tienen horas fijas, no salen "cada 30 minutos".</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">tipo</span><span class="field">route_id</span><span class="field">stop_id</span><span class="field important">titulo</span><span class="field important">estado</span><span class="field important">asignado_a</span><span class="field">prioridad</span><span class="field">fecha_limite</span>
+                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">hora_salida</span><span class="field important">dias</span><span class="field">temporada</span><span class="field">creado_por</span>
             </div>
+            <div class="entity-sub">Para rutas <strong>urbanas</strong> con frecuencia constante: campo <code style="font-size:0.75rem">frecuencia_min</code> en vez de trips individuales.</div>
+        </div>
+
+        <div class="entity">
+            <div class="entity-header"><span class="entity-icon">✅</span><span class="entity-title">Tareas automáticas <code style="font-size:0.72rem;color:#6878aa">route_tasks</code> <span class="changed-tag">ACTUALIZADO</span></span></div>
+            <p style="font-size:0.82rem">Generadas automáticamente al promover una ruta desde staging. Se cierran solas cuando el dato existe. Máximo 5 por ruta. Cada tarea puede tener su propio responsable distinto al de la ruta.</p>
+            <div class="fields">
+                <span class="field key">id</span><span class="field important">route_id</span><span class="field important">tipo</span><span class="field important">estado</span><span class="field important">asignado_a</span><span class="field">creada_en</span><span class="field">completada_en</span>
+            </div>
+        </div>
+
+        <div class="entity">
+            <div class="entity-header"><span class="entity-icon">📥</span><span class="entity-title">Staging importación <code style="font-size:0.72rem;color:#6878aa">terminal_routes</code></span></div>
+            <p style="font-size:0.82rem">Datos crudos importados del terminal. Zona de revisión — nunca van directo a <code style="font-size:0.75rem">routes</code>. Se mantiene como registro histórico. Al promover una fila, <code style="font-size:0.75rem">routes.terminal_route_id</code> apunta aquí.</p>
         </div>
 
     </section>
 
-    <!-- Progreso -->
+    <section id="tareas">
+        <h2>Tareas automáticas por ruta</h2>
+        <p>Cuando una ruta se promueve desde staging, el sistema genera estas tareas automáticamente según lo que falta. Se cierran solas cuando el dato existe — no hay que marcarlas manualmente.</p>
+        <div class="tasks-grid">
+            <div class="task-card">
+                <div class="tipo">localizar_paradas</div>
+                <div class="desc">Encontrar coordenadas exactas de cada parada de la ruta en el territorio.</div>
+                <div class="quien"><span class="contributor-tag">● contributor</span> — estudiante o persona con conocimiento del terreno</div>
+            </div>
+            <div class="task-card">
+                <div class="tipo">ingresar_tarifas</div>
+                <div class="desc">Ingresar los valores de tarifa por tramo según la lista oficial del terminal.</div>
+                <div class="quien"><span class="contributor-tag">● contributor</span> — funcionario del terminal</div>
+            </div>
+            <div class="task-card">
+                <div class="tipo">asignar_paradas</div>
+                <div class="desc">Ordenar las paradas localizadas dentro de la ruta con la secuencia correcta.</div>
+                <div class="quien"><span class="editor-tag">● editor</span> — responsable de la ruta</div>
+            </div>
+            <div class="task-card">
+                <div class="tipo">trazar_ruta</div>
+                <div class="desc">Generar el shape de la ruta usando Valhalla y las paradas asignadas.</div>
+                <div class="quien"><span class="editor-tag">● editor</span> — responsable de la ruta</div>
+            </div>
+            <div class="task-card">
+                <div class="tipo">ingresar_horarios</div>
+                <div class="desc">Registrar los horarios de salida fijos de la ruta (hora, días, temporada).</div>
+                <div class="quien"><span class="editor-tag">● editor</span> — responsable de la ruta (datos del terminal)</div>
+            </div>
+        </div>
+    </section>
+
     <section id="progreso">
-        <h2>Progreso de una ruta hacia GTFS</h2>
-        <p>Cada ruta tiene un porcentaje calculado automáticamente. 100% = lista para exportar.</p>
+        <h2>Progreso hacia GTFS (%)</h2>
+        <p>Calculado automáticamente. 100% = ruta lista para exportar al GTFS.</p>
         <table class="progress-table">
-            <thead>
-                <tr><th>Fase</th><th>Peso</th><th>Condición</th></tr>
-            </thead>
+            <thead><tr><th>Fase</th><th>Peso</th><th>Condición</th></tr></thead>
             <tbody>
-                <tr>
-                    <td>Datos básicos</td>
-                    <td><div class="weight-bar"><div class="bar" style="width:40px"></div><span class="pct">20%</span></div></td>
-                    <td style="font-size:0.78rem">origen, destino, operador y ref completos</td>
-                </tr>
-                <tr>
-                    <td>Paradas</td>
-                    <td><div class="weight-bar"><div class="bar" style="width:40px"></div><span class="pct">20%</span></div></td>
-                    <td style="font-size:0.78rem">≥ 2 paradas con coordenadas asignadas</td>
-                </tr>
-                <tr>
-                    <td>Trazado</td>
-                    <td><div class="weight-bar"><div class="bar" style="width:40px"></div><span class="pct">20%</span></div></td>
-                    <td style="font-size:0.78rem">shape generado con Valhalla o importado de OSM</td>
-                </tr>
-                <tr>
-                    <td>Tarifas</td>
-                    <td><div class="weight-bar"><div class="bar" style="width:30px"></div><span class="pct">15%</span></div></td>
-                    <td style="font-size:0.78rem">≥ 1 tarifa registrada</td>
-                </tr>
-                <tr>
-                    <td>Horarios</td>
-                    <td><div class="weight-bar"><div class="bar" style="width:30px"></div><span class="pct">15%</span></div></td>
-                    <td style="font-size:0.78rem">≥ 1 horario registrado</td>
-                </tr>
-                <tr>
-                    <td>Aprobación</td>
-                    <td><div class="weight-bar"><div class="bar" style="width:20px"></div><span class="pct">10%</span></div></td>
-                    <td style="font-size:0.78rem">estado = aprobada por un editor o admin</td>
-                </tr>
+                <tr><td>Datos básicos</td><td><div class="weight-bar"><div class="bar" style="width:40px"></div><span class="pct">20%</span></div></td><td style="font-size:0.78rem">origen, destino, operator_id, ref completos</td></tr>
+                <tr><td>Paradas</td><td><div class="weight-bar"><div class="bar" style="width:40px"></div><span class="pct">20%</span></div></td><td style="font-size:0.78rem">≥ 2 paradas con coordenadas asignadas y ordenadas</td></tr>
+                <tr><td>Trazado</td><td><div class="weight-bar"><div class="bar" style="width:40px"></div><span class="pct">20%</span></div></td><td style="font-size:0.78rem">shape generado con Valhalla o importado de OSM</td></tr>
+                <tr><td>Tarifas</td><td><div class="weight-bar"><div class="bar" style="width:30px"></div><span class="pct">15%</span></div></td><td style="font-size:0.78rem">≥ 1 tarifa registrada</td></tr>
+                <tr><td>Horarios</td><td><div class="weight-bar"><div class="bar" style="width:30px"></div><span class="pct">15%</span></div></td><td style="font-size:0.78rem">≥ 1 trip/horario registrado</td></tr>
+                <tr><td>Publicada en OSM</td><td><div class="weight-bar"><div class="bar" style="width:20px"></div><span class="pct">10%</span></div></td><td style="font-size:0.78rem">osm_relation_id presente</td></tr>
             </tbody>
         </table>
     </section>
 
-    <!-- Páginas -->
     <section id="paginas">
         <h2>Páginas de la plataforma</h2>
         <div class="pages">
-            <div class="page-item"><span class="page-url">/</span><span class="page-desc">Dashboard: progreso por región, tareas abiertas, actividad reciente, stats globales</span></div>
-            <div class="page-item"><span class="page-url">/rutas</span><span class="page-desc">Lista maestra: todas las rutas con progreso %, estado, filtros y responsables</span></div>
-            <div class="page-item"><span class="page-url">/rutas/:id</span><span class="page-desc">Detalle de ruta: paradas, trazado, tarifas, horarios, tareas asociadas</span></div>
+            <div class="page-item"><span class="page-url">/</span><span class="page-desc">Dashboard: progreso por región, tareas abiertas, actividad reciente, stats</span></div>
+            <div class="page-item"><span class="page-url">/rutas</span><span class="page-desc">Lista maestra: todas las rutas con progreso %, estado, responsable y filtros</span></div>
+            <div class="page-item"><span class="page-url">/rutas/:id</span><span class="page-desc">Detalle de ruta: paradas, trazado, tarifas, horarios, tareas pendientes</span></div>
             <div class="page-item"><span class="page-url">/editor</span><span class="page-desc">Editor de trazado: mapa Leaflet + Valhalla para dibujar la ruta</span></div>
-            <div class="page-item"><span class="page-url">/paradas</span><span class="page-desc">Catálogo de paradas con mapa, filtros y estado de coordenadas</span></div>
-            <div class="page-item"><span class="page-url">/tareas</span><span class="page-desc">Tablero de tareas: abiertas, en progreso, completadas — por persona y por ruta</span></div>
-            <div class="page-item"><span class="page-url">/explorador</span><span class="page-desc">Rutas ya en OpenStreetMap vía Overpass — para comparar y hacer merge</span></div>
-            <div class="page-item"><span class="page-url">/importar</span><span class="page-desc">Subir Excel/CSV del terminal con validación y deduplicación</span></div>
-            <div class="page-item"><span class="page-url">/exportar</span><span class="page-desc">Generar y descargar GTFS completo por región — solo rutas al 100%</span></div>
-            <div class="page-item"><span class="page-url">/admin</span><span class="page-desc">Gestión de usuarios, roles y regiones</span></div>
+            <div class="page-item"><span class="page-url">/paradas</span><span class="page-desc">Catálogo de paradas con mapa y estado de coordenadas</span></div>
+            <div class="page-item"><span class="page-url">/explorador</span><span class="page-desc">Rutas ya en OSM vía Overpass — para comparar y hacer merge</span></div>
+            <div class="page-item"><span class="page-url">/importar</span><span class="page-desc">Subir Excel/CSV del terminal a staging con validación</span></div>
+            <div class="page-item"><span class="page-url">/exportar</span><span class="page-desc">Generar y descargar GTFS por región — solo rutas al 100%</span></div>
+            <div class="page-item"><span class="page-url">/admin</span><span class="page-desc">Gestión de usuarios, roles, regiones y calidad del GTFS</span></div>
         </div>
     </section>
 
-    <!-- Herramientas -->
     <section id="herramientas">
         <h2>Herramientas externas</h2>
         <div class="tools">
-            <div class="tool">
-                <div class="tool-name">Valhalla</div>
-                <div class="tool-url">valhalla.busboy.app</div>
-                <p>Calcula el trazado de la ruta siguiendo las calles reales de OSM. Motor de enrutamiento open source.</p>
-            </div>
-            <div class="tool">
-                <div class="tool-name">Overpass API</div>
-                <div class="tool-url">overpass-api.de</div>
-                <p>Consulta rutas y paradas ya mapeadas en OpenStreetMap para comparar y hacer merge.</p>
-            </div>
-            <div class="tool">
-                <div class="tool-name">OpenStreetMap</div>
-                <div class="tool-url">openstreetmap.org</div>
-                <p>Mapa base y destino de publicación. Las rutas aprobadas se exportan como relaciones PTv2.</p>
-            </div>
-            <div class="tool">
-                <div class="tool-name">Neon Postgres</div>
-                <div class="tool-url">neon.tech</div>
-                <p>Base de datos principal serverless. Almacena todas las entidades de la plataforma.</p>
-            </div>
-            <div class="tool">
-                <div class="tool-name">Vercel</div>
-                <div class="tool-url">vercel.com</div>
-                <p>Deploy y serverless functions. Cada archivo en /api/ es un endpoint independiente.</p>
-            </div>
+            <div class="tool"><div class="tool-name">Valhalla</div><div class="tool-url">valhalla.busboy.app</div><p>Genera el trazado siguiendo calles reales de OSM. Motor de enrutamiento open source.</p></div>
+            <div class="tool"><div class="tool-name">Overpass API</div><div class="tool-url">overpass-api.de</div><p>Consulta rutas y paradas en OSM para importar shapes y hacer merge.</p></div>
+            <div class="tool"><div class="tool-name">OpenStreetMap</div><div class="tool-url">openstreetmap.org</div><p>Mapa base y destino de publicación. El editor sube manualmente con JOSM.</p></div>
+            <div class="tool"><div class="tool-name">Neon Postgres</div><div class="tool-url">neon.tech</div><p>Base de datos principal. Fuente de verdad — OSM es destino, no fuente.</p></div>
+            <div class="tool"><div class="tool-name">Vercel</div><div class="tool-url">rutas.busboy.app</div><p>Deploy y serverless functions. Cada /api/*.js es un endpoint independiente.</p></div>
         </div>
     </section>
 
-    <!-- Fases -->
     <section id="fases">
         <h2>Plan de construcción</h2>
         <div class="phases">
             <div class="phase">
                 <div class="phase-num active">1</div>
                 <div>
-                    <h3>Lista maestra + detalle de ruta <span class="tag tag-now">Ahora</span></h3>
-                    <p>Migrar datos existentes al nuevo esquema unificado.</p>
+                    <h3>Lista maestra + detalle de ruta <span class="tag-now">Ahora</span></h3>
+                    <p>Base del sistema — sin esto nada más funciona.</p>
                     <ul>
-                        <li>Migrar <code>terminal_routes</code> → <code>routes</code></li>
-                        <li>Página /rutas con filtros, progreso y estados</li>
-                        <li>Página /rutas/:id con detalle completo</li>
+                        <li>Crear tablas: operators, routes, route_tasks</li>
+                        <li>Migrar terminal_routes → routes como borrador</li>
+                        <li>Página /rutas: lista maestra con progreso, filtros, responsable</li>
+                        <li>Página /rutas/:id: detalle completo con tareas automáticas</li>
                         <li>API CRUD completa</li>
                     </ul>
                 </div>
@@ -396,36 +381,34 @@
             <div class="phase">
                 <div class="phase-num">2</div>
                 <div>
-                    <h3>Paradas y trazado <span class="tag tag-soon">Próximo</span></h3>
+                    <h3>Paradas</h3>
                     <ul>
-                        <li>Catálogo de paradas con coordenadas</li>
-                        <li>Asignar paradas a rutas con orden</li>
-                        <li>Integrar editor de trazado con Valhalla</li>
+                        <li>Catálogo /paradas con mapa</li>
+                        <li>Asignar y ordenar paradas en rutas</li>
                         <li>Merge con paradas de OSM vía Overpass</li>
+                        <li>Tareas localizar_paradas y asignar_paradas funcionales</li>
                     </ul>
                 </div>
             </div>
             <div class="phase">
                 <div class="phase-num">3</div>
                 <div>
-                    <h3>Tarifas y horarios</h3>
+                    <h3>Trazado con Valhalla</h3>
                     <ul>
-                        <li>Formulario de tarifas por tramo</li>
-                        <li>Importar tarifas desde Excel del terminal</li>
-                        <li>Formulario de horarios y frecuencias</li>
-                        <li>Asignación a funcionarios del terminal</li>
+                        <li>Editor de trazado integrado en /rutas/:id</li>
+                        <li>Guardar shape en Postgres</li>
+                        <li>Tarea trazar_ruta funcional</li>
                     </ul>
                 </div>
             </div>
             <div class="phase">
                 <div class="phase-num">4</div>
                 <div>
-                    <h3>Tareas y colaboración</h3>
+                    <h3>Tarifas y horarios</h3>
                     <ul>
-                        <li>Sistema de tareas asignables</li>
-                        <li>Flujo proponer → aprobar</li>
-                        <li>Roles activos con restricciones</li>
-                        <li>Historial de cambios</li>
+                        <li>Importar tarifas desde Excel del terminal</li>
+                        <li>Formulario de horarios fijos (route_trips)</li>
+                        <li>Tareas ingresar_tarifas e ingresar_horarios funcionales</li>
                     </ul>
                 </div>
             </div>
@@ -434,10 +417,10 @@
                 <div>
                     <h3>Exportación GTFS</h3>
                     <ul>
-                        <li>Generar agency.txt, routes.txt, stops.txt</li>
-                        <li>Generar stop_times.txt, trips.txt, calendar.txt, shapes.txt</li>
-                        <li>Validar con herramienta GTFS</li>
-                        <li>Publicar en repositorio abierto</li>
+                        <li>Generar agency.txt, routes.txt, stops.txt, trips.txt</li>
+                        <li>Generar stop_times.txt, calendar.txt, shapes.txt</li>
+                        <li>Generar fare_attributes.txt, fare_rules.txt</li>
+                        <li>Panel de calidad para el admin</li>
                     </ul>
                 </div>
             </div>
@@ -445,6 +428,5 @@
     </section>
 
 </main>
-
 </body>
 </html>
