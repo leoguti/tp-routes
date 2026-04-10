@@ -69,7 +69,7 @@
         .badge-paradero { background: #fff0e0; color: #e67e22; }
 
         /* Map */
-        #map { flex: 1; }
+        #map { flex: 1; height: 100%; min-height: 400px; }
 
         /* Modal */
         .modal-bg {
@@ -165,9 +165,9 @@
         </div>
     </div>
 
-    <div style="position:relative;flex:1;">
+    <div style="position:relative;flex:1;display:flex;flex-direction:column;">
         <div class="pick-banner" id="pick-banner">📍 Haz clic en el mapa para ubicar el terminal</div>
-        <div id="map"></div>
+        <div id="map" style="flex:1;"></div>
     </div>
 </div>
 
