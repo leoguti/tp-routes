@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP Routes — Terminales y Paradas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f4f6fa; }
+
+        #header {
+            background: #1a1a3e; color: white;
+            padding: 12px 20px; display: flex; align-items: center; gap: 16px;
+        }
+        #header h1 { font-size: 1.1rem; margin: 0; }
+        #header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
+        #header nav a.active, #header nav a:hover { color: white; }
+
+        #layout { display: flex; height: calc(100vh - 48px); }
+
+        /* Sidebar */
+        #sidebar {
+            width: 360px; min-width: 280px;
+            background: white; overflow-y: auto;
+            border-right: 1px solid #e0e6f0;
+            display: flex; flex-direction: column;
+        }
+
+        .sidebar-top { padding: 14px 16px; border-bottom: 1px solid #eee; }
+        .sidebar-top h2 { font-size: 0.95rem; color: #1a1a3e; margin-bottom: 10px; }
+
+        .search-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .search-row input {
+            flex: 1; border: 1px solid #ddd; border-radius: 6px;
+            padding: 7px 10px; font-size: 0.83rem;
+        }
+
+        .btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 0.83rem; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #1a1a3e; color: white; }
+        .btn-primary:hover { background: #2a2a5e; }
+        .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
+        .btn-outline:hover { background: #f5f5f5; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 0.76rem; }
+
+        .filter-row { display: flex; gap: 6px; }
+        .filter-row select { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 6px 8px; font-size: 0.8rem; background: white; }
+
+        /* List */
+        #terminal-list { flex: 1; overflow-y: auto; }
+        .terminal-item {
+            padding: 10px 16px; border-bottom: 1px solid #f0f0f0;
+            cursor: pointer; transition: background .1s;
+        }
+        .terminal-item:hover { background: #f8faff; }
+        .terminal-item.active { background: #eef2ff; border-left: 3px solid #1a1a3e; }
+        .terminal-item .name { font-weight: 600; font-size: 0.88rem; color: #1a1a3e; }
+        .terminal-item .meta { font-size: 0.75rem; color: #888; margin-top: 2px; }
+        .terminal-item .coords { font-size: 0.72rem; color: #aaa; font-family: monospace; }
+
+        .badge-tipo {
+            display: inline-block; padding: 1px 7px; border-radius: 10px;
+            font-size: 0.68rem; font-weight: 600; margin-left: 6px;
+        }
+        .badge-terminal { background: #e0f0ff; color: #2980b9; }
+        .badge-parada { background: #e8f8e8; color: #27ae60; }
+        .badge-paradero { background: #fff0e0; color: #e67e22; }
+
+        /* Map */
+        #map { flex: 1; }
+
+        /* Modal */
+        .modal-bg {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.45); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal-bg.open { display: flex; }
+        .modal {
+            background: white; border-radius: 10px;
+            width: 100%; max-width: 480px; padding: 24px; margin: 16px;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal h2 { margin: 0 0 16px; font-size: 1rem; color: #1a1a3e; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 0.78rem; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; border: 1px solid #ddd; border-radius: 6px;
+            padding: 8px 10px; font-size: 0.85rem;
+        }
+        .form-group textarea { height: 60px; resize: vertical; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+        .hint { font-size: 0.76rem; color: #888; margin-top: 6px; line-height: 1.4; }
+        .hint strong { color: #1a1a3e; }
+
+        .alert {
+            padding: 10px 14px; border-radius: 7px; margin-bottom: 12px;
+            font-size: 0.83rem; display: none;
+        }
+        .alert.show { display: block; }
+        .alert-success { background: #e0fae8; color: #1a6b3a; }
+        .alert-error { background: #fde8e8; color: #8b1a1a; }
+
+        .empty-list { padding: 40px 20px; text-align: center; color: #bbb; font-size: 0.85rem; }
+
+        /* Crosshair cursor when picking */
+        #map.picking { cursor: crosshair; }
+        .pick-banner {
+            display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            background: #1a1a3e; color: white; padding: 8px 18px; border-radius: 20px;
+            font-size: 0.82rem; z-index: 500; white-space: nowrap; pointer-events: none;
+        }
+        .pick-banner.show { display: block; }
+
+        @media (max-width: 640px) {
+            #layout { flex-direction: column; }
+            #sidebar { width: 100%; height: 45vh; }
+            #map { height: 55vh; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <h1>TP Routes</h1>
+    <nav>
+        <a href="/home.html">Inicio</a>
+        <a href="/explorer.html">Explorador</a>
+        <a href="/editor.html">Editor</a>
+        <a href="/rutas-terminal.html">Terminal</a>
+        <a href="/terminales.html" class="active">Terminales</a>
+    </nav>
+</div>
+
+<div id="layout">
+    <div id="sidebar">
+        <div class="sidebar-top">
+            <h2>Terminales y paradas</h2>
+            <div id="alert-box" class="alert"></div>
+            <div class="search-row">
+                <input type="text" id="search-input" placeholder="Buscar municipio o nombre..." oninput="filterList()" />
+                <button class="btn btn-primary" onclick="openNewModal()">+ Nuevo</button>
+            </div>
+            <div class="filter-row">
+                <select id="tipo-filter" onchange="filterList()">
+                    <option value="">Todos los tipos</option>
+                    <option value="terminal">Terminal</option>
+                    <option value="parada">Parada</option>
+                    <option value="paradero">Paradero</option>
+                    <option value="otro">Otro</option>
+                </select>
+                <select id="coords-filter" onchange="filterList()">
+                    <option value="">Todos</option>
+                    <option value="con">Con coordenadas</option>
+                    <option value="sin">Sin coordenadas</option>
+                </select>
+            </div>
+        </div>
+        <div id="terminal-list">
+            <div class="empty-list">Cargando...</div>
+        </div>
+    </div>
+
+    <div style="position:relative;flex:1;">
+        <div class="pick-banner" id="pick-banner">📍 Haz clic en el mapa para ubicar el terminal</div>
+        <div id="map"></div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <h2 id="modal-title">Nuevo terminal / parada</h2>
+        <input type="hidden" id="edit-id" />
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="edit-nombre" placeholder="Ej: Terminal de Tunja" />
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="edit-tipo">
+                    <option value="terminal">Terminal</option>
+                    <option value="parada">Parada</option>
+                    <option value="paradero">Paradero</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Municipio *</label>
+                <input type="text" id="edit-municipio" placeholder="Ej: Tunja" />
+            </div>
+            <div class="form-group">
+                <label>Departamento</label>
+                <input type="text" id="edit-departamento" value="Boyacá" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Latitud</label>
+                <input type="number" id="edit-lat" placeholder="5.5353" step="0.000001" />
+            </div>
+            <div class="form-group">
+                <label>Longitud</label>
+                <input type="number" id="edit-lon" placeholder="-73.3678" step="0.000001" />
+            </div>
+        </div>
+        <p class="hint" id="pick-hint">
+            <strong>¿No sabes las coordenadas?</strong> Cierra este formulario y haz clic en el mapa para ubicarlo exactamente.
+            <a href="#" onclick="startPicking();return false;" style="color:#1a1a3e;font-weight:600;">Ubicar en el mapa →</a>
+        </p>
+
+        <div class="form-group" style="margin-top:12px;margin-bottom:12px">
+            <label>Dirección</label>
+            <input type="text" id="edit-direccion" placeholder="Ej: Calle 5 #10-24" />
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>ID nodo OSM</label>
+                <input type="number" id="edit-osm" placeholder="Opcional" min="0" />
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+            <label>Notas</label>
+            <textarea id="edit-notas" placeholder="Información adicional..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteTerminal()" style="display:none">Eliminar</button>
+            <button class="btn btn-primary" onclick="saveTerminal()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/regions.js"></script>
+<script>
+const activeRegionKey = getCurrentRegion();
+const activeRegion = REGIONS[activeRegionKey];
+let allTerminals = [];
+let markers = {};
+let pickingMode = false;
+let pendingPickId = null;
+
+// Map setup
+const map = L.map('map').setView(activeRegion.center, activeRegion.zoom);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap', maxZoom: 19
+}).addTo(map);
+
+// Icons
+function makeIcon(tipo) {
+    const colors = { terminal: '#2980b9', parada: '#27ae60', paradero: '#e67e22', otro: '#888' };
+    const color = colors[tipo] || '#888';
+    return L.divIcon({
+        className: '',
+        html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+        iconSize: [14, 14], iconAnchor: [7, 7]
+    });
+}
+
+// Map click — pick mode
+map.on('click', function(e) {
+    if (!pickingMode) return;
+    const { lat, lng } = e.latlng;
+    document.getElementById('edit-lat').value = lat.toFixed(6);
+    document.getElementById('edit-lon').value = lng.toFixed(6);
+    stopPicking();
+    openModalWithData();
+});
+
+function startPicking() {
+    pickingMode = true;
+    document.getElementById('map').classList.add('picking');
+    document.getElementById('pick-banner').classList.add('show');
+    closeModal();
+}
+function stopPicking() {
+    pickingMode = false;
+    document.getElementById('map').classList.remove('picking');
+    document.getElementById('pick-banner').classList.remove('show');
+}
+
+// ─── Load ────────────────────────────────────────────────────────────────────
+
+async function loadTerminals() {
+    try {
+        const res = await fetch(`/api/terminals?region=${activeRegionKey}`);
+        const data = await res.json();
+        allTerminals = data.terminals || [];
+        renderList(allTerminals);
+        renderMarkers(allTerminals);
+    } catch (e) {
+        showAlert('Error cargando terminales: ' + e.message, 'error');
+    }
+}
+
+function filterList() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const tipo = document.getElementById('tipo-filter').value;
+    const coords = document.getElementById('coords-filter').value;
+    const filtered = allTerminals.filter(t => {
+        const matchSearch = !search ||
+            t.nombre?.toLowerCase().includes(search) ||
+            t.municipio?.toLowerCase().includes(search);
+        const matchTipo = !tipo || t.tipo === tipo;
+        const hasCoords = t.lat && t.lon;
+        const matchCoords = !coords || (coords === 'con' ? hasCoords : !hasCoords);
+        return matchSearch && matchTipo && matchCoords;
+    });
+    renderList(filtered);
+}
+
+function renderList(terminals) {
+    const el = document.getElementById('terminal-list');
+    if (!terminals.length) {
+        el.innerHTML = `<div class="empty-list">No hay terminales registrados.<br>Haz clic en <strong>"+ Nuevo"</strong> para agregar.</div>`;
+        return;
+    }
+    el.innerHTML = terminals.map(t => `
+        <div class="terminal-item" id="item-${t.id}" onclick="selectTerminal(${t.id})">
+            <div class="name">
+                ${esc(t.nombre)}
+                <span class="badge-tipo badge-${t.tipo}">${t.tipo}</span>
+            </div>
+            <div class="meta">${esc(t.municipio)}${t.departamento ? ', ' + esc(t.departamento) : ''}</div>
+            <div class="coords">${t.lat && t.lon ? `${t.lat.toFixed(5)}, ${t.lon.toFixed(5)}` : '⚠ Sin coordenadas'}</div>
+        </div>
+    `).join('');
+}
+
+function renderMarkers(terminals) {
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    markers = {};
+    terminals.filter(t => t.lat && t.lon).forEach(t => {
+        const m = L.marker([t.lat, t.lon], { icon: makeIcon(t.tipo) })
+            .addTo(map)
+            .bindPopup(`<strong>${t.nombre}</strong><br>${t.municipio}<br><small>${t.tipo}</small>
+                <br><a href="#" onclick="openEditModal(${t.id});return false;" style="color:#1a1a3e;font-weight:600;">Editar</a>`);
+        markers[t.id] = m;
+    });
+}
+
+function selectTerminal(id) {
+    document.querySelectorAll('.terminal-item').forEach(el => el.classList.remove('active'));
+    const item = document.getElementById(`item-${id}`);
+    if (item) { item.classList.add('active'); item.scrollIntoView({ block: 'nearest' }); }
+    const t = allTerminals.find(t => t.id === id);
+    if (t?.lat && t?.lon) {
+        map.setView([t.lat, t.lon], 16);
+        markers[id]?.openPopup();
+    }
+}
+
+// ─── CRUD ─────────────────────────────────────────────────────────────────────
+
+let formData = {};
+
+function openNewModal() {
+    formData = {};
+    document.getElementById('modal-title').textContent = 'Nuevo terminal / parada';
+    document.getElementById('edit-id').value = '';
+    document.getElementById('edit-nombre').value = '';
+    document.getElementById('edit-municipio').value = '';
+    document.getElementById('edit-departamento').value = 'Boyacá';
+    document.getElementById('edit-tipo').value = 'terminal';
+    document.getElementById('edit-lat').value = '';
+    document.getElementById('edit-lon').value = '';
+    document.getElementById('edit-direccion').value = '';
+    document.getElementById('edit-osm').value = '';
+    document.getElementById('edit-notas').value = '';
+    document.getElementById('btn-delete').style.display = 'none';
+    document.getElementById('modal-bg').classList.add('open');
+}
+
+function openModalWithData() {
+    document.getElementById('modal-bg').classList.add('open');
+}
+
+function openEditModal(id) {
+    const t = allTerminals.find(t => t.id === id);
+    if (!t) return;
+    document.getElementById('modal-title').textContent = 'Editar terminal / parada';
+    document.getElementById('edit-id').value = t.id;
+    document.getElementById('edit-nombre').value = t.nombre || '';
+    document.getElementById('edit-municipio').value = t.municipio || '';
+    document.getElementById('edit-departamento').value = t.departamento || 'Boyacá';
+    document.getElementById('edit-tipo').value = t.tipo || 'terminal';
+    document.getElementById('edit-lat').value = t.lat || '';
+    document.getElementById('edit-lon').value = t.lon || '';
+    document.getElementById('edit-direccion').value = t.direccion || '';
+    document.getElementById('edit-osm').value = t.osm_node_id || '';
+    document.getElementById('edit-notas').value = t.notas || '';
+    document.getElementById('btn-delete').style.display = 'inline-block';
+    document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+async function saveTerminal() {
+    const id = document.getElementById('edit-id').value;
+    const body = {
+        nombre: document.getElementById('edit-nombre').value.trim(),
+        municipio: document.getElementById('edit-municipio').value.trim(),
+        departamento: document.getElementById('edit-departamento').value.trim(),
+        tipo: document.getElementById('edit-tipo').value,
+        lat: document.getElementById('edit-lat').value || null,
+        lon: document.getElementById('edit-lon').value || null,
+        direccion: document.getElementById('edit-direccion').value.trim(),
+        osm_node_id: document.getElementById('edit-osm').value || null,
+        notas: document.getElementById('edit-notas').value.trim(),
+        region: activeRegionKey
+    };
+
+    if (!body.nombre || !body.municipio) {
+        showAlert('Nombre y municipio son obligatorios', 'error'); return;
+    }
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/terminals?id=${id}` : '/api/terminals';
+
+    const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+        closeModal();
+        showAlert(id ? 'Terminal actualizado' : 'Terminal creado', 'success');
+        loadTerminals();
+    } else {
+        const err = await res.json();
+        showAlert('Error: ' + err.error, 'error');
+    }
+}
+
+async function deleteTerminal() {
+    const id = document.getElementById('edit-id').value;
+    if (!id || !confirm('¿Eliminar este terminal?')) return;
+    const res = await fetch(`/api/terminals?id=${id}`, { method: 'DELETE' });
+    if (res.ok) { closeModal(); showAlert('Terminal eliminado', 'success'); loadTerminals(); }
+    else showAlert('Error eliminando terminal', 'error');
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showAlert(msg, type = 'info') {
+    const box = document.getElementById('alert-box');
+    box.className = `alert alert-${type} show`;
+    box.textContent = msg;
+    setTimeout(() => box.classList.remove('show'), 5000);
+}
+
+loadTerminals();
+</script>
+</body>
+</html>
