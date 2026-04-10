@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP Routes — Transporte Público Boyacá</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f1129;
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+        .logo { font-size: 1.1rem; font-weight: 700; letter-spacing: -.3px; }
+        .logo span { color: #4a9eff; }
+        .region-badge {
+            background: rgba(74,158,255,.15);
+            border: 1px solid rgba(74,158,255,.3);
+            color: #4a9eff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 500;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 56px 20px 40px;
+        }
+        .hero h1 {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 14px;
+        }
+        .hero h1 span { color: #4a9eff; }
+        .hero p {
+            font-size: 1rem;
+            color: #8892aa;
+            max-width: 480px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 56px;
+            flex-wrap: wrap;
+        }
+        .stat-item { text-align: center; }
+        .stat-item .num {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #4a9eff;
+        }
+        .stat-item .lbl {
+            font-size: 0.72rem;
+            color: #6872aa;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-top: 2px;
+        }
+
+        /* Cards grid */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        .card {
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px;
+            padding: 24px;
+            text-decoration: none;
+            color: white;
+            transition: transform .15s, background .15s, border-color .15s;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,.07);
+            border-color: rgba(74,158,255,.4);
+        }
+        .card:active { transform: translateY(0); }
+
+        .card-icon {
+            font-size: 2rem;
+            width: 52px; height: 52px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 4px;
+        }
+        .card.blue .card-icon { background: rgba(74,158,255,.15); }
+        .card.green .card-icon { background: rgba(39,174,96,.15); }
+        .card.orange .card-icon { background: rgba(230,126,34,.15); }
+        .card.purple .card-icon { background: rgba(142,68,173,.15); }
+
+        .card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .card p {
+            font-size: 0.83rem;
+            color: #8892aa;
+            line-height: 1.5;
+            flex: 1;
+        }
+        .card-arrow {
+            font-size: 0.8rem;
+            color: #4a9eff;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Tag */
+        .tag {
+            display: inline-block;
+            background: rgba(39,174,96,.2);
+            color: #4edb8a;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+        .tag.new { background: rgba(230,126,34,.2); color: #f39c12; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #3a4466;
+            font-size: 0.78rem;
+            border-top: 1px solid rgba(255,255,255,.05);
+        }
+        footer a { color: #4a6080; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">TP <span>Routes</span></div>
+    <div class="region-badge" id="region-label">Boyacá, Colombia</div>
+</header>
+
+<div class="hero">
+    <h1>Mapeo de <span>transporte público</span><br>abierto y colaborativo</h1>
+    <p>Crea, explora y gestiona rutas de bus en OpenStreetMap y GTFS para ciudades de Boyacá y más.</p>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="num" id="stat-osm">—</div>
+            <div class="lbl">Rutas en OSM</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="stat-terminal">—</div>
+            <div class="lbl">Rutas terminal</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="stat-pendientes">—</div>
+            <div class="lbl">Por mapear</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="stat-terminales">—</div>
+            <div class="lbl">Terminales</div>
+        </div>
+    </div>
+</div>
+
+<div class="cards">
+
+    <a href="/explorer.html" class="card blue">
+        <div class="card-icon">🗺️</div>
+        <h3>Explorador</h3>
+        <p>Visualiza todas las rutas de transporte público ya mapeadas en OpenStreetMap. Filtra por operador, red o estado de validez PTv2.</p>
+        <div class="card-arrow">Abrir explorador →</div>
+    </a>
+
+    <a href="/editor.html" class="card green">
+        <div class="card-icon">✏️</div>
+        <h3>Crear ruta</h3>
+        <p>Dibuja una nueva ruta en el mapa: coloca paradas, define waypoints y exporta el archivo .osm listo para subir a OpenStreetMap.</p>
+        <div class="card-arrow">Abrir editor →</div>
+    </a>
+
+    <a href="/rutas-terminal.html" class="card orange">
+        <div class="card-icon">📂</div>
+        <h3>Rutas del terminal <span class="tag new">Nuevo</span></h3>
+        <p>Importa el listado de rutas desde un archivo Excel o CSV. Gestiona el estado de cada ruta: pendiente, mapeada o publicada.</p>
+        <div class="card-arrow">Ir a terminal →</div>
+    </a>
+
+    <a href="/terminales.html" class="card purple">
+        <div class="card-icon">📍</div>
+        <h3>Terminales y paradas <span class="tag new">Nuevo</span></h3>
+        <p>Registra la ubicación exacta de terminales y paraderos. Úsalos como puntos de inicio al crear rutas en el editor.</p>
+        <div class="card-arrow">Ver terminales →</div>
+    </a>
+
+</div>
+
+<footer>
+    <a href="https://github.com/leoguti/tp-routes" target="_blank">GitHub</a> ·
+    <a href="/GUIA_FORMATO_RUTAS.md" target="_blank">Guía de formato</a> ·
+    Datos abiertos · <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>
+</footer>
+
+<script src="/js/regions.js"></script>
+<script>
+async function loadStats() {
+    try {
+        const region = getCurrentRegion();
+        document.getElementById('region-label').textContent =
+            (typeof REGIONS !== 'undefined' && REGIONS[region]) ? REGIONS[region].name : 'Boyacá, Colombia';
+
+        const [osmRes, termRes] = await Promise.all([
+            fetch(`/api/stats?region=${region}`).then(r => r.json()).catch(() => ({})),
+            fetch(`/api/terminal-routes?region=${region}`).then(r => r.json()).catch(() => ({}))
+        ]);
+
+        document.getElementById('stat-osm').textContent =
+            osmRes.route_count ?? osmRes.routes ?? '—';
+        document.getElementById('stat-terminal').textContent =
+            termRes.total ?? '—';
+        document.getElementById('stat-pendientes').textContent =
+            termRes.pendientes ?? '—';
+        document.getElementById('stat-terminales').textContent = '—';
+    } catch (e) {}
+}
+loadStats();
+</script>
+
+</body>
+</html>
