@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP Routes — Detalle de ruta</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f4f6fa; }
+        #header { background: #1a1a3e; color: white; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+        #header h1 { font-size: 1.1rem; margin: 0; }
+        #header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
+        #header nav a:hover { color: white; }
+
+        .page { max-width: 1000px; margin: 0 auto; padding: 24px 16px 60px; }
+        .back { color: #1a1a3e; text-decoration: none; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 16px; }
+        .back:hover { text-decoration: underline; }
+
+        /* Hero */
+        .hero { background: #1a1a3e; color: white; border-radius: 12px; padding: 24px 28px; margin-bottom: 20px; }
+        .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .route-title { font-size: 1.4rem; font-weight: 800; }
+        .route-title span { color: #4a9eff; }
+        .route-meta { font-size: 0.82rem; color: #8892aa; margin-top: 4px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; }
+        .badge-borrador { background: rgba(255,255,255,.1); color: #aab; }
+        .badge-en_progreso { background: rgba(74,158,255,.2); color: #4a9eff; }
+        .badge-aprobada { background: rgba(39,174,96,.2); color: #4edb8a; }
+        .badge-publicada { background: rgba(142,68,173,.2); color: #c39bd3; }
+
+        /* Progress */
+        .progress-section { margin-top: 16px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: #8892aa; margin-bottom: 6px; }
+        .progress-track { height: 8px; background: rgba(255,255,255,.1); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+
+        /* Grid */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+        .card h3 { font-size: 0.88rem; color: #1a1a3e; margin-bottom: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .card-full { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); margin-bottom: 16px; }
+        .card-full h3 { font-size: 0.88rem; color: #1a1a3e; margin-bottom: 14px; font-weight: 700; }
+
+        /* Info rows */
+        .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 0.83rem; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #888; }
+        .info-value { font-weight: 600; color: #1a1a3e; text-align: right; }
+
+        /* Tasks */
+        .tasks-list { display: grid; gap: 8px; }
+        .task-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #eee; }
+        .task-item.completada { background: #f8fffe; border-color: #c8f0db; }
+        .task-item.pendiente { background: #fff8f0; border-color: #fde0b0; }
+        .task-item.en_progreso { background: #f0f8ff; border-color: #b0d8f0; }
+        .task-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .task-info { flex: 1; }
+        .task-name { font-size: 0.85rem; font-weight: 600; color: #1a1a3e; }
+        .task-desc { font-size: 0.75rem; color: #888; margin-top: 1px; }
+        .task-status { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .status-completada { background: #e0fae8; color: #27ae60; }
+        .status-pendiente { background: #fff0e0; color: #e67e22; }
+        .status-en_progreso { background: #e0f0ff; color: #2980b9; }
+        .task-role { font-size: 0.68rem; color: #aaa; margin-top: 2px; }
+
+        /* Btn */
+        .btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 0.83rem; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #1a1a3e; color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 0.76rem; }
+        .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
+
+        .empty-section { color: #bbb; font-size: 0.82rem; text-align: center; padding: 20px; }
+
+        @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <h1>TP Routes</h1>
+    <nav>
+        <a href="/home.html">Inicio</a>
+        <a href="/rutas.html">← Rutas</a>
+    </nav>
+</div>
+
+<div class="page">
+    <a href="/rutas.html" class="back">← Volver a lista maestra</a>
+
+    <!-- Hero -->
+    <div class="hero" id="hero">
+        <div style="color:#8892aa;font-size:0.85rem">Cargando ruta...</div>
+    </div>
+
+    <!-- Info + Tareas -->
+    <div class="grid2">
+        <div class="card">
+            <h3>📋 Datos de la ruta</h3>
+            <div id="info-section"><div class="empty-section">Cargando...</div></div>
+        </div>
+        <div class="card">
+            <h3>🏢 Operador</h3>
+            <div id="operator-section"><div class="empty-section">Cargando...</div></div>
+        </div>
+    </div>
+
+    <div class="card-full">
+        <h3>✅ Tareas pendientes</h3>
+        <div id="tasks-section"><div class="empty-section">Cargando...</div></div>
+    </div>
+
+    <div class="card-full">
+        <h3>🗺️ Paradas <span style="font-size:0.75rem;color:#aaa;font-weight:400" id="stops-count"></span></h3>
+        <div id="stops-section"><div class="empty-section">Aún no hay paradas asignadas a esta ruta.</div></div>
+    </div>
+
+    <div class="card-full">
+        <h3>💰 Tarifas</h3>
+        <div id="fares-section"><div class="empty-section">Aún no hay tarifas registradas.</div></div>
+    </div>
+
+    <div class="card-full">
+        <h3>🕐 Horarios</h3>
+        <div id="trips-section"><div class="empty-section">Aún no hay horarios registrados.</div></div>
+    </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const routeId = params.get('id');
+if (!routeId) location.href = '/rutas.html';
+
+const TASK_INFO = {
+    localizar_paradas:  { icon: '📍', label: 'Localizar paradas', desc: 'Encontrar coordenadas exactas de cada parada', role: 'contributor' },
+    ingresar_tarifas:   { icon: '💰', label: 'Ingresar tarifas',   desc: 'Registrar valores por tramo según el terminal', role: 'contributor' },
+    asignar_paradas:    { icon: '🔗', label: 'Asignar paradas',    desc: 'Ordenar paradas localizadas dentro de la ruta', role: 'editor' },
+    trazar_ruta:        { icon: '〰️', label: 'Trazar ruta',        desc: 'Generar shape con Valhalla', role: 'editor' },
+    ingresar_horarios:  { icon: '🕐', label: 'Ingresar horarios',  desc: 'Registrar salidas fijas (hora, días, temporada)', role: 'editor' },
+};
+
+async function loadRoute() {
+    const res = await fetch(`/api/routes?id=${routeId}`);
+    if (!res.ok) { location.href = '/rutas.html'; return; }
+    const r = await res.json();
+
+    document.title = `${r.origen} → ${r.destino} — TP Routes`;
+
+    // Hero
+    const pct = r.progreso_pct || 0;
+    const color = pct < 40 ? '#e74c3c' : pct < 80 ? '#f39c12' : '#4edb8a';
+    document.getElementById('hero').innerHTML = `
+        <div class="hero-top">
+            <div>
+                <div class="route-title">${esc(r.origen)} <span>→</span> ${esc(r.destino)}</div>
+                <div class="route-meta">
+                    ${esc(r.operator_nombre || '—')} &nbsp;·&nbsp;
+                    ${r.direction === 'vuelta' ? 'Vuelta' : 'Ida'} &nbsp;·&nbsp;
+                    ${r.tipo_servicio || 'regular'}
+                    ${r.ref ? ` &nbsp;·&nbsp; <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">${esc(r.ref)}</code>` : ''}
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span class="badge badge-${r.estado}">${r.estado.replace('_',' ')}</span>
+                ${r.osm_relation_id ? `<a href="https://www.openstreetmap.org/relation/${r.osm_relation_id}" target="_blank" style="color:#4a9eff;font-size:0.78rem">Ver en OSM ↗</a>` : ''}
+                <button class="btn btn-outline btn-sm" onclick="editRoute()" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:white">✏ Editar</button>
+            </div>
+        </div>
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Progreso hacia GTFS</span>
+                <span style="color:${color};font-weight:700">${pct}%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+        </div>
+    `;
+
+    // Info
+    document.getElementById('info-section').innerHTML = `
+        <div class="info-row"><span class="info-label">Origen</span><span class="info-value">${esc(r.origen)}</span></div>
+        <div class="info-row"><span class="info-label">Destino</span><span class="info-value">${esc(r.destino)}</span></div>
+        <div class="info-row"><span class="info-label">Dirección</span><span class="info-value">${r.direction}</span></div>
+        <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${r.tipo_servicio || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Ref</span><span class="info-value">${esc(r.ref || '—')}</span></div>
+        <div class="info-row"><span class="info-label">Resolución</span><span class="info-value" style="font-size:0.78rem">${esc(r.resolucion || '—')}</span></div>
+        <div class="info-row"><span class="info-label">Red</span><span class="info-value">${esc(r.red || '—')}</span></div>
+    `;
+
+    // Operator
+    document.getElementById('operator-section').innerHTML = `
+        <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">${esc(r.operator_nombre || '—')}</span></div>
+        <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">${esc(r.operator_telefono || '—')}</span></div>
+        <div class="info-row"><span class="info-label">Web</span><span class="info-value">${r.operator_url ? `<a href="${r.operator_url}" target="_blank" style="color:#1a1a3e">${r.operator_url}</a>` : '—'}</span></div>
+    `;
+
+    // Tasks
+    const tasks = r.tasks || [];
+    if (tasks.length) {
+        document.getElementById('tasks-section').innerHTML = `
+            <div class="tasks-list">
+                ${tasks.map(t => {
+                    const info = TASK_INFO[t.tipo] || { icon: '❓', label: t.tipo, desc: '', role: '' };
+                    return `<div class="task-item ${t.estado}">
+                        <div class="task-icon">${info.icon}</div>
+                        <div class="task-info">
+                            <div class="task-name">${info.label}</div>
+                            <div class="task-desc">${info.desc}</div>
+                            <div class="task-role">${info.role === 'contributor' ? '● contributor' : '● editor'}</div>
+                        </div>
+                        <span class="task-status status-${t.estado}">${t.estado.replace('_',' ')}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+    } else {
+        document.getElementById('tasks-section').innerHTML = '<div class="empty-section">Sin tareas generadas aún.</div>';
+    }
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+loadRoute();
+</script>
+</body>
+</html>

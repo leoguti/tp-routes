@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP Routes — Lista maestra de rutas</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f4f6fa; }
+
+        #header { background: #1a1a3e; color: white; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+        #header h1 { font-size: 1.1rem; margin: 0; }
+        #header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
+        #header nav a.active, #header nav a:hover { color: white; }
+
+        .page { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+        /* Stats */
+        .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-box { background: white; border-radius: 8px; padding: 14px 18px; min-width: 110px; box-shadow: 0 1px 4px rgba(0,0,0,.07); text-align: center; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
+        .stat-box:hover, .stat-box.active { border-color: #1a1a3e; }
+        .stat-box .num { font-size: 1.6rem; font-weight: 800; color: #1a1a3e; }
+        .stat-box .lbl { font-size: 0.72rem; color: #888; }
+        .stat-box.borrador .num { color: #888; }
+        .stat-box.en_progreso .num { color: #2980b9; }
+        .stat-box.aprobada .num { color: #27ae60; }
+        .stat-box.publicada .num { color: #8e44ad; }
+
+        /* Progress bar global */
+        .global-progress { background: white; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+        .global-progress .label { font-size: 0.78rem; color: #888; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .progress-track { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #2980b9, #27ae60); transition: width .4s; }
+
+        /* Toolbar */
+        .toolbar { background: white; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+        .toolbar input { flex: 1; min-width: 160px; border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; }
+        .toolbar select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; background: white; }
+        .btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 0.83rem; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #1a1a3e; color: white; }
+        .btn-primary:hover { background: #2a2a5e; }
+        .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
+        .btn-outline:hover { background: #f5f5f5; }
+        .btn-sm { padding: 4px 10px; font-size: 0.76rem; }
+
+        /* Table */
+        .table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.07); overflow: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+        th { background: #1a1a3e; color: white; padding: 10px 12px; text-align: left; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        tr:hover td { background: #f8faff; }
+        tr:last-child td { border-bottom: none; }
+        td a { color: #1a1a3e; text-decoration: none; font-weight: 600; }
+        td a:hover { text-decoration: underline; }
+
+        /* Progress cell */
+        .prog-cell { display: flex; align-items: center; gap: 8px; }
+        .prog-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; min-width: 60px; }
+        .prog-fill { height: 100%; border-radius: 3px; }
+        .prog-num { font-size: 0.75rem; font-weight: 700; min-width: 30px; text-align: right; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
+        .badge-borrador { background: #f0f0f0; color: #888; }
+        .badge-en_progreso { background: #e0f0ff; color: #2980b9; }
+        .badge-aprobada { background: #e0fae8; color: #27ae60; }
+        .badge-publicada { background: #f0e0ff; color: #8e44ad; }
+
+        .tasks-pill { background: #fff0e0; color: #e67e22; border-radius: 10px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; }
+
+        .direction-tag { font-size: 0.7rem; color: #888; }
+
+        /* Empty */
+        .empty { text-align: center; padding: 48px; color: #bbb; }
+        .empty h3 { color: #ccc; margin-bottom: 8px; }
+
+        /* Alert */
+        .alert { padding: 10px 14px; border-radius: 7px; margin-bottom: 14px; font-size: 0.83rem; display: none; }
+        .alert.show { display: block; }
+        .alert-success { background: #e0fae8; color: #1a6b3a; }
+        .alert-error { background: #fde8e8; color: #8b1a1a; }
+
+        /* Modal */
+        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; }
+        .modal-bg.open { display: flex; }
+        .modal { background: white; border-radius: 10px; width: 100%; max-width: 540px; padding: 24px; margin: 16px; max-height: 90vh; overflow-y: auto; }
+        .modal h2 { margin: 0 0 18px; font-size: 1rem; color: #1a1a3e; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 0.78rem; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .btn-danger { background: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <h1>TP Routes</h1>
+    <nav>
+        <a href="/home.html">Inicio</a>
+        <a href="/rutas.html" class="active">Rutas</a>
+        <a href="/explorer.html">Explorador OSM</a>
+        <a href="/rutas-terminal.html">Terminal</a>
+        <a href="/terminales.html">Paradas</a>
+    </nav>
+</div>
+
+<div class="page">
+
+    <div id="alert-box" class="alert"></div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-box" onclick="filterByEstado('')">
+            <div class="num" id="stat-total">—</div>
+            <div class="lbl">Total rutas</div>
+        </div>
+        <div class="stat-box borrador" onclick="filterByEstado('borrador')">
+            <div class="num" id="stat-borrador">—</div>
+            <div class="lbl">Borrador</div>
+        </div>
+        <div class="stat-box en_progreso" onclick="filterByEstado('en_progreso')">
+            <div class="num" id="stat-en_progreso">—</div>
+            <div class="lbl">En progreso</div>
+        </div>
+        <div class="stat-box aprobada" onclick="filterByEstado('aprobada')">
+            <div class="num" id="stat-aprobada">—</div>
+            <div class="lbl">Aprobadas</div>
+        </div>
+        <div class="stat-box publicada" onclick="filterByEstado('publicada')">
+            <div class="num" id="stat-publicada">—</div>
+            <div class="lbl">Publicadas</div>
+        </div>
+        <div class="stat-box" style="min-width:140px;">
+            <div class="num" id="stat-progreso" style="font-size:1.3rem">—%</div>
+            <div class="lbl">Progreso promedio</div>
+        </div>
+    </div>
+
+    <!-- Global progress bar -->
+    <div class="global-progress">
+        <div class="label">
+            <span>Progreso hacia GTFS completo</span>
+            <span id="progreso-label">—%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progreso-bar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <input type="text" id="search-input" placeholder="Buscar origen, destino u operador..." oninput="filterRoutes()" />
+        <select id="estado-filter" onchange="filterRoutes()">
+            <option value="">Todos los estados</option>
+            <option value="borrador">Borrador</option>
+            <option value="en_progreso">En progreso</option>
+            <option value="aprobada">Aprobada</option>
+            <option value="publicada">Publicada</option>
+        </select>
+        <select id="operator-filter" onchange="filterRoutes()">
+            <option value="">Todos los operadores</option>
+        </select>
+        <button class="btn btn-outline" onclick="loadRoutes()">↺</button>
+        <button class="btn btn-primary" onclick="openNewModal()">+ Nueva ruta</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Origen → Destino</th>
+                    <th>Operador</th>
+                    <th>Ref</th>
+                    <th>Progreso GTFS</th>
+                    <th>Estado</th>
+                    <th>Tareas</th>
+                    <th>OSM</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="routes-body">
+                <tr><td colspan="8"><div class="empty"><h3>Cargando...</h3></div></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Modal nueva/editar ruta -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <h2 id="modal-title">Nueva ruta</h2>
+        <input type="hidden" id="edit-id" />
+        <div class="form-row">
+            <div class="form-group">
+                <label>Origen *</label>
+                <input type="text" id="edit-origen" placeholder="Ej: Tunja" />
+            </div>
+            <div class="form-group">
+                <label>Destino *</label>
+                <input type="text" id="edit-destino" placeholder="Ej: Aguazul" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Operador *</label>
+                <select id="edit-operator"></select>
+            </div>
+            <div class="form-group">
+                <label>Dirección</label>
+                <select id="edit-direction">
+                    <option value="ida">Ida</option>
+                    <option value="vuelta">Vuelta</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Ref / Código</label>
+                <input type="text" id="edit-ref" placeholder="Ej: T-01" />
+            </div>
+            <div class="form-group">
+                <label>Tipo de servicio</label>
+                <select id="edit-tipo">
+                    <option value="regular">Regular</option>
+                    <option value="express">Express</option>
+                    <option value="nocturno">Nocturno</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Resolución</label>
+                <input type="text" id="edit-resolucion" placeholder="Ej: Res. 001234-2022" />
+            </div>
+            <div class="form-group">
+                <label>Estado</label>
+                <select id="edit-estado">
+                    <option value="borrador">Borrador</option>
+                    <option value="en_progreso">En progreso</option>
+                    <option value="aprobada">Aprobada</option>
+                    <option value="publicada">Publicada</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteRoute()" style="display:none">Eliminar</button>
+            <button class="btn btn-primary" onclick="saveRoute()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/regions.js"></script>
+<script>
+const region = getCurrentRegion();
+let allRoutes = [];
+let operators = [];
+
+// ─── Load ─────────────────────────────────────────────────────────────────────
+
+async function loadRoutes() {
+    const [routesRes, opsRes] = await Promise.all([
+        fetch(`/api/routes?region=${region}`).then(r => r.json()),
+        fetch(`/api/operators?region=${region}`).then(r => r.json())
+    ]);
+
+    allRoutes = routesRes.routes || [];
+    operators = opsRes.operators || [];
+
+    // Stats
+    document.getElementById('stat-total').textContent = routesRes.total ?? 0;
+    document.getElementById('stat-borrador').textContent = routesRes.borrador ?? 0;
+    document.getElementById('stat-en_progreso').textContent = routesRes.en_progreso ?? 0;
+    document.getElementById('stat-aprobada').textContent = routesRes.aprobada ?? 0;
+    document.getElementById('stat-publicada').textContent = routesRes.publicada ?? 0;
+    document.getElementById('stat-progreso').textContent = (routesRes.promedio_progreso ?? 0) + '%';
+    document.getElementById('progreso-bar').style.width = (routesRes.promedio_progreso ?? 0) + '%';
+    document.getElementById('progreso-label').textContent = (routesRes.promedio_progreso ?? 0) + '%';
+
+    // Operator filter
+    const opFilter = document.getElementById('operator-filter');
+    opFilter.innerHTML = '<option value="">Todos los operadores</option>';
+    operators.forEach(o => opFilter.innerHTML += `<option value="${o.id}">${esc(o.nombre)}</option>`);
+
+    renderTable(allRoutes);
+}
+
+function filterByEstado(estado) {
+    document.getElementById('estado-filter').value = estado;
+    filterRoutes();
+}
+
+function filterRoutes() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const estado = document.getElementById('estado-filter').value;
+    const opId = document.getElementById('operator-filter').value;
+
+    const filtered = allRoutes.filter(r => {
+        const matchSearch = !search ||
+            r.origen?.toLowerCase().includes(search) ||
+            r.destino?.toLowerCase().includes(search) ||
+            r.operator_nombre?.toLowerCase().includes(search);
+        const matchEstado = !estado || r.estado === estado;
+        const matchOp = !opId || String(r.operator_id) === opId;
+        return matchSearch && matchEstado && matchOp;
+    });
+    renderTable(filtered);
+}
+
+function renderTable(routes) {
+    const tbody = document.getElementById('routes-body');
+    if (!routes.length) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><h3>No hay rutas</h3><p>Importa desde el terminal o crea una manualmente.</p></div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = routes.map(r => {
+        const pct = r.progreso_pct || 0;
+        const color = pct < 40 ? '#e74c3c' : pct < 80 ? '#e67e22' : '#27ae60';
+        return `<tr>
+            <td>
+                <a href="/ruta.html?id=${r.id}"><strong>${esc(r.origen)}</strong> → ${esc(r.destino)}</a>
+                <span class="direction-tag">${r.direction === 'vuelta' ? ' ↩' : ''}</span>
+            </td>
+            <td>${esc(r.operator_nombre || '—')}</td>
+            <td style="font-family:monospace;font-size:0.78rem;color:#666">${esc(r.ref || '—')}</td>
+            <td>
+                <div class="prog-cell">
+                    <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+                    <span class="prog-num" style="color:${color}">${pct}%</span>
+                </div>
+            </td>
+            <td><span class="badge badge-${r.estado}">${r.estado.replace('_',' ')}</span></td>
+            <td>${r.tareas_pendientes > 0 ? `<span class="tasks-pill">${r.tareas_pendientes} pendientes</span>` : '<span style="color:#27ae60;font-size:0.75rem">✓ listo</span>'}</td>
+            <td>${r.osm_relation_id ? `<a href="https://www.openstreetmap.org/relation/${r.osm_relation_id}" target="_blank" style="font-size:0.75rem;color:#4a9eff">OSM ↗</a>` : '<span style="color:#ccc;font-size:0.75rem">—</span>'}</td>
+            <td><button class="btn btn-outline btn-sm" onclick="openEditModal(${r.id})">✏</button></td>
+        </tr>`;
+    }).join('');
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+
+function populateOperatorSelect(selectedId) {
+    const sel = document.getElementById('edit-operator');
+    sel.innerHTML = '<option value="">— Seleccionar —</option>';
+    operators.forEach(o => sel.innerHTML += `<option value="${o.id}" ${o.id == selectedId ? 'selected' : ''}>${esc(o.nombre)}</option>`);
+}
+
+function openNewModal() {
+    document.getElementById('modal-title').textContent = 'Nueva ruta';
+    document.getElementById('edit-id').value = '';
+    document.getElementById('edit-origen').value = '';
+    document.getElementById('edit-destino').value = '';
+    document.getElementById('edit-ref').value = '';
+    document.getElementById('edit-resolucion').value = '';
+    document.getElementById('edit-tipo').value = 'regular';
+    document.getElementById('edit-direction').value = 'ida';
+    document.getElementById('edit-estado').value = 'borrador';
+    document.getElementById('btn-delete').style.display = 'none';
+    populateOperatorSelect('');
+    document.getElementById('modal-bg').classList.add('open');
+}
+
+function openEditModal(id) {
+    const r = allRoutes.find(r => r.id === id);
+    if (!r) return;
+    document.getElementById('modal-title').textContent = 'Editar ruta';
+    document.getElementById('edit-id').value = r.id;
+    document.getElementById('edit-origen').value = r.origen || '';
+    document.getElementById('edit-destino').value = r.destino || '';
+    document.getElementById('edit-ref').value = r.ref || '';
+    document.getElementById('edit-resolucion').value = r.resolucion || '';
+    document.getElementById('edit-tipo').value = r.tipo_servicio || 'regular';
+    document.getElementById('edit-direction').value = r.direction || 'ida';
+    document.getElementById('edit-estado').value = r.estado || 'borrador';
+    document.getElementById('btn-delete').style.display = 'inline-block';
+    populateOperatorSelect(r.operator_id);
+    document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+async function saveRoute() {
+    const id = document.getElementById('edit-id').value;
+    const body = {
+        region_id: region,
+        operator_id: document.getElementById('edit-operator').value,
+        origen: document.getElementById('edit-origen').value.trim(),
+        destino: document.getElementById('edit-destino').value.trim(),
+        ref: document.getElementById('edit-ref').value.trim(),
+        resolucion: document.getElementById('edit-resolucion').value.trim(),
+        tipo_servicio: document.getElementById('edit-tipo').value,
+        direction: document.getElementById('edit-direction').value,
+        estado: document.getElementById('edit-estado').value,
+    };
+    if (!body.operator_id || !body.origen || !body.destino) {
+        showAlert('Operador, origen y destino son obligatorios', 'error'); return;
+    }
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/routes?id=${id}` : '/api/routes';
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.ok) { closeModal(); showAlert(id ? 'Ruta actualizada' : 'Ruta creada', 'success'); loadRoutes(); }
+    else { const e = await res.json(); showAlert('Error: ' + e.error, 'error'); }
+}
+
+async function deleteRoute() {
+    const id = document.getElementById('edit-id').value;
+    if (!id || !confirm('¿Eliminar esta ruta?')) return;
+    await fetch(`/api/routes?id=${id}`, { method: 'DELETE' });
+    closeModal(); showAlert('Ruta eliminada', 'success'); loadRoutes();
+}
+
+function showAlert(msg, type) {
+    const b = document.getElementById('alert-box');
+    b.className = `alert alert-${type} show`;
+    b.textContent = msg;
+    setTimeout(() => b.classList.remove('show'), 5000);
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+loadRoutes();
+</script>
+</body>
+</html>
