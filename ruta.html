@@ -72,6 +72,21 @@
         .empty-section { color: #bbb; font-size: 0.82rem; text-align: center; padding: 20px; }
 
         @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+        /* Modal edición */
+        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; }
+        .modal-bg.open { display: flex; }
+        .modal { background: white; border-radius: 10px; width: 100%; max-width: 540px; padding: 24px; margin: 16px; max-height: 90vh; overflow-y: auto; }
+        .modal h2 { margin: 0 0 18px; font-size: 1rem; color: #1a1a3e; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 0.78rem; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .alert { padding: 10px 14px; border-radius: 7px; margin-bottom: 14px; font-size: 0.83rem; display: none; }
+        .alert.show { display: block; }
+        .alert-success { background: #e0fae8; color: #1a6b3a; }
+        .alert-error { background: #fde8e8; color: #8b1a1a; }
     </style>
 </head>
 <body>
@@ -83,6 +98,8 @@
         <a href="/rutas.html">← Rutas</a>
     </nav>
 </div>
+
+<div id="alert-box" class="alert" style="max-width:1000px;margin:12px auto 0;"></div>
 
 <div class="page">
     <a href="/rutas.html" class="back">← Volver a lista maestra</a>
@@ -126,6 +143,48 @@
 
 </div>
 
+<!-- Modal edición -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <h2>Editar ruta</h2>
+        <div class="form-row">
+            <div class="form-group"><label>Origen *</label><input type="text" id="edit-origen" /></div>
+            <div class="form-group"><label>Destino *</label><input type="text" id="edit-destino" /></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Operador *</label><select id="edit-operator"></select></div>
+            <div class="form-group"><label>Dirección</label>
+                <select id="edit-direction"><option value="ida">Ida</option><option value="vuelta">Vuelta</option></select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Ref / Código</label><input type="text" id="edit-ref" /></div>
+            <div class="form-group"><label>Tipo de servicio</label>
+                <select id="edit-tipo">
+                    <option value="regular">Regular</option>
+                    <option value="express">Express</option>
+                    <option value="nocturno">Nocturno</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Resolución</label><input type="text" id="edit-resolucion" /></div>
+            <div class="form-group"><label>Estado</label>
+                <select id="edit-estado">
+                    <option value="borrador">Borrador</option>
+                    <option value="en_progreso">En progreso</option>
+                    <option value="aprobada">Aprobada</option>
+                    <option value="publicada">Publicada</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveRoute()">Guardar</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const params = new URLSearchParams(location.search);
 const routeId = params.get('id');
@@ -139,11 +198,29 @@ const TASK_INFO = {
     ingresar_horarios:  { icon: '🕐', label: 'Ingresar horarios',  desc: 'Registrar salidas fijas (hora, días, temporada)', role: 'editor' },
 };
 
-async function loadRoute() {
-    const res = await fetch(`/api/routes?id=${routeId}`);
-    if (!res.ok) { location.href = '/rutas.html'; return; }
-    const r = await res.json();
+let currentRoute = null;
+let operators = [];
 
+async function loadRoute() {
+    try {
+        const res = await fetch(`/api/routes?id=${routeId}`);
+        if (!res.ok) { location.href = '/rutas.html'; return; }
+        currentRoute = await res.json();
+        renderRoute(currentRoute);
+    } catch (err) {
+        document.getElementById('hero').innerHTML = `<div style="color:#e74c3c">Error al cargar la ruta. <a href="/rutas.html" style="color:#4a9eff">Volver</a></div>`;
+    }
+}
+
+async function loadOperators() {
+    try {
+        const res = await fetch(`/api/operators?region=boyaca`);
+        const data = await res.json();
+        operators = data.operators || [];
+    } catch (_) {}
+}
+
+function renderRoute(r) {
     document.title = `${r.origen} → ${r.destino} — TP Routes`;
 
     // Hero
@@ -181,18 +258,19 @@ async function loadRoute() {
     document.getElementById('info-section').innerHTML = `
         <div class="info-row"><span class="info-label">Origen</span><span class="info-value">${esc(r.origen)}</span></div>
         <div class="info-row"><span class="info-label">Destino</span><span class="info-value">${esc(r.destino)}</span></div>
-        <div class="info-row"><span class="info-label">Dirección</span><span class="info-value">${r.direction}</span></div>
-        <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${r.tipo_servicio || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Dirección</span><span class="info-value">${esc(r.direction)}</span></div>
+        <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${esc(r.tipo_servicio || '—')}</span></div>
         <div class="info-row"><span class="info-label">Ref</span><span class="info-value">${esc(r.ref || '—')}</span></div>
         <div class="info-row"><span class="info-label">Resolución</span><span class="info-value" style="font-size:0.78rem">${esc(r.resolucion || '—')}</span></div>
         <div class="info-row"><span class="info-label">Red</span><span class="info-value">${esc(r.red || '—')}</span></div>
     `;
 
-    // Operator
+    // Operator — operator_url sanitizada
+    const safeUrl = /^https?:\/\//.test(r.operator_url || '') ? r.operator_url : null;
     document.getElementById('operator-section').innerHTML = `
         <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">${esc(r.operator_nombre || '—')}</span></div>
         <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">${esc(r.operator_telefono || '—')}</span></div>
-        <div class="info-row"><span class="info-label">Web</span><span class="info-value">${r.operator_url ? `<a href="${r.operator_url}" target="_blank" style="color:#1a1a3e">${r.operator_url}</a>` : '—'}</span></div>
+        <div class="info-row"><span class="info-label">Web</span><span class="info-value">${safeUrl ? `<a href="${esc(safeUrl)}" target="_blank" rel="noopener" style="color:#1a1a3e">${esc(safeUrl)}</a>` : '—'}</span></div>
     `;
 
     // Tasks
@@ -205,8 +283,8 @@ async function loadRoute() {
                     return `<div class="task-item ${t.estado}">
                         <div class="task-icon">${info.icon}</div>
                         <div class="task-info">
-                            <div class="task-name">${info.label}</div>
-                            <div class="task-desc">${info.desc}</div>
+                            <div class="task-name">${esc(info.label)}</div>
+                            <div class="task-desc">${esc(info.desc)}</div>
                             <div class="task-role">${info.role === 'contributor' ? '● contributor' : '● editor'}</div>
                         </div>
                         <span class="task-status status-${t.estado}">${t.estado.replace('_',' ')}</span>
@@ -217,11 +295,90 @@ async function loadRoute() {
     } else {
         document.getElementById('tasks-section').innerHTML = '<div class="empty-section">Sin tareas generadas aún.</div>';
     }
+
+    // Paradas
+    const sc = r.stops_count || 0;
+    document.getElementById('stops-count').textContent = sc ? `(${sc})` : '';
+    document.getElementById('stops-section').innerHTML = sc
+        ? `<div class="empty-section">${sc} parada${sc !== 1 ? 's' : ''} asignada${sc !== 1 ? 's' : ''}. Gestión de paradas próximamente.</div>`
+        : '<div class="empty-section">Aún no hay paradas asignadas a esta ruta.</div>';
+
+    // Tarifas
+    const fc = r.fares_count || 0;
+    document.getElementById('fares-section').innerHTML = fc
+        ? `<div class="empty-section">${fc} tarifa${fc !== 1 ? 's' : ''} registrada${fc !== 1 ? 's' : ''}. Gestión de tarifas próximamente.</div>`
+        : '<div class="empty-section">Aún no hay tarifas registradas.</div>';
+
+    // Horarios
+    const tc = r.trips_count || 0;
+    document.getElementById('trips-section').innerHTML = tc
+        ? `<div class="empty-section">${tc} horario${tc !== 1 ? 's' : ''} registrado${tc !== 1 ? 's' : ''}. Gestión de horarios próximamente.</div>`
+        : '<div class="empty-section">Aún no hay horarios registrados.</div>';
+}
+
+// ─── Modal edición ─────────────────────────────────────────────────────────────
+
+function editRoute() {
+    if (!currentRoute) return;
+    const r = currentRoute;
+    const sel = document.getElementById('edit-operator');
+    sel.innerHTML = '<option value="">— Seleccionar —</option>';
+    operators.forEach(o => sel.innerHTML += `<option value="${o.id}" ${o.id == r.operator_id ? 'selected' : ''}>${esc(o.nombre)}</option>`);
+    document.getElementById('edit-origen').value = r.origen || '';
+    document.getElementById('edit-destino').value = r.destino || '';
+    document.getElementById('edit-ref').value = r.ref || '';
+    document.getElementById('edit-resolucion').value = r.resolucion || '';
+    document.getElementById('edit-tipo').value = r.tipo_servicio || 'regular';
+    document.getElementById('edit-direction').value = r.direction || 'ida';
+    document.getElementById('edit-estado').value = r.estado || 'borrador';
+    document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+async function saveRoute() {
+    const body = {
+        operator_id: document.getElementById('edit-operator').value,
+        origen: document.getElementById('edit-origen').value.trim(),
+        destino: document.getElementById('edit-destino').value.trim(),
+        ref: document.getElementById('edit-ref').value.trim(),
+        resolucion: document.getElementById('edit-resolucion').value.trim(),
+        tipo_servicio: document.getElementById('edit-tipo').value,
+        direction: document.getElementById('edit-direction').value,
+        estado: document.getElementById('edit-estado').value,
+    };
+    if (!body.operator_id || !body.origen || !body.destino) {
+        showAlert('Operador, origen y destino son obligatorios', 'error'); return;
+    }
+    try {
+        const res = await fetch(`/api/routes?id=${routeId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (res.ok) {
+            closeModal();
+            showAlert('Ruta actualizada', 'success');
+            await loadRoute();
+        } else {
+            const e = await res.json();
+            showAlert('Error: ' + e.error, 'error');
+        }
+    } catch (_) {
+        showAlert('Error de conexión', 'error');
+    }
+}
+
+function showAlert(msg, type) {
+    const b = document.getElementById('alert-box');
+    b.className = `alert alert-${type} show`;
+    b.textContent = msg;
+    setTimeout(() => b.classList.remove('show'), 5000);
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-loadRoute();
+Promise.all([loadRoute(), loadOperators()]);
 </script>
 </body>
 </html>

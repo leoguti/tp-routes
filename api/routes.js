@@ -12,7 +12,11 @@ module.exports = async function handler(req, res) {
         if (id) {
             const rows = await sql`
                 SELECT r.*, o.nombre AS operator_nombre, o.telefono AS operator_telefono, o.url AS operator_url,
-                       (SELECT json_agg(t ORDER BY t.tipo) FROM route_tasks t WHERE t.route_id = r.id) AS tasks
+                       (SELECT json_agg(t ORDER BY t.tipo) FROM route_tasks t WHERE t.route_id = r.id) AS tasks,
+                       (SELECT COUNT(*) FROM route_stops  WHERE route_id = r.id)::int AS stops_count,
+                       (SELECT COUNT(*) FROM route_shapes WHERE route_id = r.id)::int AS shapes_count,
+                       (SELECT COUNT(*) FROM route_fares  WHERE route_id = r.id)::int AS fares_count,
+                       (SELECT COUNT(*) FROM route_trips  WHERE route_id = r.id)::int AS trips_count
                 FROM routes r
                 LEFT JOIN operators o ON o.id = r.operator_id
                 WHERE r.id = ${id}
@@ -77,8 +81,9 @@ module.exports = async function handler(req, res) {
         `;
         const routeId = row[0].id;
 
-        // Generar tareas automáticas
+        // Generar tareas automáticas y calcular progreso inicial
         await generateTasks(sql, routeId);
+        await recalcProgress(sql, routeId);
 
         return res.json({ ok: true, id: routeId });
     }
@@ -90,6 +95,9 @@ module.exports = async function handler(req, res) {
 
         const { operator_id, origen, destino, ref, red, color, resolucion,
                 tipo_servicio, direction, estado, responsable_id, osm_relation_id } = req.body;
+
+        if (!operator_id || !origen?.trim() || !destino?.trim())
+            return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
 
         await sql`
             UPDATE routes SET
@@ -113,8 +121,12 @@ module.exports = async function handler(req, res) {
     if (req.method === 'DELETE') {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Falta id' });
-        await sql`DELETE FROM routes WHERE id = ${id}`;
-        return res.json({ ok: true });
+        try {
+            await sql`DELETE FROM routes WHERE id = ${id}`;
+            return res.json({ ok: true });
+        } catch (err) {
+            return res.status(409).json({ error: 'No se puede eliminar: la ruta tiene datos asociados' });
+        }
     }
 
     res.status(405).json({ error: 'Método no permitido' });

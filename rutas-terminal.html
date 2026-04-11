@@ -71,6 +71,9 @@
         .btn-outline:hover { background: #f5f5f5; }
         .btn-danger { background: #e74c3c; color: white; }
         .btn-danger:hover { background: #c0392b; }
+        .btn-promote { background: #8e44ad; color: white; }
+        .btn-promote:hover { background: #7d3c98; }
+        .btn-promote:disabled { background: #ccc; cursor: not-allowed; }
         .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
 
         /* Upload zone */
@@ -263,6 +266,7 @@
         <button class="btn btn-outline" onclick="loadRoutes()">↺ Actualizar</button>
         <button class="btn btn-success" onclick="exportCSV()">⬇ Exportar CSV</button>
         <button class="btn btn-primary" onclick="openNewModal()">+ Nueva ruta</button>
+        <button class="btn btn-promote" id="btn-promote" onclick="promoteRoutes()">▲ Promover pendientes a Lista Maestra</button>
     </div>
 
     <!-- Table -->
@@ -646,6 +650,50 @@ function exportCSV() {
     let url = `/api/terminal-routes-export?region=${activeRegionKey}`;
     if (status) url += `&status=${status}`;
     window.location.href = url;
+}
+
+// ─── Promoción a Lista Maestra ────────────────────────────────────────────────
+
+async function promoteRoutes() {
+    const pendientes = allRoutes.filter(r => r.status === 'pendiente').length;
+    if (!pendientes) {
+        showAlert('No hay rutas pendientes para promover.', 'info');
+        return;
+    }
+    if (!confirm(`¿Promover ${pendientes} ruta(s) pendiente(s) a la Lista Maestra?\nSe crearán operadores y rutas automáticamente.`))
+        return;
+
+    const btn = document.getElementById('btn-promote');
+    btn.disabled = true;
+    btn.textContent = 'Promoviendo...';
+    showProgress(true, `Promoviendo ${pendientes} rutas...`);
+    setProgressWidth(30);
+
+    try {
+        const res = await fetch(`/api/promote-routes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ region: activeRegionKey })
+        });
+        const result = await res.json();
+        setProgressWidth(100);
+
+        if (!res.ok) {
+            showAlert('Error: ' + (result.error || 'Error desconocido'), 'error');
+        } else {
+            let msg = `✅ ${result.promoted} rutas promovidas a la Lista Maestra.`;
+            if (result.skipped > 0) msg += ` ${result.skipped} ya existían.`;
+            if (result.errors?.length > 0) msg += ` ${result.errors.length} con errores.`;
+            showAlert(msg, 'success');
+            loadRoutes();
+        }
+    } catch (e) {
+        showAlert('Error de conexión: ' + e.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '▲ Promover pendientes a Lista Maestra';
+    showProgress(false);
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

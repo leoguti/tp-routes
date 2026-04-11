@@ -408,8 +408,13 @@ async function saveRoute() {
 async function deleteRoute() {
     const id = document.getElementById('edit-id').value;
     if (!id || !confirm('¿Eliminar esta ruta?')) return;
-    await fetch(`/api/routes?id=${id}`, { method: 'DELETE' });
-    closeModal(); showAlert('Ruta eliminada', 'success'); loadRoutes();
+    try {
+        const res = await fetch(`/api/routes?id=${id}`, { method: 'DELETE' });
+        if (res.ok) { closeModal(); showAlert('Ruta eliminada', 'success'); loadRoutes(); }
+        else { const e = await res.json(); showAlert('Error: ' + e.error, 'error'); }
+    } catch (_) {
+        showAlert('Error de conexión', 'error');
+    }
 }
 
 function showAlert(msg, type) {
