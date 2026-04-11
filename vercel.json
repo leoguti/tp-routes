@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/promote-routes", "destination": "/api/promote-routes" },
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/reset",          "destination": "/api/reset"          },
+    { "source": "/api/(.*)",           "destination": "/api/$1"             }
   ]
 }
