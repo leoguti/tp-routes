@@ -18,29 +18,34 @@ module.exports = async function handler(req, res) {
     try {
         let counts = {};
 
+        // Tablas dependientes de routes (solo las que existen)
+        const depTables = ['route_trips', 'route_fares', 'route_shapes', 'route_stops', 'route_tasks'];
+
         if (region) {
-            // Borrar solo una región
             const routes = await sql`SELECT id FROM routes WHERE region_id = ${region}`;
             const routeIds = routes.map(r => r.id);
 
             if (routeIds.length) {
-                await sql`DELETE FROM route_trips  WHERE route_id = ANY(${routeIds}::int[])`;
-                await sql`DELETE FROM route_fares  WHERE route_id = ANY(${routeIds}::int[])`;
-                await sql`DELETE FROM route_shapes WHERE route_id = ANY(${routeIds}::int[])`;
-                await sql`DELETE FROM route_stops  WHERE route_id = ANY(${routeIds}::int[])`;
-                await sql`DELETE FROM route_tasks  WHERE route_id = ANY(${routeIds}::int[])`;
+                for (const tbl of depTables) {
+                    try {
+                        await sql(`DELETE FROM ${tbl} WHERE route_id = ANY($1::int[])`, [routeIds]);
+                    } catch (_) { /* tabla no existe aún, ignorar */ }
+                }
             }
 
-            const r = await sql`DELETE FROM routes        WHERE region_id = ${region} RETURNING id`;
-            const o = await sql`DELETE FROM operators     WHERE region_id = ${region} RETURNING id`;
-            const t = await sql`DELETE FROM terminal_routes WHERE region   = ${region} RETURNING id`;
+            const r = await sql`DELETE FROM routes          WHERE region_id = ${region} RETURNING id`;
+            const o = await sql`DELETE FROM operators       WHERE region_id = ${region} RETURNING id`;
+            const t = await sql`DELETE FROM terminal_routes WHERE region    = ${region} RETURNING id`;
 
             counts = { routes: r.length, operators: o.length, terminal_routes: t.length };
         } else {
-            // Borrar todo
-            await sql`TRUNCATE route_trips, route_fares, route_shapes, route_stops, route_tasks CASCADE`;
-            const r = await sql`DELETE FROM routes         RETURNING id`;
-            const o = await sql`DELETE FROM operators      RETURNING id`;
+            for (const tbl of depTables) {
+                try {
+                    await sql(`DELETE FROM ${tbl}`, []);
+                } catch (_) { /* tabla no existe aún, ignorar */ }
+            }
+            const r = await sql`DELETE FROM routes          RETURNING id`;
+            const o = await sql`DELETE FROM operators       RETURNING id`;
             const t = await sql`DELETE FROM terminal_routes RETURNING id`;
 
             counts = { routes: r.length, operators: o.length, terminal_routes: t.length };
