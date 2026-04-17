@@ -59,13 +59,15 @@ module.exports = async function handler(req, res) {
                     operatorId = created[0].id;
                 }
 
-                // 2. Verificar si la ruta ya existe
+                // 2. Verificar si la ruta ya existe (clave: operator+origen+destino+via)
+                const viaNorm = (tr.via?.trim()) || '';
                 const exists = await sql`
                     SELECT id FROM routes
                     WHERE region_id  = ${region}
                       AND operator_id = ${operatorId}
                       AND LOWER(origen)  = LOWER(${tr.origen.trim()})
                       AND LOWER(destino) = LOWER(${tr.destino.trim()})
+                      AND LOWER(COALESCE(via, '')) = LOWER(${viaNorm})
                 `;
 
                 if (exists.length) {
@@ -80,9 +82,9 @@ module.exports = async function handler(req, res) {
 
                 // 3. Crear ruta
                 const newRoute = await sql`
-                    INSERT INTO routes (region_id, operator_id, origen, destino,
+                    INSERT INTO routes (region_id, operator_id, origen, destino, via,
                                        resolucion, terminal_route_id, estado)
-                    VALUES (${region}, ${operatorId}, ${tr.origen.trim()}, ${tr.destino.trim()},
+                    VALUES (${region}, ${operatorId}, ${tr.origen.trim()}, ${tr.destino.trim()}, ${viaNorm || null},
                             ${tr.resolucion || null}, ${tr.id}, 'borrador')
                     RETURNING id
                 `;

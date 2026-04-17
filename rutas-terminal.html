@@ -231,6 +231,7 @@
             <span class="col-tag">origen</span>
             <span class="col-tag">destino</span>
             <span class="col-tag">operador</span>
+            <span class="col-tag optional">via</span>
             <span class="col-tag optional">telefono</span>
             <span class="col-tag optional">resolucion</span>
             <span class="col-tag optional">tarifa</span>
@@ -238,7 +239,7 @@
         </div>
         <div style="margin-top:8px;">
             Las columnas en <span style="background:#6c757d;color:white;padding:1px 6px;border-radius:3px;font-size:0.75rem;">gris</span> son opcionales.
-            Las rutas duplicadas (mismo origen+destino+operador) se omiten automáticamente.
+            Las rutas duplicadas (mismo origen+destino+operador+via) se omiten automáticamente.
             <a href="/GUIA_FORMATO_RUTAS.md" target="_blank" style="color:#1a1a3e;font-weight:600;margin-left:6px;">Ver guía completa →</a>
         </div>
     </div>
@@ -276,6 +277,7 @@
                 <tr>
                     <th>Origen</th>
                     <th>Destino</th>
+                    <th>Vía</th>
                     <th>Operador</th>
                     <th>Teléfono</th>
                     <th>Resolución</th>
@@ -285,7 +287,7 @@
                 </tr>
             </thead>
             <tbody id="routes-body">
-                <tr><td colspan="8" class="empty"><h3>Cargando...</h3></td></tr>
+                <tr><td colspan="9" class="empty"><h3>Cargando...</h3></td></tr>
             </tbody>
         </table>
     </div>
@@ -307,9 +309,15 @@
                 <input type="text" id="edit-destino" placeholder="Ej: Aguazul" />
             </div>
         </div>
-        <div class="form-group" style="margin-bottom:12px">
-            <label>Operador *</label>
-            <input type="text" id="edit-operador" placeholder="Ej: Autoboy S.A." />
+        <div class="form-row">
+            <div class="form-group">
+                <label>Operador *</label>
+                <input type="text" id="edit-operador" placeholder="Ej: Autoboy S.A." />
+            </div>
+            <div class="form-group">
+                <label>Vía</label>
+                <input type="text" id="edit-via" placeholder="Ej: Nobsa, Directo, Moniquira - Barbosa" />
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -392,13 +400,14 @@ function filterRoutes() {
 function renderTable(routes) {
     const tbody = document.getElementById('routes-body');
     if (!routes.length) {
-        tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><h3>No hay rutas</h3><p>Sube un archivo o agrega una ruta manualmente.</p></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><h3>No hay rutas</h3><p>Sube un archivo o agrega una ruta manualmente.</p></div></td></tr>`;
         return;
     }
     tbody.innerHTML = routes.map(r => `
         <tr>
             <td>${esc(r.origen)}</td>
             <td><strong>${esc(r.destino)}</strong></td>
+            <td style="color:#666;font-size:0.82rem">${esc(r.via || '—')}</td>
             <td>${esc(r.operador)}</td>
             <td style="color:#666">${esc(r.telefono || '—')}</td>
             <td style="font-size:0.78rem;color:#888">${esc(r.resolucion || '—')}</td>
@@ -563,6 +572,7 @@ function openNewModal() {
     document.getElementById('edit-origen').value = '';
     document.getElementById('edit-destino').value = '';
     document.getElementById('edit-operador').value = '';
+    document.getElementById('edit-via').value = '';
     document.getElementById('edit-telefono').value = '';
     document.getElementById('edit-tarifa').value = '';
     document.getElementById('edit-resolucion').value = '';
@@ -581,6 +591,7 @@ function openEditModal(id) {
     document.getElementById('edit-origen').value = r.origen || '';
     document.getElementById('edit-destino').value = r.destino || '';
     document.getElementById('edit-operador').value = r.operador || '';
+    document.getElementById('edit-via').value = r.via || '';
     document.getElementById('edit-telefono').value = r.telefono || '';
     document.getElementById('edit-tarifa').value = r.tarifa || '';
     document.getElementById('edit-resolucion').value = r.resolucion || '';
@@ -601,6 +612,7 @@ async function saveRoute() {
         origen: document.getElementById('edit-origen').value.trim(),
         destino: document.getElementById('edit-destino').value.trim(),
         operador: document.getElementById('edit-operador').value.trim(),
+        via: document.getElementById('edit-via').value.trim(),
         telefono: document.getElementById('edit-telefono').value.trim(),
         tarifa: document.getElementById('edit-tarifa').value,
         resolucion: document.getElementById('edit-resolucion').value.trim(),

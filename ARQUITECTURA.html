@@ -162,7 +162,7 @@
             <div class="principle"><div class="num">2</div><div class="text"><strong>GTFS como destino</strong> — cada campo existe porque GTFS lo necesita</div></div>
             <div class="principle"><div class="num">3</div><div class="text"><strong>No bloquear colaboración</strong> — contribuir sin saber OSM</div></div>
             <div class="principle"><div class="num">4</div><div class="text"><strong>Progreso automático</strong> — el sistema calcula qué falta, sin tareas manuales</div></div>
-            <div class="principle"><div class="num">5</div><div class="text"><strong>Importación directa</strong> — las rutas nuevas del terminal entran sin aprobación; solo se pide confirmación si la tripleta (operator, origen, destino) ya existe</div></div>
+            <div class="principle"><div class="num">5</div><div class="text"><strong>Importación directa</strong> — las rutas nuevas del terminal entran sin aprobación; solo se pide confirmación si la clave (operator, origen, destino, via) ya existe</div></div>
             <div class="principle"><div class="num">6</div><div class="text"><strong>Multi-región</strong> — Boyacá, Cochabamba, Kigali... cada una independiente</div></div>
         </div>
     </section>
@@ -225,11 +225,11 @@
 
         <div class="entity">
             <div class="entity-header"><span class="entity-icon">🚌</span><span class="entity-title">Ruta <code style="font-size:0.72rem;color:#6878aa">routes</code> — entidad central <span class="changed-tag">ACTUALIZADO</span></span></div>
-            <p style="font-size:0.82rem">Combinación única de origen + destino + operador + dirección. Ida y vuelta son la misma ruta GTFS con <code style="font-size:0.75rem">direction_id</code> diferente.</p>
+            <p style="font-size:0.82rem">Combinación única de <strong>operador + origen + destino + vía</strong>. Dos rutas con mismo origen y destino pero diferente <code style="font-size:0.75rem">via</code> son rutas distintas: paran en pueblos distintos, tienen otras paradas y tarifas intermedias. Ida y vuelta comparten GTFS con <code style="font-size:0.75rem">direction_id</code> diferente.</p>
             <div class="fields">
-                <span class="field key">id</span><span class="field important">origen</span><span class="field important">destino</span><span class="field important">operator_id</span><span class="field">ref</span><span class="field">red</span><span class="field">color</span><span class="field">resolucion</span><span class="field">tipo_servicio</span><span class="field new">direction</span><span class="field new">route_parent_id</span><span class="field important">estado</span><span class="field important">progreso_pct</span><span class="field important">responsable_id</span><span class="field">osm_relation_id</span><span class="field">osm_merged</span><span class="field">terminal_route_id</span>
+                <span class="field key">id</span><span class="field important">origen</span><span class="field important">destino</span><span class="field new">via</span><span class="field important">operator_id</span><span class="field">ref</span><span class="field">red</span><span class="field">color</span><span class="field">resolucion</span><span class="field">tipo_servicio</span><span class="field new">direction</span><span class="field new">route_parent_id</span><span class="field important">estado</span><span class="field important">progreso_pct</span><span class="field important">responsable_id</span><span class="field">osm_relation_id</span><span class="field">osm_merged</span><span class="field">terminal_route_id</span>
             </div>
-            <div class="entity-sub"><strong>direction:</strong> ida | vuelta &nbsp;·&nbsp; <strong>route_parent_id:</strong> agrupa ida y vuelta como misma ruta GTFS &nbsp;·&nbsp; <strong>terminal_route_id:</strong> FK a staging — saber de dónde vino</div>
+            <div class="entity-sub"><strong>Clave única:</strong> <code>(operator_id, origen, destino, COALESCE(via, ''))</code> &nbsp;·&nbsp; <strong>via:</strong> municipio intermedio clave, NULL si no aplica &nbsp;·&nbsp; <strong>direction:</strong> ida | vuelta &nbsp;·&nbsp; <strong>route_parent_id:</strong> agrupa ida y vuelta como misma ruta GTFS</div>
         </div>
 
         <div class="entity">
@@ -290,10 +290,10 @@
 
     <section id="importacion">
         <h2>Reglas de importación desde terminal <span class="new-tag">NUEVO</span></h2>
-        <p>Cada fila del Excel/CSV se evalúa contra las rutas existentes usando la <strong>tripleta única</strong> <code style="font-size:0.8rem;color:#4a9eff">(operator_id, origen, destino)</code>.</p>
+        <p>Cada fila del Excel/CSV se evalúa contra las rutas existentes usando la <strong>clave única</strong> <code style="font-size:0.8rem;color:#4a9eff">(operator_id, origen, destino, COALESCE(via, ''))</code>. Dos rutas con mismo origen/destino pero distinta <code>via</code> son rutas diferentes (pasan por municipios distintos).</p>
 
         <div class="flow" style="margin:16px 0 24px;">
-<span class="highlight">¿Existe ya una ruta con la misma tripleta?</span>
+<span class="highlight">¿Existe ya una ruta con la misma clave (op, origen, destino, via)?</span>
   │
   ├── <span class="highlight">NO</span>  <span class="arrow">→</span> Crear ruta en estado <code style="color:#4edb8a">borrador</code>
   │         + vincular <code>routes.terminal_route_id</code>
@@ -309,7 +309,7 @@
         <p>Si el operador no existe se crea automáticamente. Match tolerante (mayúsculas/minúsculas, acentos, espacios) para reusar el <code>operator_id</code> existente y evitar duplicados.</p>
 
         <h3>Ida y vuelta</h3>
-        <p>Cada fila genera <strong>dos registros</strong>: ida (<code>origen → destino</code>) y vuelta (<code>destino → origen</code>), vinculados con <code>route_parent_id</code>. La dedup por tripleta se evalúa en ambas direcciones.</p>
+        <p>Cada fila genera <strong>dos registros</strong>: ida (<code>origen → destino</code>) y vuelta (<code>destino → origen</code>), vinculados con <code>route_parent_id</code>. La dedup por clave única se evalúa en ambas direcciones, preservando la misma <code>via</code>.</p>
 
         <h3>Resumen del import</h3>
         <p>Al terminar, <code>/importar</code> muestra: N creadas, N ignoradas, N duplicados marcados, y link al <code>audit_log</code> del import para trazabilidad.</p>
@@ -372,7 +372,7 @@
             <div class="page-item"><span class="page-url">/editor</span><span class="page-desc">Editor de trazado: mapa Leaflet + Valhalla para dibujar la ruta</span></div>
             <div class="page-item"><span class="page-url">/paradas</span><span class="page-desc">Catálogo de paradas con mapa y estado de coordenadas</span></div>
             <div class="page-item"><span class="page-url">/explorador</span><span class="page-desc">Rutas ya en OSM vía Overpass — para comparar y hacer merge</span></div>
-            <div class="page-item"><span class="page-url">/importar</span><span class="page-desc">Subir Excel/CSV del terminal. Crea rutas directamente; pide confirmación fila a fila si la tripleta ya existe. Muestra resumen final (creadas, ignoradas, duplicados)</span></div>
+            <div class="page-item"><span class="page-url">/importar</span><span class="page-desc">Subir Excel/CSV del terminal. Crea rutas directamente; pide confirmación fila a fila si la clave (op, origen, destino, via) ya existe. Muestra resumen final (creadas, ignoradas, duplicados)</span></div>
             <div class="page-item"><span class="page-url">/exportar</span><span class="page-desc">Generar y descargar GTFS por región — solo rutas al 100%</span></div>
             <div class="page-item"><span class="page-url">/admin</span><span class="page-desc">Gestión de usuarios, roles, regiones y calidad del GTFS</span></div>
         </div>

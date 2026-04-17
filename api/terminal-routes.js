@@ -61,23 +61,27 @@ module.exports = async function handler(req, res) {
             let inserted = 0;
             let skipped = 0;
             for (const r of valid) {
-                // Check for duplicates
+                const viaNorm = (r.via?.trim()) || '';
+                // Dedup por clave única (origen, destino, operador, via). COALESCE
+                // asegura que NULL y '' se traten igual.
                 const exists = await sql`
                     SELECT id FROM terminal_routes
                     WHERE origen = ${r.origen.trim()}
                       AND destino = ${r.destino.trim()}
                       AND operador = ${r.operador.trim()}
+                      AND COALESCE(via, '') = ${viaNorm}
                       AND region = ${region}
                 `;
                 if (exists.length > 0) { skipped++; continue; }
 
                 await sql`
                     INSERT INTO terminal_routes
-                      (origen, destino, operador, telefono, resolucion, tarifa, notas, region)
+                      (origen, destino, operador, via, telefono, resolucion, tarifa, notas, region)
                     VALUES (
                       ${r.origen.trim()},
                       ${r.destino.trim()},
                       ${r.operador.trim()},
+                      ${viaNorm || null},
                       ${r.telefono?.trim() || null},
                       ${r.resolucion?.trim() || null},
                       ${r.tarifa ? parseInt(r.tarifa) : null},
@@ -99,13 +103,14 @@ module.exports = async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Falta id' });
 
-        const { origen, destino, operador, telefono, resolucion, tarifa, notas, status, osm_relation_id } = req.body;
+        const { origen, destino, operador, via, telefono, resolucion, tarifa, notas, status, osm_relation_id } = req.body;
         try {
             await sql`
                 UPDATE terminal_routes SET
                     origen = ${origen},
                     destino = ${destino},
                     operador = ${operador},
+                    via = ${via || null},
                     telefono = ${telefono || null},
                     resolucion = ${resolucion || null},
                     tarifa = ${tarifa ? parseInt(tarifa) : null},

@@ -16,7 +16,7 @@ Plataforma colaborativa para generar datos GTFS de transporte público abierto. 
 2. **GTFS como destino** — cada campo existe porque GTFS lo necesita
 3. **Progreso visible** — cada ruta tiene un % de completitud calculado automáticamente
 4. **No bloquear la colaboración** — los no expertos en OSM pueden contribuir libremente
-5. **Importación directa con confirmación en conflictos** — las rutas nuevas del terminal se crean sin aprobación previa. Solo se pide intervención humana cuando la tripleta `(operator, origen, destino)` ya existe
+5. **Importación directa con confirmación en conflictos** — las rutas nuevas del terminal se crean sin aprobación previa. Solo se pide intervención humana cuando la clave única `(operator, origen, destino, via)` ya existe
 6. **Multi-región** — Boyacá, Cochabamba, Kigali... cada una con su propio GTFS independiente
 
 ---
@@ -74,11 +74,12 @@ creada_en
 ```
 
 ### 3. Ruta (`routes`) — entidad central
-Combinación única de origen + destino + operador + dirección.
+Combinación única de **operador + origen + destino + vía**. Dos rutas con mismo origen y destino pero diferente `vía` son rutas distintas (paran en pueblos distintos, tienen otras paradas y tarifas intermedias).
 
 ```
 id, region_id, operator_id,
 origen, destino,
+via,                    -- municipio intermedio clave; NULL si no aplica
 ref (código), red (network), color,
 resolucion, tipo_servicio (regular|express|nocturno),
 direction (ida|vuelta),
@@ -91,6 +92,8 @@ osm_merged,             -- true si se hizo merge con datos de OSM
 terminal_route_id,      -- FK a terminal_routes (origen del import)
 creado_por, creada_en, actualizada_en
 ```
+
+> **Clave única:** `(operator_id, origen, destino, COALESCE(via, ''))`. Ejemplo: `Tunja → Sogamoso vía Nobsa` y `Tunja → Sogamoso vía Paipa` son dos rutas separadas.
 
 ### 4. Parada (`stops`) — compartida entre rutas
 Punto físico compartido por múltiples rutas.
@@ -196,12 +199,12 @@ creado_en
 
 ## Reglas de importación desde terminal
 
-Al procesar un archivo Excel/CSV, cada fila se evalúa contra las rutas existentes usando la **tripleta única** `(operator_id, origen, destino)`.
+Al procesar un archivo Excel/CSV, cada fila se evalúa contra las rutas existentes usando la **clave única** `(operator_id, origen, destino, COALESCE(via, ''))`.
 
 ### Flujo por fila
 
 ```
-¿Existe ya una ruta con la misma tripleta?
+¿Existe ya una ruta con la misma clave única?
   │
   ├── NO  → Crear ruta nueva en estado `borrador`
   │         + vincular routes.terminal_route_id al registro del import
@@ -211,7 +214,7 @@ Al procesar un archivo Excel/CSV, cada fila se evalúa contra las rutas existent
             ┌─ Ignorar         → no hacer nada, seguir con la siguiente fila
             ├─ Actualizar      → sobreescribir campos de la ruta existente
             │                     con los nuevos valores del Excel
-            └─ Crear duplicado → crear otra ruta con misma tripleta,
+            └─ Crear duplicado → crear otra ruta con misma clave única,
                                   marcarla con estado `borrador` y tag
                                   de "duplicado por revisar"
 ```
@@ -223,7 +226,7 @@ Al procesar un archivo Excel/CSV, cada fila se evalúa contra las rutas existent
 
 ### Ida y vuelta
 
-Cada fila del Excel genera **dos registros en `routes`**: la ida (`origen → destino`) y la vuelta (`destino → origen`). Se vinculan con `route_parent_id` apuntando a la ida. La dedup por tripleta se evalúa en ambas direcciones.
+Cada fila del Excel genera **dos registros en `routes`**: la ida (`origen → destino`) y la vuelta (`destino → origen`). Se vinculan con `route_parent_id` apuntando a la ida. La dedup por clave única se evalúa en ambas direcciones, preservando la misma `via` en la vuelta.
 
 ### Resumen de import
 
@@ -260,7 +263,7 @@ Calculado automáticamente. 100% = lista para incluir en la exportación GTFS.
 | `/editor` | Editor de trazado: mapa Leaflet + Valhalla |
 | `/paradas` | Catálogo de paradas con mapa y estado de coordenadas |
 | `/explorador` | Rutas ya en OSM vía Overpass — para comparar y hacer merge |
-| `/importar` | Subir Excel/CSV del terminal. Crea rutas directamente; pide confirmación fila a fila si la tripleta ya existe. Muestra resumen final (creadas, ignoradas, en conflicto) |
+| `/importar` | Subir Excel/CSV del terminal. Crea rutas directamente; pide confirmación fila a fila si la clave (op, origen, destino, via) ya existe. Muestra resumen final (creadas, ignoradas, en conflicto) |
 | `/exportar` | Generar y descargar GTFS por región — solo rutas aprobadas |
 | `/admin` | Gestión de usuarios, roles, regiones, calidad del GTFS |
 

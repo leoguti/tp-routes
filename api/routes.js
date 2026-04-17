@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
         }
 
         let query = `
-            SELECT r.id, r.origen, r.destino, r.ref, r.direction, r.estado, r.progreso_pct,
+            SELECT r.id, r.origen, r.destino, r.via, r.ref, r.direction, r.estado, r.progreso_pct,
                    r.osm_relation_id, r.terminal_route_id, r.creada_en, r.actualizada_en,
                    r.responsable_id, r.color, r.tipo_servicio, r.operator_id,
                    o.nombre AS operator_nombre,
