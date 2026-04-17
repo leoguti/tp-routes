@@ -26,9 +26,16 @@ module.exports = async function handler(req, res) {
         }
 
         let query = `
-            SELECT r.id, r.origen, r.destino, r.via, r.ref, r.direction, r.estado, r.progreso_pct,
+            SELECT r.id, r.origen, r.destino, r.via, r.ref, r.direction,
+                   r.resolucion, r.progreso_pct,
+                   CASE
+                     WHEN r.progreso_pct >= 100 AND r.osm_relation_id IS NOT NULL THEN 'publicada'
+                     WHEN r.progreso_pct >= 81 THEN 'aprobada'
+                     WHEN r.progreso_pct >= 21 THEN 'en_progreso'
+                     ELSE 'borrador'
+                   END AS estado,
                    r.osm_relation_id, r.terminal_route_id, r.creada_en, r.actualizada_en,
-                   r.responsable_id, r.color, r.tipo_servicio, r.operator_id,
+                   r.responsable_id, r.color, r.operator_id,
                    o.nombre AS operator_nombre,
                    (SELECT COUNT(*) FROM route_tasks t WHERE t.route_id = r.id AND t.estado != 'completada') AS tareas_pendientes
             FROM routes r
@@ -63,20 +70,20 @@ module.exports = async function handler(req, res) {
 
     // POST — crear ruta
     if (req.method === 'POST') {
-        const { region_id = 'boyaca', operator_id, origen, destino, ref, red, color,
-                resolucion, tipo_servicio = 'regular', direction = 'ida',
+        const { region_id = 'boyaca', operator_id, origen, destino, via, ref, red, color,
+                resolucion, direction = 'ida',
                 responsable_id, terminal_route_id } = req.body;
 
         if (!operator_id || !origen?.trim() || !destino?.trim())
             return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
 
         const row = await sql`
-            INSERT INTO routes (region_id, operator_id, origen, destino, ref, red, color,
-                resolucion, tipo_servicio, direction, responsable_id, terminal_route_id)
+            INSERT INTO routes (region_id, operator_id, origen, destino, via, ref, red, color,
+                resolucion, direction, responsable_id, terminal_route_id, estado)
             VALUES (${region_id}, ${operator_id}, ${origen.trim()}, ${destino.trim()},
-                ${ref || null}, ${red || null}, ${color || null},
-                ${resolucion || null}, ${tipo_servicio}, ${direction},
-                ${responsable_id || null}, ${terminal_route_id || null})
+                ${via?.trim() || null}, ${ref || null}, ${red || null}, ${color || null},
+                ${resolucion || null}, ${direction},
+                ${responsable_id || null}, ${terminal_route_id || null}, 'borrador')
             RETURNING id
         `;
         const routeId = row[0].id;
@@ -88,13 +95,13 @@ module.exports = async function handler(req, res) {
         return res.json({ ok: true, id: routeId });
     }
 
-    // PUT — actualizar ruta
+    // PUT — actualizar ruta (estado NO se acepta: es auto-calculado)
     if (req.method === 'PUT') {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Falta id' });
 
-        const { operator_id, origen, destino, ref, red, color, resolucion,
-                tipo_servicio, direction, estado, responsable_id, osm_relation_id } = req.body;
+        const { operator_id, origen, destino, via, ref, red, color, resolucion,
+                direction, responsable_id, osm_relation_id } = req.body;
 
         if (!operator_id || !origen?.trim() || !destino?.trim())
             return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
@@ -102,16 +109,17 @@ module.exports = async function handler(req, res) {
         await sql`
             UPDATE routes SET
                 operator_id = ${operator_id}, origen = ${origen}, destino = ${destino},
+                via = ${via?.trim() || null},
                 ref = ${ref || null}, red = ${red || null}, color = ${color || null},
-                resolucion = ${resolucion || null}, tipo_servicio = ${tipo_servicio},
-                direction = ${direction}, estado = ${estado},
+                resolucion = ${resolucion || null},
+                direction = ${direction},
                 responsable_id = ${responsable_id || null},
                 osm_relation_id = ${osm_relation_id || null},
                 actualizada_en = NOW()
             WHERE id = ${id}
         `;
 
-        // Recalcular progreso
+        // Recalcular progreso (que a su vez define el estado)
         await recalcProgress(sql, id);
 
         return res.json({ ok: true });

@@ -81,7 +81,7 @@ id, region_id, operator_id,
 origen, destino,
 via,                    -- municipio intermedio clave; NULL si no aplica
 ref (código), red (network), color,
-resolucion, tipo_servicio (regular|express|nocturno),
+resolucion,
 direction (ida|vuelta),
 route_parent_id,        -- agrupa ida y vuelta como misma ruta GTFS
 estado (borrador|en_progreso|aprobada|publicada),

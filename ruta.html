@@ -158,25 +158,16 @@
             </div>
         </div>
         <div class="form-row">
+            <div class="form-group"><label>Vía</label><input type="text" id="edit-via" placeholder="Ej: Nobsa, Directo, Moniquira - Barbosa" /></div>
             <div class="form-group"><label>Ref / Código</label><input type="text" id="edit-ref" /></div>
-            <div class="form-group"><label>Tipo de servicio</label>
-                <select id="edit-tipo">
-                    <option value="regular">Regular</option>
-                    <option value="express">Express</option>
-                    <option value="nocturno">Nocturno</option>
-                </select>
-            </div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Resolución</label><input type="text" id="edit-resolucion" /></div>
-            <div class="form-group"><label>Estado</label>
-                <select id="edit-estado">
-                    <option value="borrador">Borrador</option>
-                    <option value="en_progreso">En progreso</option>
-                    <option value="aprobada">Aprobada</option>
-                    <option value="publicada">Publicada</option>
-                </select>
-            </div>
+        <div class="form-group" style="margin-bottom:12px">
+            <label>Resolución</label>
+            <input type="text" id="edit-resolucion" />
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+            <label>Estado <span style="font-weight:400;color:#888;font-size:0.75rem">(automático según progreso)</span></label>
+            <div id="edit-estado-display" style="padding:8px 12px;background:#f5f5f5;border-radius:6px;font-size:0.85rem">—</div>
         </div>
         <div class="modal-actions">
             <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
@@ -232,8 +223,8 @@ function renderRoute(r) {
                 <div class="route-title">${esc(r.origen)} <span>→</span> ${esc(r.destino)}</div>
                 <div class="route-meta">
                     ${esc(r.operator_nombre || '—')} &nbsp;·&nbsp;
-                    ${r.direction === 'vuelta' ? 'Vuelta' : 'Ida'} &nbsp;·&nbsp;
-                    ${r.tipo_servicio || 'regular'}
+                    ${r.direction === 'vuelta' ? 'Vuelta' : 'Ida'}
+                    ${r.via ? ` &nbsp;·&nbsp; vía ${esc(r.via)}` : ''}
                     ${r.ref ? ` &nbsp;·&nbsp; <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">${esc(r.ref)}</code>` : ''}
                 </div>
             </div>
@@ -258,8 +249,8 @@ function renderRoute(r) {
     document.getElementById('info-section').innerHTML = `
         <div class="info-row"><span class="info-label">Origen</span><span class="info-value">${esc(r.origen)}</span></div>
         <div class="info-row"><span class="info-label">Destino</span><span class="info-value">${esc(r.destino)}</span></div>
+        <div class="info-row"><span class="info-label">Vía</span><span class="info-value">${esc(r.via || '—')}</span></div>
         <div class="info-row"><span class="info-label">Dirección</span><span class="info-value">${esc(r.direction)}</span></div>
-        <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${esc(r.tipo_servicio || '—')}</span></div>
         <div class="info-row"><span class="info-label">Ref</span><span class="info-value">${esc(r.ref || '—')}</span></div>
         <div class="info-row"><span class="info-label">Resolución</span><span class="info-value" style="font-size:0.78rem">${esc(r.resolucion || '—')}</span></div>
         <div class="info-row"><span class="info-label">Red</span><span class="info-value">${esc(r.red || '—')}</span></div>
@@ -326,11 +317,13 @@ function editRoute() {
     operators.forEach(o => sel.innerHTML += `<option value="${o.id}" ${o.id == r.operator_id ? 'selected' : ''}>${esc(o.nombre)}</option>`);
     document.getElementById('edit-origen').value = r.origen || '';
     document.getElementById('edit-destino').value = r.destino || '';
+    document.getElementById('edit-via').value = r.via || '';
     document.getElementById('edit-ref').value = r.ref || '';
     document.getElementById('edit-resolucion').value = r.resolucion || '';
-    document.getElementById('edit-tipo').value = r.tipo_servicio || 'regular';
     document.getElementById('edit-direction').value = r.direction || 'ida';
-    document.getElementById('edit-estado').value = r.estado || 'borrador';
+    const estado = r.estado || 'borrador';
+    const pct = r.progreso_pct ?? 0;
+    document.getElementById('edit-estado-display').textContent = `${estado.replace('_',' ')} (${pct}%)`;
     document.getElementById('modal-bg').classList.add('open');
 }
 
@@ -341,11 +334,10 @@ async function saveRoute() {
         operator_id: document.getElementById('edit-operator').value,
         origen: document.getElementById('edit-origen').value.trim(),
         destino: document.getElementById('edit-destino').value.trim(),
+        via: document.getElementById('edit-via').value.trim(),
         ref: document.getElementById('edit-ref').value.trim(),
         resolucion: document.getElementById('edit-resolucion').value.trim(),
-        tipo_servicio: document.getElementById('edit-tipo').value,
         direction: document.getElementById('edit-direction').value,
-        estado: document.getElementById('edit-estado').value,
     };
     if (!body.operator_id || !body.origen || !body.destino) {
         showAlert('Operador, origen y destino son obligatorios', 'error'); return;
