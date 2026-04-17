@@ -131,6 +131,7 @@
     <a href="#roles">Roles y flujo</a>
     <a href="#entidades" class="section">Datos</a>
     <a href="#entidades">Entidades</a>
+    <a href="#importacion">Reglas de importación</a>
     <a href="#tareas">Tareas automáticas</a>
     <a href="#progreso">Progreso GTFS</a>
     <a href="#plataforma" class="section">Plataforma</a>
@@ -161,7 +162,7 @@
             <div class="principle"><div class="num">2</div><div class="text"><strong>GTFS como destino</strong> — cada campo existe porque GTFS lo necesita</div></div>
             <div class="principle"><div class="num">3</div><div class="text"><strong>No bloquear colaboración</strong> — contribuir sin saber OSM</div></div>
             <div class="principle"><div class="num">4</div><div class="text"><strong>Progreso automático</strong> — el sistema calcula qué falta, sin tareas manuales</div></div>
-            <div class="principle"><div class="num">5</div><div class="text"><strong>Staging → Producción</strong> — datos del terminal pasan por revisión</div></div>
+            <div class="principle"><div class="num">5</div><div class="text"><strong>Importación directa</strong> — las rutas nuevas del terminal entran sin aprobación; solo se pide confirmación si la tripleta (operator, origen, destino) ya existe</div></div>
             <div class="principle"><div class="num">6</div><div class="text"><strong>Multi-región</strong> — Boyacá, Cochabamba, Kigali... cada una independiente</div></div>
         </div>
     </section>
@@ -281,15 +282,42 @@
         </div>
 
         <div class="entity">
-            <div class="entity-header"><span class="entity-icon">📥</span><span class="entity-title">Staging importación <code style="font-size:0.72rem;color:#6878aa">terminal_routes</code></span></div>
-            <p style="font-size:0.82rem">Datos crudos importados del terminal. Zona de revisión — nunca van directo a <code style="font-size:0.75rem">routes</code>. Se mantiene como registro histórico. Al promover una fila, <code style="font-size:0.75rem">routes.terminal_route_id</code> apunta aquí.</p>
+            <div class="entity-header"><span class="entity-icon">📥</span><span class="entity-title">Log de importaciones <code style="font-size:0.72rem;color:#6878aa">terminal_routes</code><span class="changed-tag">ACTUALIZADO</span></span></div>
+            <p style="font-size:0.82rem">Log histórico de cada fila importada desde Excel/CSV del terminal. <strong>No es staging bloqueante</strong> — las filas nuevas crean directamente un registro en <code style="font-size:0.75rem">routes</code>. Se conserva como referencia de trazabilidad (archivo, fecha, usuario). <code style="font-size:0.75rem">routes.terminal_route_id</code> apunta a esta tabla.</p>
         </div>
 
     </section>
 
+    <section id="importacion">
+        <h2>Reglas de importación desde terminal <span class="new-tag">NUEVO</span></h2>
+        <p>Cada fila del Excel/CSV se evalúa contra las rutas existentes usando la <strong>tripleta única</strong> <code style="font-size:0.8rem;color:#4a9eff">(operator_id, origen, destino)</code>.</p>
+
+        <div class="flow" style="margin:16px 0 24px;">
+<span class="highlight">¿Existe ya una ruta con la misma tripleta?</span>
+  │
+  ├── <span class="highlight">NO</span>  <span class="arrow">→</span> Crear ruta en estado <code style="color:#4edb8a">borrador</code>
+  │         + vincular <code>routes.terminal_route_id</code>
+  │         + registrar en <code>audit_log</code>
+  │
+  └── <span class="highlight">SÍ</span>  <span class="arrow">→</span> Pausar y mostrar 3 opciones al usuario:
+            ├─ <span style="color:#6878aa">Ignorar</span>         — no tocar, seguir
+            ├─ <span style="color:#4a9eff">Actualizar</span>      — sobreescribir con los datos nuevos
+            └─ <span style="color:#f39c12">Crear duplicado</span> — marcar como "duplicado a revisar"
+        </div>
+
+        <h3>Operadores</h3>
+        <p>Si el operador no existe se crea automáticamente. Match tolerante (mayúsculas/minúsculas, acentos, espacios) para reusar el <code>operator_id</code> existente y evitar duplicados.</p>
+
+        <h3>Ida y vuelta</h3>
+        <p>Cada fila genera <strong>dos registros</strong>: ida (<code>origen → destino</code>) y vuelta (<code>destino → origen</code>), vinculados con <code>route_parent_id</code>. La dedup por tripleta se evalúa en ambas direcciones.</p>
+
+        <h3>Resumen del import</h3>
+        <p>Al terminar, <code>/importar</code> muestra: N creadas, N ignoradas, N duplicados marcados, y link al <code>audit_log</code> del import para trazabilidad.</p>
+    </section>
+
     <section id="tareas">
         <h2>Tareas automáticas por ruta</h2>
-        <p>Cuando una ruta se promueve desde staging, el sistema genera estas tareas automáticamente según lo que falta. Se cierran solas cuando el dato existe — no hay que marcarlas manualmente.</p>
+        <p>Al crearse una ruta (vía import directo o manualmente), el sistema genera estas tareas automáticamente según lo que falta. Se cierran solas cuando el dato existe — no hay que marcarlas manualmente.</p>
         <div class="tasks-grid">
             <div class="task-card">
                 <div class="tipo">localizar_paradas</div>
@@ -344,7 +372,7 @@
             <div class="page-item"><span class="page-url">/editor</span><span class="page-desc">Editor de trazado: mapa Leaflet + Valhalla para dibujar la ruta</span></div>
             <div class="page-item"><span class="page-url">/paradas</span><span class="page-desc">Catálogo de paradas con mapa y estado de coordenadas</span></div>
             <div class="page-item"><span class="page-url">/explorador</span><span class="page-desc">Rutas ya en OSM vía Overpass — para comparar y hacer merge</span></div>
-            <div class="page-item"><span class="page-url">/importar</span><span class="page-desc">Subir Excel/CSV del terminal a staging con validación</span></div>
+            <div class="page-item"><span class="page-url">/importar</span><span class="page-desc">Subir Excel/CSV del terminal. Crea rutas directamente; pide confirmación fila a fila si la tripleta ya existe. Muestra resumen final (creadas, ignoradas, duplicados)</span></div>
             <div class="page-item"><span class="page-url">/exportar</span><span class="page-desc">Generar y descargar GTFS por región — solo rutas al 100%</span></div>
             <div class="page-item"><span class="page-url">/admin</span><span class="page-desc">Gestión de usuarios, roles, regiones y calidad del GTFS</span></div>
         </div>

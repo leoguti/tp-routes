@@ -16,7 +16,7 @@ Plataforma colaborativa para generar datos GTFS de transporte público abierto. 
 2. **GTFS como destino** — cada campo existe porque GTFS lo necesita
 3. **Progreso visible** — cada ruta tiene un % de completitud calculado automáticamente
 4. **No bloquear la colaboración** — los no expertos en OSM pueden contribuir libremente
-5. **Staging → Producción** — los datos del terminal pasan por revisión antes de ser rutas oficiales
+5. **Importación directa con confirmación en conflictos** — las rutas nuevas del terminal se crean sin aprobación previa. Solo se pide intervención humana cuando la tripleta `(operator, origen, destino)` ya existe
 6. **Multi-región** — Boyacá, Cochabamba, Kigali... cada una con su propio GTFS independiente
 
 ---
@@ -166,12 +166,12 @@ creada_en, completada_en
 
 **Regla:** Las tareas `localizar_paradas` e `ingresar_tarifas` son para contributors. Las tareas `asignar_paradas`, `trazar_ruta` e `ingresar_horarios` son para el editor responsable de la ruta.
 
-### 10. Importación staging (`terminal_routes`)
-Datos crudos importados del terminal. Nunca van directo a `routes` — pasan por revisión. Se mantiene como registro histórico de importaciones.
+### 10. Log de importaciones (`terminal_routes`)
+Log histórico de cada fila importada desde Excel/CSV del terminal. No es staging bloqueante — cada fila nueva crea directamente un registro en `routes` (ver *Reglas de importación*). Se conserva para trazabilidad: saber qué archivo, cuándo y quién originó cada ruta.
 
 ```
 -- tabla existente, no se modifica --
--- routes.terminal_route_id apunta aquí cuando una ruta fue promovida desde staging --
+-- routes.terminal_route_id apunta aquí como referencia al origen del import --
 ```
 
 ### 11. Usuarios (`users`)
@@ -191,6 +191,47 @@ usuario_id, accion (create|update|delete|approve|publish),
 datos_anteriores (jsonb), datos_nuevos (jsonb),
 creado_en
 ```
+
+---
+
+## Reglas de importación desde terminal
+
+Al procesar un archivo Excel/CSV, cada fila se evalúa contra las rutas existentes usando la **tripleta única** `(operator_id, origen, destino)`.
+
+### Flujo por fila
+
+```
+¿Existe ya una ruta con la misma tripleta?
+  │
+  ├── NO  → Crear ruta nueva en estado `borrador`
+  │         + vincular routes.terminal_route_id al registro del import
+  │         + registrar en audit_log (accion: create)
+  │
+  └── SÍ  → Pausar esta fila y mostrar al usuario 3 opciones:
+            ┌─ Ignorar         → no hacer nada, seguir con la siguiente fila
+            ├─ Actualizar      → sobreescribir campos de la ruta existente
+            │                     con los nuevos valores del Excel
+            └─ Crear duplicado → crear otra ruta con misma tripleta,
+                                  marcarla con estado `borrador` y tag
+                                  de "duplicado por revisar"
+```
+
+### Operadores
+
+- Si el `operador` de la fila no existe en `operators`, se crea automáticamente
+- Match tolerante: mayúsculas/minúsculas, acentos, espacios — si hay similitud alta, reusa el `operator_id` existente en vez de crear duplicado
+
+### Ida y vuelta
+
+Cada fila del Excel genera **dos registros en `routes`**: la ida (`origen → destino`) y la vuelta (`destino → origen`). Se vinculan con `route_parent_id` apuntando a la ida. La dedup por tripleta se evalúa en ambas direcciones.
+
+### Resumen de import
+
+Al final del proceso, `/importar` muestra:
+- N filas creadas
+- N filas ignoradas por decisión del usuario
+- N filas marcadas como duplicado a revisar
+- Link al `audit_log` del import
 
 ---
 
@@ -219,7 +260,7 @@ Calculado automáticamente. 100% = lista para incluir en la exportación GTFS.
 | `/editor` | Editor de trazado: mapa Leaflet + Valhalla |
 | `/paradas` | Catálogo de paradas con mapa y estado de coordenadas |
 | `/explorador` | Rutas ya en OSM vía Overpass — para comparar y hacer merge |
-| `/importar` | Subir Excel/CSV del terminal (staging) |
+| `/importar` | Subir Excel/CSV del terminal. Crea rutas directamente; pide confirmación fila a fila si la tripleta ya existe. Muestra resumen final (creadas, ignoradas, en conflicto) |
 | `/exportar` | Generar y descargar GTFS por región — solo rutas aprobadas |
 | `/admin` | Gestión de usuarios, roles, regiones, calidad del GTFS |
 
