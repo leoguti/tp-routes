@@ -260,14 +260,14 @@
         <input type="text" id="search-input" placeholder="Buscar por origen, destino u operador..." oninput="filterRoutes()" />
         <select id="status-filter" onchange="filterRoutes()">
             <option value="">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="mapeada">Mapeada</option>
+            <option value="borrador">Borrador</option>
+            <option value="en_progreso">En progreso</option>
+            <option value="aprobada">Aprobada</option>
             <option value="publicada">Publicada</option>
         </select>
         <button class="btn btn-outline" onclick="loadRoutes()">↺ Actualizar</button>
         <button class="btn btn-success" onclick="exportCSV()">⬇ Exportar CSV</button>
         <button class="btn btn-primary" onclick="openNewModal()">+ Nueva ruta</button>
-        <button class="btn btn-promote" id="btn-promote" onclick="promoteRoutes()">▲ Promover pendientes a Lista Maestra</button>
     </div>
 
     <!-- Table -->
@@ -312,7 +312,8 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Operador *</label>
-                <input type="text" id="edit-operador" placeholder="Ej: Autoboy S.A." />
+                <input type="text" id="edit-operador" list="operators-list" placeholder="Selecciona o escribe" />
+                <datalist id="operators-list"></datalist>
             </div>
             <div class="form-group">
                 <label>Vía</label>
@@ -391,7 +392,7 @@ function filterRoutes() {
             r.origen?.toLowerCase().includes(search) ||
             r.destino?.toLowerCase().includes(search) ||
             r.operador?.toLowerCase().includes(search);
-        const matchStatus = !status || r.status === status;
+        const matchStatus = !status || (r.route_estado || 'borrador') === status;
         return matchSearch && matchStatus;
     });
     renderTable(filtered);
@@ -403,7 +404,10 @@ function renderTable(routes) {
         tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><h3>No hay rutas</h3><p>Sube un archivo o agrega una ruta manualmente.</p></div></td></tr>`;
         return;
     }
-    tbody.innerHTML = routes.map(r => `
+    tbody.innerHTML = routes.map(r => {
+        const estado = r.route_estado || 'borrador';
+        const progreso = r.progreso_pct ?? 0;
+        return `
         <tr>
             <td>${esc(r.origen)}</td>
             <td><strong>${esc(r.destino)}</strong></td>
@@ -412,14 +416,14 @@ function renderTable(routes) {
             <td style="color:#666">${esc(r.telefono || '—')}</td>
             <td style="font-size:0.78rem;color:#888">${esc(r.resolucion || '—')}</td>
             <td class="tarifa">${r.tarifa ? '$' + r.tarifa.toLocaleString('es-CO') : '—'}</td>
-            <td><span class="badge badge-${r.status}">${r.status}</span></td>
+            <td><span class="badge badge-${estado}">${estado}</span><div style="font-size:0.7rem;color:#888">${progreso}%</div></td>
             <td>
                 <button class="btn btn-outline btn-sm" onclick="openEditModal(${r.id})">Editar</button>
-                ${r.status === 'pendiente' ? `<a href="/?from=${enc(r.origen)}&to=${enc(r.destino)}&op=${enc(r.operador)}" class="btn btn-primary btn-sm" style="margin-left:4px;text-decoration:none">Mapear</a>` : ''}
+                ${r.route_id ? `<a href="/ruta.html?id=${r.route_id}" class="btn btn-primary btn-sm" style="margin-left:4px;text-decoration:none">Ver detalle</a>` : ''}
                 ${r.osm_relation_id ? `<a href="https://www.openstreetmap.org/relation/${r.osm_relation_id}" target="_blank" class="btn btn-outline btn-sm" style="margin-left:4px">OSM ↗</a>` : ''}
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 }
 
 // ─── Upload ──────────────────────────────────────────────────────────────────
@@ -664,49 +668,6 @@ function exportCSV() {
     window.location.href = url;
 }
 
-// ─── Promoción a Lista Maestra ────────────────────────────────────────────────
-
-async function promoteRoutes() {
-    const pendientes = allRoutes.filter(r => r.status === 'pendiente').length;
-    if (!pendientes) {
-        showAlert('No hay rutas pendientes para promover.', 'info');
-        return;
-    }
-    if (!confirm(`¿Promover ${pendientes} ruta(s) pendiente(s) a la Lista Maestra?\nSe crearán operadores y rutas automáticamente.`))
-        return;
-
-    const btn = document.getElementById('btn-promote');
-    btn.disabled = true;
-    btn.textContent = 'Promoviendo...';
-    showProgress(true, `Promoviendo ${pendientes} rutas...`);
-    setProgressWidth(30);
-
-    try {
-        const res = await fetch(`/api/promote-routes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ region: activeRegionKey })
-        });
-        const result = await res.json();
-        setProgressWidth(100);
-
-        if (!res.ok) {
-            showAlert('Error: ' + (result.error || 'Error desconocido'), 'error');
-        } else {
-            let msg = `✅ ${result.promoted} rutas promovidas a la Lista Maestra.`;
-            if (result.skipped > 0) msg += ` ${result.skipped} ya existían.`;
-            if (result.errors?.length > 0) msg += ` ${result.errors.length} con errores.`;
-            showAlert(msg, 'success');
-            loadRoutes();
-        }
-    } catch (e) {
-        showAlert('Error de conexión: ' + e.message, 'error');
-    }
-
-    btn.disabled = false;
-    btn.textContent = '▲ Promover pendientes a Lista Maestra';
-    showProgress(false);
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -732,9 +693,22 @@ function setProgressWidth(pct) {
     document.getElementById('progress-fill').style.width = pct + '%';
 }
 
+// ─── Operators autocomplete ──────────────────────────────────────────────────
+
+async function loadOperators() {
+    try {
+        const res = await fetch(`/api/operators?region=${activeRegionKey}`);
+        const data = await res.json();
+        const dl = document.getElementById('operators-list');
+        dl.innerHTML = (data.operators || [])
+            .map(o => `<option value="${esc(o.nombre)}">`).join('');
+    } catch (e) { /* silencioso */ }
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 loadRoutes();
+loadOperators();
 </script>
 
 </body>

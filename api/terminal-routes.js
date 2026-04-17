@@ -4,29 +4,37 @@ const { neon } = require('@neondatabase/serverless');
 module.exports = async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
 
-    // GET /api/terminal-routes — list with filters
+    // GET /api/terminal-routes — lista con JOIN a routes (estado real) y operators
     if (req.method === 'GET') {
-        const { region = 'boyaca', status, operador, search } = req.query;
-        let query = `SELECT * FROM terminal_routes WHERE region = $1`;
+        const { region = 'boyaca', estado, operador, search } = req.query;
+        let query = `
+            SELECT tr.id, tr.origen, tr.destino, tr.operador, tr.via,
+                   tr.telefono, tr.resolucion, tr.tarifa, tr.notas, tr.region,
+                   tr.created_at, tr.updated_at,
+                   r.id AS route_id, r.estado AS route_estado, r.progreso_pct,
+                   r.osm_relation_id
+            FROM terminal_routes tr
+            LEFT JOIN routes r ON r.terminal_route_id = tr.id
+            WHERE tr.region = $1
+        `;
         const params = [region];
         let idx = 2;
 
-        if (status) { query += ` AND status = $${idx++}`; params.push(status); }
-        if (operador) { query += ` AND operador ILIKE $${idx++}`; params.push(`%${operador}%`); }
+        if (estado) { query += ` AND r.estado = $${idx++}`; params.push(estado); }
+        if (operador) { query += ` AND tr.operador ILIKE $${idx++}`; params.push(`%${operador}%`); }
         if (search) {
-            query += ` AND (origen ILIKE $${idx} OR destino ILIKE $${idx} OR operador ILIKE $${idx})`;
+            query += ` AND (tr.origen ILIKE $${idx} OR tr.destino ILIKE $${idx} OR tr.operador ILIKE $${idx})`;
             params.push(`%${search}%`); idx++;
         }
-        query += ' ORDER BY destino, operador';
+        query += ' ORDER BY tr.destino, tr.operador';
 
         try {
             const rows = await sql(query, params);
-            // Stats
             const total = rows.length;
-            const pendientes = rows.filter(r => r.status === 'pendiente').length;
-            const mapeadas = rows.filter(r => r.status === 'mapeada').length;
-            const publicadas = rows.filter(r => r.status === 'publicada').length;
-            res.json({ total, pendientes, mapeadas, publicadas, routes: rows });
+            const borradores = rows.filter(r => (r.route_estado || 'borrador') === 'borrador').length;
+            const en_progreso = rows.filter(r => r.route_estado === 'en_progreso').length;
+            const publicadas = rows.filter(r => r.route_estado === 'publicada').length;
+            res.json({ total, borradores, en_progreso, publicadas, routes: rows });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
@@ -57,38 +65,87 @@ module.exports = async function handler(req, res) {
             return res.status(400).json({ error: 'Archivo con errores', details: errors });
         }
 
+        // Import directo: para cada fila -> crea/encuentra operator, verifica dedup
+        // por clave única (op, origen, destino, via) en routes, inserta en routes
+        // y loguea en terminal_routes.
         try {
             let inserted = 0;
             let skipped = 0;
+            const TAREAS = ['localizar_paradas','ingresar_tarifas','asignar_paradas','trazar_ruta','ingresar_horarios'];
+
             for (const r of valid) {
+                const origen = r.origen.trim();
+                const destino = r.destino.trim();
+                const operadorNombre = r.operador.trim();
                 const viaNorm = (r.via?.trim()) || '';
-                // Dedup por clave única (origen, destino, operador, via). COALESCE
-                // asegura que NULL y '' se traten igual.
+
+                // 1. Operador: buscar por nombre case-insensitive, crear si no existe
+                let opRow = await sql`
+                    SELECT id FROM operators
+                    WHERE region_id = ${region} AND LOWER(nombre) = LOWER(${operadorNombre})
+                `;
+                let operatorId;
+                if (opRow.length) {
+                    operatorId = opRow[0].id;
+                    if (r.telefono?.trim()) {
+                        await sql`
+                            UPDATE operators SET telefono = COALESCE(NULLIF(telefono,''), ${r.telefono.trim()})
+                            WHERE id = ${operatorId}
+                        `;
+                    }
+                } else {
+                    const created = await sql`
+                        INSERT INTO operators (region_id, nombre, telefono)
+                        VALUES (${region}, ${operadorNombre}, ${r.telefono?.trim() || null})
+                        RETURNING id
+                    `;
+                    operatorId = created[0].id;
+                }
+
+                // 2. Dedup por clave única en routes
                 const exists = await sql`
-                    SELECT id FROM terminal_routes
-                    WHERE origen = ${r.origen.trim()}
-                      AND destino = ${r.destino.trim()}
-                      AND operador = ${r.operador.trim()}
-                      AND COALESCE(via, '') = ${viaNorm}
-                      AND region = ${region}
+                    SELECT id FROM routes
+                    WHERE region_id = ${region}
+                      AND operator_id = ${operatorId}
+                      AND LOWER(origen) = LOWER(${origen})
+                      AND LOWER(destino) = LOWER(${destino})
+                      AND LOWER(COALESCE(via, '')) = LOWER(${viaNorm})
                 `;
                 if (exists.length > 0) { skipped++; continue; }
 
-                await sql`
+                // 3. Log en terminal_routes
+                const trRow = await sql`
                     INSERT INTO terminal_routes
                       (origen, destino, operador, via, telefono, resolucion, tarifa, notas, region)
                     VALUES (
-                      ${r.origen.trim()},
-                      ${r.destino.trim()},
-                      ${r.operador.trim()},
-                      ${viaNorm || null},
-                      ${r.telefono?.trim() || null},
-                      ${r.resolucion?.trim() || null},
-                      ${r.tarifa ? parseInt(r.tarifa) : null},
-                      ${r.notas?.trim() || null},
+                      ${origen}, ${destino}, ${operadorNombre}, ${viaNorm || null},
+                      ${r.telefono?.trim() || null}, ${r.resolucion?.trim() || null},
+                      ${r.tarifa ? parseInt(r.tarifa) : null}, ${r.notas?.trim() || null},
                       ${region}
                     )
+                    RETURNING id
                 `;
+                const terminalRouteId = trRow[0].id;
+
+                // 4. Insertar en routes (borrador)
+                const newRoute = await sql`
+                    INSERT INTO routes (region_id, operator_id, origen, destino, via,
+                                        resolucion, terminal_route_id, estado)
+                    VALUES (${region}, ${operatorId}, ${origen}, ${destino}, ${viaNorm || null},
+                            ${r.resolucion?.trim() || null}, ${terminalRouteId}, 'borrador')
+                    RETURNING id
+                `;
+                const routeId = newRoute[0].id;
+
+                // 5. Generar tareas automáticas
+                for (const tipo of TAREAS) {
+                    await sql`
+                        INSERT INTO route_tasks (route_id, tipo)
+                        VALUES (${routeId}, ${tipo})
+                        ON CONFLICT (route_id, tipo) DO NOTHING
+                    `;
+                }
+
                 inserted++;
             }
             res.json({ inserted, skipped, errors, total: valid.length + errors.length });
