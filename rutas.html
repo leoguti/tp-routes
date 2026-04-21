@@ -3,94 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TP Routes — Lista maestra de rutas</title>
+    <title>TP Routes — Listado maestro</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, sans-serif; background: #f4f6fa; }
+        body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; }
 
         #header { background: #1a1a3e; color: white; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
-        #header h1 { font-size: 1.1rem; margin: 0; }
+        #header h1 { font-size: 1.05rem; margin: 0; }
         #header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
         #header nav a.active, #header nav a:hover { color: white; }
 
-        .page { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+        .page { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
 
         /* Stats */
-        .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .stat-box { background: white; border-radius: 8px; padding: 14px 18px; min-width: 110px; box-shadow: 0 1px 4px rgba(0,0,0,.07); text-align: center; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
-        .stat-box:hover, .stat-box.active { border-color: #1a1a3e; }
-        .stat-box .num { font-size: 1.6rem; font-weight: 800; color: #1a1a3e; }
-        .stat-box .lbl { font-size: 0.72rem; color: #888; }
-        .stat-box.borrador .num { color: #888; }
-        .stat-box.en_progreso .num { color: #2980b9; }
-        .stat-box.aprobada .num { color: #27ae60; }
-        .stat-box.publicada .num { color: #8e44ad; }
-
-        /* Progress bar global */
-        .global-progress { background: white; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
-        .global-progress .label { font-size: 0.78rem; color: #888; margin-bottom: 6px; display: flex; justify-content: space-between; }
-        .progress-track { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #2980b9, #27ae60); transition: width .4s; }
+        .stats-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .stat-box { background: white; border-radius: 8px; padding: 12px 18px; min-width: 120px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-align: center; }
+        .stat-box .num { font-size: 1.5rem; font-weight: 800; color: #1a1a3e; }
+        .stat-box .lbl { font-size: 0.72rem; color: #888; margin-top: 2px; }
+        .stat-box.accent .num { color: #2980b9; }
+        .stat-box.warn   .num { color: #e67e22; }
+        .stat-box.good   .num { color: #27ae60; }
 
         /* Toolbar */
-        .toolbar { background: white; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
-        .toolbar input { flex: 1; min-width: 160px; border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; }
-        .toolbar select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; background: white; }
+        .toolbar { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+        .toolbar input, .toolbar select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; }
+        .toolbar input[type=text] { flex: 1; min-width: 200px; }
         .btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 0.83rem; cursor: pointer; font-weight: 500; }
         .btn-primary { background: #1a1a3e; color: white; }
         .btn-primary:hover { background: #2a2a5e; }
-        .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
-        .btn-outline:hover { background: #f5f5f5; }
-        .btn-sm { padding: 4px 10px; font-size: 0.76rem; }
+        .btn-ghost { background: transparent; color: #1a1a3e; border: 1px solid #ddd; }
+        .btn-ghost:hover { background: #f5f5f5; }
+        .btn-sm { padding: 4px 9px; font-size: 0.76rem; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
 
-        /* Table */
-        .table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.07); overflow: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-        th { background: #1a1a3e; color: white; padding: 10px 12px; text-align: left; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
-        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-        tr:hover td { background: #f8faff; }
-        tr:last-child td { border-bottom: none; }
-        td a { color: #1a1a3e; text-decoration: none; font-weight: 600; }
-        td a:hover { text-decoration: underline; }
+        /* Jerarquía */
+        .tree { background: transparent; }
+        .empty { text-align: center; padding: 56px 20px; color: #aab; font-size: 0.9rem; }
 
-        /* Progress cell */
-        .prog-cell { display: flex; align-items: center; gap: 8px; }
-        .prog-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; min-width: 60px; }
-        .prog-fill { height: 100%; border-radius: 3px; }
-        .prog-num { font-size: 0.75rem; font-weight: 700; min-width: 30px; text-align: right; }
+        /* Nivel 1: par ↔ */
+        .pair-group { background: white; border-radius: 10px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
+        .pair-head { display: flex; align-items: center; padding: 14px 18px; cursor: pointer; background: #fbfcff; border-bottom: 1px solid #edf0f7; user-select: none; }
+        .pair-head:hover { background: #f5f7ff; }
+        .pair-head .chev { font-size: 0.85rem; margin-right: 10px; color: #6872aa; width: 14px; display: inline-block; }
+        .pair-head .title { font-size: 1rem; font-weight: 700; color: #1a1a3e; flex: 1; }
+        .pair-head .meta  { font-size: 0.78rem; color: #888; margin-left: 12px; }
 
-        /* Badges */
-        .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
-        .badge-borrador { background: #f0f0f0; color: #888; }
-        .badge-en_progreso { background: #e0f0ff; color: #2980b9; }
-        .badge-aprobada { background: #e0fae8; color: #27ae60; }
-        .badge-publicada { background: #f0e0ff; color: #8e44ad; }
+        .pair-body.collapsed { display: none; }
 
-        .tasks-pill { background: #fff0e0; color: #e67e22; border-radius: 10px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; }
+        /* Nivel 2: vía */
+        .via-group { border-bottom: 1px solid #edf0f7; }
+        .via-group:last-child { border-bottom: none; }
+        .via-head { display: flex; align-items: center; padding: 10px 18px 10px 40px; background: #f8faff; cursor: pointer; user-select: none; }
+        .via-head:hover { background: #f0f4ff; }
+        .via-head .chev { font-size: 0.8rem; margin-right: 8px; color: #6872aa; width: 12px; display: inline-block; }
+        .via-head .title { font-size: 0.88rem; font-weight: 600; color: #2a2a5e; flex: 1; }
+        .via-head .meta  { font-size: 0.76rem; color: #888; }
+        .via-body.collapsed { display: none; }
 
-        .direction-tag { font-size: 0.7rem; color: #888; }
+        /* Nivel 3: operador */
+        .op-group { padding: 8px 18px 12px 62px; border-top: 1px dashed #eff2f8; }
+        .op-group:first-child { border-top: none; }
+        .op-head { display: flex; align-items: center; padding: 6px 0 8px; }
+        .op-head .name { font-weight: 700; font-size: 0.86rem; color: #1a1a3e; flex: 1; }
+        .op-head .actions { display: flex; gap: 6px; }
 
-        /* Empty */
-        .empty { text-align: center; padding: 48px; color: #bbb; }
-        .empty h3 { color: #ccc; margin-bottom: 8px; }
+        /* Filas ida/vuelta */
+        .dir-row { display: flex; align-items: center; padding: 6px 10px; border-radius: 6px; background: #fafbfe; margin-top: 4px; font-size: 0.84rem; }
+        .dir-row:hover { background: #f0f4ff; }
+        .dir-chip { display: inline-block; background: #e8ecf8; color: #1a1a3e; padding: 2px 9px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-right: 10px; text-transform: uppercase; letter-spacing: .3px; }
+        .dir-chip.vuelta { background: #fff0e0; color: #e67e22; }
+        .dir-row .od { flex: 1; color: #333; }
+        .dir-row .stop-tag { font-size: 0.7rem; color: #aab; margin-left: 8px; }
+        .dir-row .prog { font-size: 0.78rem; color: #555; min-width: 44px; text-align: right; font-weight: 600; margin-right: 10px; }
+
+        /* Chips de resolución */
+        .res-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; margin-left: 62px; }
+        .res-chip { background: #eef3ff; color: #2a3e7a; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .res-chip .pdf { color: #27ae60; margin-left: 4px; }
+        .res-chip.missing { background: #fff0f0; color: #c0392b; }
 
         /* Alert */
         .alert { padding: 10px 14px; border-radius: 7px; margin-bottom: 14px; font-size: 0.83rem; display: none; }
         .alert.show { display: block; }
         .alert-success { background: #e0fae8; color: #1a6b3a; }
-        .alert-error { background: #fde8e8; color: #8b1a1a; }
+        .alert-error { background: #fde4e0; color: #922; }
 
         /* Modal */
-        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; }
+        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(26,26,62,.5); z-index: 100; align-items: flex-start; justify-content: center; overflow-y: auto; }
         .modal-bg.open { display: flex; }
-        .modal { background: white; border-radius: 10px; width: 100%; max-width: 540px; padding: 24px; margin: 16px; max-height: 90vh; overflow-y: auto; }
-        .modal h2 { margin: 0 0 18px; font-size: 1rem; color: #1a1a3e; }
+        .modal { background: white; border-radius: 10px; width: 100%; max-width: 620px; padding: 24px; margin: 40px 16px; max-height: 90vh; overflow-y: auto; }
+        .modal h2 { margin: 0 0 18px; font-size: 1rem; }
         .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
         .form-group { flex: 1; }
-        .form-group label { display: block; font-size: 0.78rem; color: #666; margin-bottom: 4px; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; }
+        .form-group label { display: block; font-size: 0.76rem; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; font-family: inherit;
+        }
+        .form-group small { color: #888; font-size: 0.72rem; display: block; margin-top: 2px; }
+        .form-group .vias-input { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .form-group .via-chip { background: #eef3ff; color: #2a3e7a; padding: 2px 8px 2px 10px; border-radius: 10px; font-size: 0.76rem; display: flex; align-items: center; gap: 6px; }
+        .form-group .via-chip button { background: none; border: none; color: #2a3e7a; cursor: pointer; padding: 0; font-size: 0.9rem; line-height: 1; }
         .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-        .btn-danger { background: #e74c3c; color: white; }
+
+        .loader { text-align: center; padding: 40px; color: #aab; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -107,316 +123,389 @@
 
 <div class="page">
 
-    <div id="alert-box" class="alert"></div>
+    <div id="alert" class="alert"></div>
 
-    <!-- Stats -->
     <div class="stats-row">
-        <div class="stat-box" onclick="filterByEstado('')">
-            <div class="num" id="stat-total">—</div>
-            <div class="lbl">Total rutas</div>
-        </div>
-        <div class="stat-box borrador" onclick="filterByEstado('borrador')">
-            <div class="num" id="stat-borrador">—</div>
-            <div class="lbl">Borrador</div>
-        </div>
-        <div class="stat-box en_progreso" onclick="filterByEstado('en_progreso')">
-            <div class="num" id="stat-en_progreso">—</div>
-            <div class="lbl">En progreso</div>
-        </div>
-        <div class="stat-box aprobada" onclick="filterByEstado('aprobada')">
-            <div class="num" id="stat-aprobada">—</div>
-            <div class="lbl">Aprobadas</div>
-        </div>
-        <div class="stat-box publicada" onclick="filterByEstado('publicada')">
-            <div class="num" id="stat-publicada">—</div>
-            <div class="lbl">Publicadas</div>
-        </div>
-        <div class="stat-box" style="min-width:140px;">
-            <div class="num" id="stat-progreso" style="font-size:1.3rem">—%</div>
-            <div class="lbl">Progreso promedio</div>
-        </div>
+        <div class="stat-box"><div class="num" id="s-rutas">—</div><div class="lbl">Rutas</div></div>
+        <div class="stat-box accent"><div class="num" id="s-pares">—</div><div class="lbl">Pares O↔D</div></div>
+        <div class="stat-box accent"><div class="num" id="s-ops">—</div><div class="lbl">Operadores</div></div>
+        <div class="stat-box good"><div class="num" id="s-res">—</div><div class="lbl">Resoluciones</div></div>
+        <div class="stat-box warn"><div class="num" id="s-sinres">—</div><div class="lbl">Sin resolución</div></div>
     </div>
 
-    <!-- Global progress bar -->
-    <div class="global-progress">
-        <div class="label">
-            <span>Progreso hacia GTFS completo</span>
-            <span id="progreso-label">—%</span>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="progreso-bar" style="width:0%"></div></div>
-    </div>
-
-    <!-- Toolbar -->
     <div class="toolbar">
-        <input type="text" id="search-input" placeholder="Buscar origen, destino u operador..." oninput="filterRoutes()" />
-        <select id="estado-filter" onchange="filterRoutes()">
-            <option value="">Todos los estados</option>
-            <option value="borrador">Borrador</option>
-            <option value="en_progreso">En progreso</option>
-            <option value="aprobada">Aprobada</option>
-            <option value="publicada">Publicada</option>
-        </select>
-        <select id="operator-filter" onchange="filterRoutes()">
+        <input id="search" type="text" placeholder="Buscar por ciudad, operador o vía…" />
+        <select id="filter-op">
             <option value="">Todos los operadores</option>
         </select>
-        <button class="btn btn-outline" onclick="loadRoutes()">↺</button>
-        <button class="btn btn-primary" onclick="openNewModal()">+ Nueva ruta</button>
+        <button class="btn btn-ghost btn-sm" onclick="expandAll(true)">Expandir</button>
+        <button class="btn btn-ghost btn-sm" onclick="expandAll(false)">Colapsar</button>
+        <button class="btn btn-primary" onclick="openCreate()">+ Nueva ruta</button>
     </div>
 
-    <!-- Table -->
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Origen → Destino</th>
-                    <th>Vía</th>
-                    <th>Operador</th>
-                    <th>Ref</th>
-                    <th>Progreso GTFS</th>
-                    <th>Estado</th>
-                    <th>Tareas</th>
-                    <th>OSM</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="routes-body">
-                <tr><td colspan="9"><div class="empty"><h3>Cargando...</h3></div></td></tr>
-            </tbody>
-        </table>
-    </div>
+    <div id="tree" class="tree"><div class="loader">Cargando…</div></div>
 
 </div>
 
-<!-- Modal nueva/editar ruta -->
-<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
-    <div class="modal">
-        <h2 id="modal-title">Nueva ruta</h2>
-        <input type="hidden" id="edit-id" />
-        <div class="form-row">
-            <div class="form-group">
-                <label>Origen *</label>
-                <input type="text" id="edit-origen" placeholder="Ej: Tunja" />
-            </div>
-            <div class="form-group">
-                <label>Destino *</label>
-                <input type="text" id="edit-destino" placeholder="Ej: Aguazul" />
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Operador *</label>
-                <select id="edit-operator"></select>
-            </div>
-            <div class="form-group">
-                <label>Dirección</label>
-                <select id="edit-direction">
-                    <option value="ida">Ida</option>
-                    <option value="vuelta">Vuelta</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Vía</label>
-                <input type="text" id="edit-via" placeholder="Ej: Nobsa, Directo, Moniquira - Barbosa" />
-            </div>
-            <div class="form-group">
-                <label>Ref / Código</label>
-                <input type="text" id="edit-ref" placeholder="Ej: T-01" />
-            </div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px">
-            <label>Resolución</label>
-            <input type="text" id="edit-resolucion" placeholder="Ej: Res. 001234-2022" />
-        </div>
-        <div class="form-group" style="margin-bottom:12px">
-            <label>Estado <span style="font-weight:400;color:#888;font-size:0.75rem">(automático según progreso)</span></label>
-            <div id="edit-estado-display" style="padding:8px 12px;background:#f5f5f5;border-radius:6px;font-size:0.85rem">—</div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteRoute()" style="display:none">Eliminar</button>
-            <button class="btn btn-primary" onclick="saveRoute()">Guardar</button>
+<!-- Modal crear/editar ruta -->
+<div id="modal-bg" class="modal-bg">
+  <div class="modal">
+    <h2 id="modal-title">Nueva ruta</h2>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Operador *</label>
+            <select id="f-operator" required></select>
         </div>
     </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Origen *</label>
+            <input id="f-origen" type="text" placeholder="Ej. Bogotá" required />
+        </div>
+        <div class="form-group">
+            <label>Destino *</label>
+            <input id="f-destino" type="text" placeholder="Ej. Sogamoso" required />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Vía (ciudades intermedias en orden)</label>
+            <input id="f-via-input" type="text" placeholder="Escribe y pulsa Enter (vacío = Directo)" />
+            <div id="f-via-chips" class="vias-input"></div>
+            <small>La vuelta se genera automáticamente con la vía invertida.</small>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Ref (código interno)</label>
+            <input id="f-ref" type="text" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea id="f-notas" rows="2"></textarea>
+        </div>
+    </div>
+    <small id="f-hint" style="color:#888">Las resoluciones se editan desde el detalle de la ruta.</small>
+    <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button id="f-delete" class="btn btn-danger" style="display:none" onclick="deleteRoute()">Eliminar</button>
+        <button class="btn btn-primary" onclick="saveRoute()">Guardar</button>
+    </div>
+  </div>
 </div>
 
 <script src="/js/regions.js"></script>
 <script>
-const region = getCurrentRegion();
-let allRoutes = [];
-let operators = [];
+const state = {
+    region: (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca',
+    data: null,              // respuesta cruda /api/routes?grouped=1
+    operators: [],
+    filterOp: '',
+    search: '',
+    collapsed: new Set(),    // keys colapsados
+    editing: null,           // { id_ida } si se está editando
+    viasDraft: [],
+};
 
-// ─── Load ─────────────────────────────────────────────────────────────────────
-
-async function loadRoutes() {
-    const [routesRes, opsRes] = await Promise.all([
-        fetch(`/api/routes?region=${region}`).then(r => r.json()),
-        fetch(`/api/operators?region=${region}`).then(r => r.json())
-    ]);
-
-    allRoutes = routesRes.routes || [];
-    operators = opsRes.operators || [];
-
-    // Stats
-    document.getElementById('stat-total').textContent = routesRes.total ?? 0;
-    document.getElementById('stat-borrador').textContent = routesRes.borrador ?? 0;
-    document.getElementById('stat-en_progreso').textContent = routesRes.en_progreso ?? 0;
-    document.getElementById('stat-aprobada').textContent = routesRes.aprobada ?? 0;
-    document.getElementById('stat-publicada').textContent = routesRes.publicada ?? 0;
-    document.getElementById('stat-progreso').textContent = (routesRes.promedio_progreso ?? 0) + '%';
-    document.getElementById('progreso-bar').style.width = (routesRes.promedio_progreso ?? 0) + '%';
-    document.getElementById('progreso-label').textContent = (routesRes.promedio_progreso ?? 0) + '%';
-
-    // Operator filter
-    const opFilter = document.getElementById('operator-filter');
-    opFilter.innerHTML = '<option value="">Todos los operadores</option>';
-    operators.forEach(o => opFilter.innerHTML += `<option value="${o.id}">${esc(o.nombre)}</option>`);
-
-    renderTable(allRoutes);
+function norm(s) {
+    return String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
-function filterByEstado(estado) {
-    document.getElementById('estado-filter').value = estado;
-    filterRoutes();
+function alertMsg(msg, type = 'success') {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert show alert-${type}`;
+    setTimeout(() => el.classList.remove('show'), 3500);
 }
 
-function filterRoutes() {
-    const search = document.getElementById('search-input').value.toLowerCase();
-    const estado = document.getElementById('estado-filter').value;
-    const opId = document.getElementById('operator-filter').value;
+async function load() {
+    try {
+        const [groupedRes, opsRes] = await Promise.all([
+            fetch(`/api/routes?region=${state.region}&grouped=1`).then(r => r.json()),
+            fetch(`/api/operators?region=${state.region}`).then(r => r.json()),
+        ]);
+        state.data = groupedRes;
+        state.operators = opsRes.operators || [];
 
-    const filtered = allRoutes.filter(r => {
-        const matchSearch = !search ||
-            r.origen?.toLowerCase().includes(search) ||
-            r.destino?.toLowerCase().includes(search) ||
-            r.operator_nombre?.toLowerCase().includes(search);
-        const matchEstado = !estado || r.estado === estado;
-        const matchOp = !opId || String(r.operator_id) === opId;
-        return matchSearch && matchEstado && matchOp;
-    });
-    renderTable(filtered);
+        // Llenar filtro y select del modal
+        const filterSel = document.getElementById('filter-op');
+        filterSel.innerHTML = '<option value="">Todos los operadores</option>';
+        for (const o of state.operators) {
+            filterSel.innerHTML += `<option value="${o.id}">${o.nombre}</option>`;
+        }
+
+        updateStats();
+        render();
+    } catch (e) {
+        document.getElementById('tree').innerHTML = `<div class="empty">Error al cargar: ${e.message}</div>`;
+    }
 }
 
-function renderTable(routes) {
-    const tbody = document.getElementById('routes-body');
-    if (!routes.length) {
-        tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><h3>No hay rutas</h3><p>Importa desde el terminal o crea una manualmente.</p></div></td></tr>`;
+function updateStats() {
+    const d = state.data;
+    const groups = d.groups || [];
+    const totalRutas = groups.reduce((s, g) => s + g.total_rutas, 0);
+    const pares = groups.length;
+    const ops = new Set();
+    let totalRes = 0, sinRes = 0;
+    for (const g of groups) for (const v of g.vias) for (const op of v.operadores) {
+        ops.add(op.operator_id);
+        if (op.resoluciones && op.resoluciones.length) totalRes += op.resoluciones.length;
+        else sinRes++;
+    }
+    document.getElementById('s-rutas').textContent = totalRutas;
+    document.getElementById('s-pares').textContent = pares;
+    document.getElementById('s-ops').textContent = ops.size;
+    document.getElementById('s-res').textContent = totalRes;
+    document.getElementById('s-sinres').textContent = sinRes;
+}
+
+function matches(pair) {
+    // Filtro por operador: conserva el par si algún op coincide.
+    if (state.filterOp) {
+        const has = pair.vias.some(v => v.operadores.some(op => String(op.operator_id) === String(state.filterOp)));
+        if (!has) return false;
+    }
+    if (state.search) {
+        const q = norm(state.search);
+        const hay = norm(pair.pair_label + ' ' +
+            pair.vias.map(v => v.via_label + ' ' +
+                v.operadores.map(o => o.operator_nombre).join(' ')).join(' ')
+        );
+        if (!hay.includes(q)) return false;
+    }
+    return true;
+}
+
+function render() {
+    const tree = document.getElementById('tree');
+    const groups = (state.data.groups || []).filter(matches);
+
+    if (!groups.length) {
+        tree.innerHTML = `<div class="empty">No hay rutas que coincidan.</div>`;
         return;
     }
 
-    tbody.innerHTML = routes.map(r => {
-        const pct = r.progreso_pct || 0;
-        const color = pct < 40 ? '#e74c3c' : pct < 80 ? '#e67e22' : '#27ae60';
-        return `<tr>
-            <td>
-                <a href="/ruta.html?id=${r.id}"><strong>${esc(r.origen)}</strong> → ${esc(r.destino)}</a>
-                <span class="direction-tag">${r.direction === 'vuelta' ? ' ↩' : ''}</span>
-            </td>
-            <td style="font-size:0.8rem;color:#666">${esc(r.via || '—')}</td>
-            <td>${esc(r.operator_nombre || '—')}</td>
-            <td style="font-family:monospace;font-size:0.78rem;color:#666">${esc(r.ref || '—')}</td>
-            <td>
-                <div class="prog-cell">
-                    <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
-                    <span class="prog-num" style="color:${color}">${pct}%</span>
-                </div>
-            </td>
-            <td><span class="badge badge-${r.estado}">${r.estado.replace('_',' ')}</span></td>
-            <td>${r.tareas_pendientes > 0 ? `<span class="tasks-pill">${r.tareas_pendientes} pendientes</span>` : '<span style="color:#27ae60;font-size:0.75rem">✓ listo</span>'}</td>
-            <td>${r.osm_relation_id ? `<a href="https://www.openstreetmap.org/relation/${r.osm_relation_id}" target="_blank" style="font-size:0.75rem;color:#4a9eff">OSM ↗</a>` : '<span style="color:#ccc;font-size:0.75rem">—</span>'}</td>
-            <td><button class="btn btn-outline btn-sm" onclick="openEditModal(${r.id})">✏</button></td>
-        </tr>`;
-    }).join('');
+    tree.innerHTML = groups.map(renderPair).join('');
 }
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
-
-function populateOperatorSelect(selectedId) {
-    const sel = document.getElementById('edit-operator');
-    sel.innerHTML = '<option value="">— Seleccionar —</option>';
-    operators.forEach(o => sel.innerHTML += `<option value="${o.id}" ${o.id == selectedId ? 'selected' : ''}>${esc(o.nombre)}</option>`);
+function renderPair(pair) {
+    const key = `p:${pair.pair_label}`;
+    const collapsed = state.collapsed.has(key);
+    return `
+    <div class="pair-group">
+        <div class="pair-head" onclick="toggle('${escapeAttr(key)}')">
+            <span class="chev">${collapsed ? '▸' : '▾'}</span>
+            <span class="title">${escapeHtml(pair.pair_label)}</span>
+            <span class="meta">${pair.total_rutas} rutas · ${pair.total_operadores} operadores · ${pair.vias.length} vía(s)</span>
+        </div>
+        <div class="pair-body ${collapsed ? 'collapsed' : ''}">
+            ${pair.vias.map(v => renderVia(pair, v)).join('')}
+        </div>
+    </div>`;
 }
 
-function openNewModal() {
+function renderVia(pair, via) {
+    const key = `v:${pair.pair_label}::${via.via_label}`;
+    const collapsed = state.collapsed.has(key);
+    return `
+    <div class="via-group">
+        <div class="via-head" onclick="toggle('${escapeAttr(key)}')">
+            <span class="chev">${collapsed ? '▸' : '▾'}</span>
+            <span class="title">${escapeHtml(via.via_label)}</span>
+            <span class="meta">${via.operadores.length} operador(es)</span>
+        </div>
+        <div class="via-body ${collapsed ? 'collapsed' : ''}">
+            ${via.operadores.map(op => renderOp(pair, via, op)).join('')}
+        </div>
+    </div>`;
+}
+
+function renderOp(pair, via, op) {
+    const ida    = op.ida;
+    const vuelta = op.vuelta;
+    return `
+    <div class="op-group">
+        <div class="op-head">
+            <span class="name">${escapeHtml(op.operator_nombre)}</span>
+            <div class="actions">
+                <button class="btn btn-ghost btn-sm"
+                    onclick='openEdit(${JSON.stringify({pair: pair.pair_label, via_label: via.via_label, op})})'>
+                    Editar
+                </button>
+            </div>
+        </div>
+        ${renderDirRow('Ida', ida)}
+        ${renderDirRow('Vuelta', vuelta)}
+        <div class="res-chips">${renderResChips(op.resoluciones)}</div>
+    </div>`;
+}
+
+function renderDirRow(label, r) {
+    if (!r) return `<div class="dir-row" style="opacity:.5">
+        <span class="dir-chip ${label==='Vuelta'?'vuelta':''}">${label}</span>
+        <span class="od">— (no existe)</span></div>`;
+    const linked = r.origen_stop_id || r.destino_stop_id ? '🔗' : '';
+    return `
+    <div class="dir-row">
+        <span class="dir-chip ${r.direction==='vuelta'?'vuelta':''}">${label}</span>
+        <span class="od">${escapeHtml(r.origen_text)} → ${escapeHtml(r.destino_text)}
+            ${linked ? `<span class="stop-tag">${linked} linkeada</span>` : ''}
+        </span>
+        <span class="prog">${r.progreso_pct || 0}%</span>
+        <a class="btn btn-ghost btn-sm" href="/ruta.html?id=${r.id}">Detalle</a>
+    </div>`;
+}
+
+function renderResChips(resoluciones) {
+    if (!resoluciones || !resoluciones.length)
+        return `<span class="res-chip missing">Sin resolución</span>`;
+    return resoluciones.map(r => `
+        <span class="res-chip">
+            Res ${escapeHtml(r.numero)}${r.fecha ? ' · '+r.fecha.slice(0,10) : ''}
+            ${r.pdf_url ? '<span class="pdf">📄</span>' : ''}
+        </span>`).join('');
+}
+
+function toggle(key) {
+    if (state.collapsed.has(key)) state.collapsed.delete(key);
+    else state.collapsed.add(key);
+    render();
+}
+
+function expandAll(expand) {
+    state.collapsed.clear();
+    if (!expand) {
+        // Colapsa solo nivel 1 (par) para hacer la vista compacta
+        for (const g of state.data.groups) state.collapsed.add(`p:${g.pair_label}`);
+    }
+    render();
+}
+
+// ---- Modal crear / editar -----
+
+function openCreate() {
+    state.editing = null;
+    state.viasDraft = [];
     document.getElementById('modal-title').textContent = 'Nueva ruta';
-    document.getElementById('edit-id').value = '';
-    document.getElementById('edit-origen').value = '';
-    document.getElementById('edit-destino').value = '';
-    document.getElementById('edit-via').value = '';
-    document.getElementById('edit-ref').value = '';
-    document.getElementById('edit-resolucion').value = '';
-    document.getElementById('edit-direction').value = 'ida';
-    document.getElementById('edit-estado-display').textContent = 'borrador (0%)';
-    document.getElementById('btn-delete').style.display = 'none';
-    populateOperatorSelect('');
+    document.getElementById('f-operator').innerHTML =
+        state.operators.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+    document.getElementById('f-origen').value = '';
+    document.getElementById('f-destino').value = '';
+    document.getElementById('f-via-input').value = '';
+    document.getElementById('f-ref').value = '';
+    document.getElementById('f-notas').value = '';
+    document.getElementById('f-delete').style.display = 'none';
+    renderViasDraft();
     document.getElementById('modal-bg').classList.add('open');
 }
 
-function openEditModal(id) {
-    const r = allRoutes.find(r => r.id === id);
-    if (!r) return;
+function openEdit({pair, via_label, op}) {
+    state.editing = { id_ida: op.ida?.id || op.vuelta?.id };
+    const r = op.ida || op.vuelta;
+    state.viasDraft = (r.waypoints || []).map(w => w.nombre_text);
     document.getElementById('modal-title').textContent = 'Editar ruta';
-    document.getElementById('edit-id').value = r.id;
-    document.getElementById('edit-origen').value = r.origen || '';
-    document.getElementById('edit-destino').value = r.destino || '';
-    document.getElementById('edit-via').value = r.via || '';
-    document.getElementById('edit-ref').value = r.ref || '';
-    document.getElementById('edit-resolucion').value = r.resolucion || '';
-    document.getElementById('edit-direction').value = r.direction || 'ida';
-    const estado = r.estado || 'borrador';
-    const pct = r.progreso_pct ?? 0;
-    document.getElementById('edit-estado-display').textContent = `${estado.replace('_',' ')} (${pct}%)`;
-    document.getElementById('btn-delete').style.display = 'inline-block';
-    populateOperatorSelect(r.operator_id);
+    document.getElementById('f-operator').innerHTML =
+        state.operators.map(o => `<option value="${o.id}" ${o.id===op.operator_id?'selected':''}>${o.nombre}</option>`).join('');
+    document.getElementById('f-origen').value = op.ida?.origen_text || op.vuelta?.destino_text || '';
+    document.getElementById('f-destino').value = op.ida?.destino_text || op.vuelta?.origen_text || '';
+    document.getElementById('f-ref').value = op.ref || '';
+    document.getElementById('f-notas').value = op.notas || '';
+    document.getElementById('f-via-input').value = '';
+    document.getElementById('f-delete').style.display = '';
+    renderViasDraft();
     document.getElementById('modal-bg').classList.add('open');
 }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 
+document.getElementById('f-via-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val) { state.viasDraft.push(val); e.target.value = ''; renderViasDraft(); }
+    }
+});
+
+function renderViasDraft() {
+    const c = document.getElementById('f-via-chips');
+    c.innerHTML = state.viasDraft.map((v, i) =>
+        `<span class="via-chip">${escapeHtml(v)} <button onclick="removeVia(${i})" title="Quitar">×</button></span>`
+    ).join('');
+}
+function removeVia(i) { state.viasDraft.splice(i, 1); renderViasDraft(); }
+
 async function saveRoute() {
-    const id = document.getElementById('edit-id').value;
     const body = {
-        region_id: region,
-        operator_id: document.getElementById('edit-operator').value,
-        origen: document.getElementById('edit-origen').value.trim(),
-        destino: document.getElementById('edit-destino').value.trim(),
-        via: document.getElementById('edit-via').value.trim(),
-        ref: document.getElementById('edit-ref').value.trim(),
-        resolucion: document.getElementById('edit-resolucion').value.trim(),
-        direction: document.getElementById('edit-direction').value,
+        region_id: state.region,
+        operator_id: +document.getElementById('f-operator').value,
+        origen:   document.getElementById('f-origen').value.trim(),
+        destino:  document.getElementById('f-destino').value.trim(),
+        via:      [...state.viasDraft],
+        ref:      document.getElementById('f-ref').value.trim() || null,
+        notas:    document.getElementById('f-notas').value.trim() || null,
     };
     if (!body.operator_id || !body.origen || !body.destino) {
-        showAlert('Operador, origen y destino son obligatorios', 'error'); return;
+        alertMsg('Operador, origen y destino son obligatorios', 'error');
+        return;
     }
-    const method = id ? 'PUT' : 'POST';
-    const url = id ? `/api/routes?id=${id}` : '/api/routes';
-    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res.ok) { closeModal(); showAlert(id ? 'Ruta actualizada' : 'Ruta creada', 'success'); loadRoutes(); }
-    else { const e = await res.json(); showAlert('Error: ' + e.error, 'error'); }
+    try {
+        let r;
+        if (state.editing) {
+            r = await fetch(`/api/routes?id=${state.editing.id_ida}`, {
+                method: 'PUT', headers: { 'content-type':'application/json' },
+                body: JSON.stringify(body),
+            }).then(r => r.json());
+        } else {
+            r = await fetch(`/api/routes`, {
+                method: 'POST', headers: { 'content-type':'application/json' },
+                body: JSON.stringify(body),
+            }).then(r => r.json());
+        }
+        if (r.error) throw new Error(r.error);
+        alertMsg(state.editing ? 'Ruta actualizada' : 'Ruta creada');
+        closeModal();
+        await load();
+    } catch (e) {
+        alertMsg(`Error: ${e.message}`, 'error');
+    }
 }
 
 async function deleteRoute() {
-    const id = document.getElementById('edit-id').value;
-    if (!id || !confirm('¿Eliminar esta ruta?')) return;
+    if (!state.editing) return;
+    if (!confirm('¿Eliminar esta ruta (ida y vuelta)? Se perderán waypoints y resoluciones.')) return;
     try {
-        const res = await fetch(`/api/routes?id=${id}`, { method: 'DELETE' });
-        if (res.ok) { closeModal(); showAlert('Ruta eliminada', 'success'); loadRoutes(); }
-        else { const e = await res.json(); showAlert('Error: ' + e.error, 'error'); }
-    } catch (_) {
-        showAlert('Error de conexión', 'error');
+        const r = await fetch(`/api/routes?id=${state.editing.id_ida}`, { method: 'DELETE' }).then(r => r.json());
+        if (r.error) throw new Error(r.error);
+        alertMsg('Ruta eliminada');
+        closeModal();
+        await load();
+    } catch (e) {
+        alertMsg(`Error: ${e.message}`, 'error');
     }
 }
 
-function showAlert(msg, type) {
-    const b = document.getElementById('alert-box');
-    b.className = `alert alert-${type} show`;
-    b.textContent = msg;
-    setTimeout(() => b.classList.remove('show'), 5000);
-}
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// ---- Filtros -----
+document.getElementById('search').addEventListener('input', e => {
+    state.search = e.target.value;
+    render();
+});
+document.getElementById('filter-op').addEventListener('change', e => {
+    state.filterOp = e.target.value;
+    render();
+});
 
-loadRoutes();
+// ---- Utils -----
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s).replace(/'/g, "\\'"); }
+
+load();
 </script>
+
 </body>
 </html>
