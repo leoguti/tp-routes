@@ -135,8 +135,11 @@ function groupRoutes(rows) {
         // Normalizar la vía "canónica" para este par: ordenar según la ida
         // (route_parent_id IS NULL). Para la vuelta, invertimos para que caiga
         // en el mismo grupo que la ida.
+        // Canónico = orden cityA → cityB. Si la fila parte de cityB (sea ida o
+        // vuelta), invertimos los waypoints para mantener coherencia en el diagrama.
         const waypointNames = r.waypoints.map(w => w.nombre_text);
-        const canonicalVia = r.direction === 'vuelta' ? [...waypointNames].reverse() : waypointNames;
+        const partFromA = norm(r.origen_text) === norm(a);
+        const canonicalVia = partFromA ? waypointNames : [...waypointNames].reverse();
         const viaKey = canonicalVia.map(norm).join('>');
         const viaLabel = canonicalVia.length ? 'vía ' + canonicalVia.join(' → ') : 'Directo';
 

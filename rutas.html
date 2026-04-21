@@ -66,6 +66,28 @@
         .via-head .meta  { font-size: 0.76rem; color: #777; }
         .via-body.collapsed { display: none; }
 
+        /* Diagrama tipo metro del recorrido */
+        .rd-wrap { padding: 14px 20px 18px 54px; background: #fafcff; border-bottom: 1px solid #eff2fa; overflow-x: auto; }
+        .rd { display: flex; align-items: flex-start; min-width: max-content; }
+        .rd-stop { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .rd-dot {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: white; border: 3px solid #2a5ec8;
+            position: relative; z-index: 1;
+        }
+        .rd-stop.term .rd-dot { background: #2a5ec8; width: 18px; height: 18px; border-width: 3px; margin-top: -2px; }
+        .rd-lbl { font-size: 0.72rem; font-weight: 600; color: #2a3e7a; margin-top: 6px; white-space: nowrap; padding: 0 4px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+        .rd-stop.term .rd-lbl { font-weight: 800; color: #1a1a3e; font-size: 0.78rem; }
+        .rd-line {
+            height: 4px; background: #2a5ec8; flex: 1;
+            min-width: 38px; margin-top: 8px;
+            border-radius: 2px;
+        }
+        .rd-caption {
+            font-size: 0.7rem; color: #888; margin-top: 8px; letter-spacing: .3px;
+            text-transform: uppercase; font-weight: 600;
+        }
+
         /* Nivel 3: Empresa (operador) — tarjeta plana que contiene todo */
         .op-group { padding: 10px 20px 10px 54px; }
         .op-card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: white; border: 1px solid #e2e7f1; border-radius: 10px; margin-top: 6px; }
@@ -343,8 +365,31 @@ function renderVia(pair, via) {
             <span class="meta">${via.operadores.length} empresa${via.operadores.length!==1?'s':''}</span>
         </div>
         <div class="via-body ${collapsed ? 'collapsed' : ''}">
+            ${renderRouteDiagram(pair, via)}
             ${via.operadores.map(op => renderOp(pair, via, op)).join('')}
         </div>
+    </div>`;
+}
+
+function renderRouteDiagram(pair, via) {
+    // Paradas en orden: cityA - waypoints - cityB
+    const stops = [pair.cityA, ...(via.via || []), pair.cityB];
+    const n = stops.length;
+    const parts = [];
+    for (let i = 0; i < n; i++) {
+        const isTerm = i === 0 || i === n - 1;
+        parts.push(`
+            <div class="rd-stop ${isTerm ? 'term' : ''}">
+                <div class="rd-dot"></div>
+                <div class="rd-lbl">${escapeHtml(stops[i])}</div>
+            </div>
+        `);
+        if (i < n - 1) parts.push(`<div class="rd-line"></div>`);
+    }
+    return `
+    <div class="rd-wrap">
+        <div class="rd-caption">Recorrido · ${stops.length} paradas</div>
+        <div class="rd">${parts.join('')}</div>
     </div>`;
 }
 
