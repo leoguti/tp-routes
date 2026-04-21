@@ -355,6 +355,40 @@
         .flow-box.highlight { background: rgba(247,184,75,.1); border-color: rgba(247,184,75,.4); }
         .flow-box.highlight h4 { color: var(--warm); }
 
+        /* ========== Trufi app — ya existe en el mundo ========== */
+        .trufi-sec { background: #fff8ec; border-top: 1px solid #f2e3bf; border-bottom: 1px solid #f2e3bf; }
+        .trufi-lead {
+            max-width: 760px;
+            margin-bottom: 36px;
+            color: #5a4a1a; font-size: 1.02rem; line-height: 1.65;
+        }
+        .trufi-lead strong { color: var(--ink); }
+        .cities-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px; margin-top: 10px;
+        }
+        .city {
+            background: white; border: 1px solid #f0e2bc;
+            padding: 18px 16px; border-radius: 12px;
+            display: flex; gap: 14px; align-items: center;
+        }
+        .city .flag { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+        .city .name { font-weight: 700; color: var(--ink); font-size: 0.95rem; }
+        .city .country { font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
+        .city .users { font-size: 0.72rem; color: #a85a10; font-weight: 700; margin-top: 4px; letter-spacing: .3px; }
+        .city.star {
+            background: linear-gradient(135deg, #fff7e0, #ffe8bf);
+            border-color: #f2b84b; transform: scale(1.03);
+            box-shadow: 0 8px 22px rgba(247,184,75,.22);
+        }
+        .city.star .name { color: #7a4e00; }
+        .trufi-note {
+            margin-top: 30px; padding: 22px 26px;
+            background: white; border: 1px dashed #f2c97c; border-radius: 12px;
+            font-size: 0.95rem; color: #3a3e5c; line-height: 1.6;
+        }
+        .trufi-note strong { color: var(--ink); }
+
         /* ========== Horizonte app ========== */
         .features-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -491,7 +525,6 @@
         <a href="#fases">Fases</a>
         <a href="#app">La app</a>
         <a href="#aliados">Aliados</a>
-        <a href="#roles">Tu rol</a>
     </div>
 </nav>
 
@@ -805,12 +838,78 @@
     </div>
 </section>
 
+<!-- =========================== TRUFI APP YA EXISTE =========================== -->
+<section class="trufi-sec" style="padding:96px 24px">
+    <div class="container reveal">
+        <div class="section-tag" style="color:#a85a10">El aporte de Trufi</div>
+        <h2>La app de planificación ya existe. Y ya funciona.</h2>
+        <p class="trufi-lead">
+            Trufi Association desarrolla una aplicación de planificación de transporte
+            público <strong>de código abierto</strong> que hoy es usada por cientos de miles
+            de personas en tres continentes. Cuando Boyacá publique su GTFS,
+            <strong>la app se despliega sobre él</strong> — no hay que inventarla, ya está.
+            Ese es el aporte tecnológico que traemos al proyecto.
+        </p>
+
+        <div class="cities-grid">
+            <div class="city star">
+                <div class="flag">🇧🇴</div>
+                <div>
+                    <div class="name">Cochabamba</div>
+                    <div class="country">Bolivia</div>
+                    <div class="users">300 000+ usuarios</div>
+                </div>
+            </div>
+            <div class="city">
+                <div class="flag">🇧🇴</div>
+                <div><div class="name">Oruro</div><div class="country">Bolivia</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇵🇪</div>
+                <div><div class="name">Trujillo</div><div class="country">Perú</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇵🇪</div>
+                <div><div class="name">Arequipa</div><div class="country">Perú</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇲🇽</div>
+                <div><div class="name">Estado de México</div><div class="country">México</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇲🇽</div>
+                <div><div class="name">Oaxaca</div><div class="country">México</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇪🇹</div>
+                <div><div class="name">Addis Abeba</div><div class="country">Etiopía</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇷🇼</div>
+                <div><div class="name">Ruanda</div><div class="country">África Oriental</div></div>
+            </div>
+            <div class="city">
+                <div class="flag">🇩🇪</div>
+                <div><div class="name">Alemania</div><div class="country">Europa</div></div>
+            </div>
+        </div>
+
+        <div class="trufi-note">
+            <strong>Colombia es el próximo país.</strong> Nunca se ha hecho aquí.
+            Boyacá puede ser la primera región del país en tener una app pública de
+            transporte intermunicipal con datos abiertos — sobre la misma tecnología
+            probada en 10+ ciudades del mundo.
+        </div>
+    </div>
+</section>
+
+
 <!-- =========================== HORIZONTE APP =========================== -->
 <section id="app" class="section-paper">
     <div class="container reveal">
-        <div class="section-tag">El horizonte</div>
-        <h2>Una app para que el transporte público se deje usar.</h2>
-        <p class="big">Con el dato estandarizado, sobre el mismo GTFS, se construye una aplicación pública que el ciudadano y el despachador usan a diario.</p>
+        <div class="section-tag">Qué resuelve la app</div>
+        <h2>Lo que la ciudadanía va a poder hacer.</h2>
+        <p class="big">Estas no son ideas futuras — son las funciones reales que la app ya ofrece en otras ciudades y que llegarán a Boyacá una vez publicado el GTFS.</p>
 
         <div class="features-grid">
             <div class="feat">
