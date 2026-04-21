@@ -297,6 +297,23 @@
         .allies .logos .ally-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .allies .logos .ally-name { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
 
+        /* QR para el evento */
+        .qr-box {
+            margin-top: 40px; padding: 30px;
+            background: white; border: 1px solid var(--paper-2); border-radius: 16px;
+            display: flex; gap: 28px; flex-wrap: wrap; align-items: center; justify-content: center;
+        }
+        .qr-box img { width: 180px; height: 180px; border-radius: 10px; border: 4px solid white; box-shadow: 0 4px 16px rgba(16,18,58,.08); }
+        .qr-box .qr-text { flex: 1; min-width: 240px; max-width: 440px; }
+        .qr-box h3 { color: var(--ink); font-size: 1.2rem; margin-bottom: 8px; }
+        .qr-box p { color: #555; font-size: 0.92rem; }
+        .qr-box .qr-url {
+            display: inline-block; margin-top: 10px;
+            font-family: ui-monospace, Menlo, monospace;
+            background: var(--paper-2); padding: 5px 10px; border-radius: 6px;
+            font-size: 0.82rem; color: var(--ink);
+        }
+
         .contact-box {
             margin-top: 44px; padding: 28px; background: var(--navy);
             color: white; border-radius: 16px;
@@ -620,6 +637,16 @@
                 <div class="who">Aliados e instituciones</div>
                 <h3>Súmense</h3>
                 <p>Autoridad de movilidad, empresas, ONGs, universidades, desarrolladores: hay lugar para todos. Escriban y conversamos qué pueden aportar.</p>
+            </div>
+        </div>
+
+        <div class="qr-box">
+            <img src="/assets/qr/busboy-small.png" alt="Código QR a rutas.busboy.app/busboy">
+            <div class="qr-text">
+                <h3>📱 Llévatela en tu celular</h3>
+                <p>Escanea el código para abrir esta presentación en tu teléfono.
+                   Compártela con quien creas que puede sumarse al proyecto.</p>
+                <span class="qr-url">rutas.busboy.app/busboy</span>
             </div>
         </div>
 
