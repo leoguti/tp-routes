@@ -162,8 +162,40 @@
         }
 
         /* ========== Roadmap / timeline de hitos ========== */
-        .roadmap { margin: 40px 0 20px; padding: 30px 20px 24px; background: white; border: 1px solid var(--paper-2); border-radius: 14px; overflow-x: auto; }
+        .roadmap { margin: 40px 0 20px; padding: 28px 20px 22px; background: white; border: 1px solid var(--paper-2); border-radius: 14px; overflow-x: auto; }
+
+        /* Cabecera de zonas del roadmap */
+        .rm-zones { display: flex; gap: 0; min-width: max-content; margin-bottom: 14px; }
+        .rm-zone {
+            padding: 10px 14px; border-radius: 10px;
+            font-size: 0.76rem; font-weight: 700; letter-spacing: .4px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .rm-zone.now {
+            background: #e8fae8; color: #1a6b3a; border: 1px solid #bce3c5;
+        }
+        .rm-zone.horizon {
+            background: #f2efff; color: #4a3b7a; border: 1px dashed #c8bce9;
+            margin-left: 20px;
+        }
+        .rm-zone .spd { font-weight: 800; }
+
         .roadmap-track { display: flex; align-items: flex-start; min-width: max-content; }
+        .rm-zone-group { display: flex; align-items: flex-start; }
+        .rm-zone-group.now-zone { padding-right: 16px; position: relative; }
+        .rm-zone-group.now-zone::after {
+            content: ''; position: absolute; right: 0; top: 0; bottom: 40px;
+            border-left: 2px dashed #b0b8d0;
+        }
+        .rm-zone-group.horizon-zone { padding-left: 16px; opacity: .78; }
+
+        .rm-note {
+            margin-top: 18px; padding: 14px 18px;
+            background: linear-gradient(90deg, #e8fae8 0%, #fafafa 50%, #f2efff 100%);
+            border-radius: 10px; font-size: 0.88rem; color: #3a3e5c;
+            text-align: center; line-height: 1.55;
+        }
+        .rm-note strong { color: var(--ink); }
         .rm-stop { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; min-width: 150px; padding: 0 4px; }
         .rm-dot {
             width: 20px; height: 20px; border-radius: 50%;
@@ -262,6 +294,51 @@
         .map-note ul { list-style: none; padding: 0; margin-top: 14px; }
         .map-note li { padding: 6px 0; color: #4a4e6c; font-size: 0.95rem; }
         .map-note li strong { color: var(--ink); }
+
+        /* ========== OSM — bloque destacado ========== */
+        .osm-section {
+            padding: 100px 24px;
+            background:
+                radial-gradient(ellipse at top left, rgba(126,188,111,.18) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(74,158,255,.08) 0%, transparent 50%),
+                #f6faf3;
+            border-top: 1px solid #dfeed9;
+            border-bottom: 1px solid #dfeed9;
+        }
+        .osm-card {
+            max-width: 980px; margin: 0 auto;
+            display: grid; grid-template-columns: 170px 1fr; gap: 44px; align-items: center;
+            padding: 40px 36px;
+            background: white; border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(26,107,58,.1);
+            border: 1px solid #cbe4bd;
+        }
+        .osm-mark {
+            width: 170px; height: 170px; border-radius: 50%;
+            background: linear-gradient(135deg, #7ebc6f 0%, #4a9e45 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4.2rem; color: white;
+            box-shadow: 0 8px 20px rgba(126,188,111,.35);
+        }
+        .osm-card h2 {
+            font-size: clamp(1.5rem, 3vw, 2.1rem);
+            color: #1a3a1a; margin-bottom: 14px;
+        }
+        .osm-card p {
+            color: #2e4a2e; font-size: 1rem; line-height: 1.65;
+        }
+        .osm-card p + p { margin-top: 12px; }
+        .osm-card strong { color: #0f1129; }
+        .osm-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 16px; color: #2a5ec8;
+            text-decoration: none; font-weight: 700; font-size: 0.9rem;
+        }
+        .osm-link:hover { color: #4a9eff; }
+        @media (max-width: 720px) {
+            .osm-card { grid-template-columns: 1fr; text-align: center; padding: 32px 24px; gap: 22px; }
+            .osm-mark { margin: 0 auto; width: 130px; height: 130px; font-size: 3.2rem; }
+        }
 
         /* ========== Objetivo: GTFS ========== */
         .flow {
@@ -519,54 +596,75 @@
         </div>
 
         <div class="roadmap reveal" aria-label="Hoja de ruta del proyecto">
+
+            <div class="rm-zones">
+                <div class="rm-zone now">🐢 <span>Alcance actual · pro bono · <span class="spd">ritmo lento</span></span></div>
+                <div class="rm-zone horizon">🚀 <span>Horizonte · con aliados · <span class="spd">ritmo acelerado</span></span></div>
+            </div>
+
             <div class="roadmap-track">
-                <div class="rm-stop done">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">En marcha</div>
-                    <div class="rm-title">Listado maestro de rutas</div>
+                <!-- Zona actual: hasta GTFS, pro bono -->
+                <div class="rm-zone-group now-zone">
+                    <div class="rm-stop done">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">En marcha</div>
+                        <div class="rm-title">Listado maestro de rutas</div>
+                    </div>
+                    <div class="rm-line active"></div>
+                    <div class="rm-stop active">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">Próximo</div>
+                        <div class="rm-title">Trazado en OSM + paradas</div>
+                    </div>
+                    <div class="rm-line"></div>
+                    <div class="rm-stop next">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">Fase 3</div>
+                        <div class="rm-title">Horarios, tarifas y capacidades</div>
+                    </div>
+                    <div class="rm-line"></div>
+                    <div class="rm-stop next">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">Meta</div>
+                        <div class="rm-title">Feed GTFS público</div>
+                    </div>
                 </div>
-                <div class="rm-line active"></div>
-                <div class="rm-stop active">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">Próximo</div>
-                    <div class="rm-title">Trazado en OSM + paradas</div>
-                </div>
-                <div class="rm-line"></div>
-                <div class="rm-stop next">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">Fase 3</div>
-                    <div class="rm-title">Horarios, tarifas y capacidades</div>
-                </div>
-                <div class="rm-line"></div>
-                <div class="rm-stop next">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">Fase 4</div>
-                    <div class="rm-title">Feed GTFS público</div>
-                </div>
-                <div class="rm-line"></div>
-                <div class="rm-stop future">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">Fase 5</div>
-                    <div class="rm-title">App con planeador de rutas</div>
-                </div>
-                <div class="rm-line"></div>
-                <div class="rm-stop future">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">Fase 6</div>
-                    <div class="rm-title">Tiempo real, pagos y chatbot</div>
-                </div>
-                <div class="rm-line"></div>
-                <div class="rm-stop future">
-                    <div class="rm-dot"></div>
-                    <div class="rm-phase">Fase 7</div>
-                    <div class="rm-title">Replicar en otras regiones</div>
+
+                <!-- Zona de horizonte: solo con financiación -->
+                <div class="rm-zone-group horizon-zone">
+                    <div class="rm-line"></div>
+                    <div class="rm-stop future">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">Fase 5</div>
+                        <div class="rm-title">App con planeador de rutas</div>
+                    </div>
+                    <div class="rm-line"></div>
+                    <div class="rm-stop future">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">Fase 6</div>
+                        <div class="rm-title">Tiempo real, pagos y chatbot</div>
+                    </div>
+                    <div class="rm-line"></div>
+                    <div class="rm-stop future">
+                        <div class="rm-dot"></div>
+                        <div class="rm-phase">Fase 7</div>
+                        <div class="rm-title">Replicar en otras regiones</div>
+                    </div>
                 </div>
             </div>
+
+            <div class="rm-note">
+                <strong>Hasta el GTFS avanzamos solos, paso a paso</strong>, sin esperar a que nadie
+                nos pague. Para cruzar la línea y llegar a la app pública con tiempo real,
+                <strong>necesitamos aliados y financiación</strong> — con recursos, lo que hoy
+                toma meses podría tomar semanas.
+            </div>
+
             <div class="rm-legend">
                 <span><span class="sw done"></span>En marcha</span>
                 <span><span class="sw active"></span>Próximo</span>
-                <span><span class="sw next"></span>Planificado</span>
-                <span><span class="sw future"></span>Futuro</span>
+                <span><span class="sw next"></span>Planificado (a nuestro ritmo)</span>
+                <span><span class="sw future"></span>Solo con financiación</span>
             </div>
         </div>
 
@@ -661,6 +759,30 @@
         </div>
     </div>
 </section>
+
+<!-- =========================== OSM — los datos viven aquí =========================== -->
+<section class="osm-section">
+    <div class="osm-card reveal">
+        <div class="osm-mark" aria-hidden="true">🗺️</div>
+        <div>
+            <div class="section-tag" style="color:#4a9e45">Dónde viven los datos</div>
+            <h2>Los datos residen en <span style="color:#4a9e45">OpenStreetMap</span>.</h2>
+            <p>
+                Cada ruta trazada, cada parada y cada terminal se publica en
+                <strong>OpenStreetMap</strong> — el mapa libre del mundo, construido
+                por una comunidad global de más de diez millones de personas.
+                Desde el primer día, visible y editable por cualquiera.
+            </p>
+            <p>
+                No dependemos de Google, ni de plataformas privadas. <strong>Los datos
+                son públicos, colaborativos y auditables</strong>. Si el proyecto
+                desaparece mañana, los datos siguen ahí — pertenecen a la región y al mundo.
+            </p>
+            <a href="https://www.openstreetmap.org" target="_blank" class="osm-link">Visitar OpenStreetMap ↗</a>
+        </div>
+    </div>
+</section>
+
 
 <!-- =========================== GTFS =========================== -->
 <section class="section-dark">
@@ -847,7 +969,6 @@
             </div>
             <div class="links">
                 <a href="mailto:leonardo.gutierrez@trufi-association.org">leonardo.gutierrez@trufi-association.org</a>
-                <a href="https://github.com/leoguti/tp-routes" target="_blank">Código abierto ↗</a>
             </div>
         </div>
     </div>
