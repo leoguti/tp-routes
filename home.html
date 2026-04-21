@@ -215,13 +215,6 @@
         <div class="card-arrow">Abrir editor →</div>
     </a>
 
-    <a href="/rutas-terminal.html" class="card orange">
-        <div class="card-icon">📂</div>
-        <h3>Rutas del terminal <span class="tag new">Nuevo</span></h3>
-        <p>Importa el listado de rutas desde un archivo Excel o CSV. Gestiona el estado de cada ruta: pendiente, mapeada o publicada.</p>
-        <div class="card-arrow">Ir a terminal →</div>
-    </a>
-
     <a href="/terminales.html" class="card purple">
         <div class="card-icon">📍</div>
         <h3>Terminales y paradas <span class="tag new">Nuevo</span></h3>
@@ -247,17 +240,17 @@ async function loadStats() {
         document.getElementById('region-label').textContent =
             (typeof REGIONS !== 'undefined' && REGIONS[region]) ? REGIONS[region].name : 'Boyacá, Colombia';
 
-        const [osmRes, termRes] = await Promise.all([
+        const [osmRes, routesRes] = await Promise.all([
             fetch(`/api/stats?region=${region}`).then(r => r.json()).catch(() => ({})),
-            fetch(`/api/terminal-routes?region=${region}`).then(r => r.json()).catch(() => ({}))
+            fetch(`/api/routes?region=${region}`).then(r => r.json()).catch(() => ({}))
         ]);
 
         document.getElementById('stat-osm').textContent =
             osmRes.route_count ?? osmRes.routes ?? '—';
         document.getElementById('stat-terminal').textContent =
-            termRes.total ?? '—';
+            routesRes.total ?? '—';
         document.getElementById('stat-pendientes').textContent =
-            termRes.pendientes ?? '—';
+            (routesRes.borrador ?? 0) + (routesRes.en_progreso ?? 0) || '—';
         document.getElementById('stat-terminales').textContent = '—';
     } catch (e) {}
 }

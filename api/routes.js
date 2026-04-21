@@ -1,199 +1,305 @@
-// API: routes — lista maestra + CRUD
+// API: routes — esquema v3.0 (listado maestro jerárquico)
+//
+// Consume el esquema definido en scripts/migrate_v3.sql:
+//   - routes con origen_text/destino_text y direction.
+//   - route_waypoints como lista ordenada de ciudades intermedias.
+//   - route_resolutions (apuntan a la ida; la vuelta las lee a través de route_parent_id).
+//
+// Endpoints:
+//   GET /api/routes?region=boyaca                 -> listado plano + stats
+//   GET /api/routes?region=boyaca&grouped=1       -> estructura jerárquica ya agrupada
+//   GET /api/routes?id=123                        -> detalle + waypoints + resoluciones
+//   POST /api/routes                              -> crea ruta (ida + vuelta automático)
+//   PUT  /api/routes?id=123                       -> actualiza (afecta ida + vuelta)
+//   DELETE /api/routes?id=123                     -> elimina ambas direcciones
+
 const { neon } = require('@neondatabase/serverless');
 
 module.exports = async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
 
-    // GET — lista con filtros y progreso
-    if (req.method === 'GET') {
-        const { region = 'boyaca', estado, operator_id, search, id } = req.query;
+    if (req.method === 'GET')    return handleGet(sql, req, res);
+    if (req.method === 'POST')   return handlePost(sql, req, res);
+    if (req.method === 'PUT')    return handlePut(sql, req, res);
+    if (req.method === 'DELETE') return handleDelete(sql, req, res);
+    return res.status(405).json({ error: 'Método no permitido' });
+};
 
-        // Detalle de una ruta
-        if (id) {
-            const rows = await sql`
-                SELECT r.*, o.nombre AS operator_nombre, o.telefono AS operator_telefono, o.url AS operator_url,
-                       (SELECT json_agg(t ORDER BY t.tipo) FROM route_tasks t WHERE t.route_id = r.id) AS tasks,
-                       (SELECT COUNT(*) FROM route_stops  WHERE route_id = r.id)::int AS stops_count,
-                       (SELECT COUNT(*) FROM route_shapes WHERE route_id = r.id)::int AS shapes_count,
-                       (SELECT COUNT(*) FROM route_fares  WHERE route_id = r.id)::int AS fares_count,
-                       (SELECT COUNT(*) FROM route_trips  WHERE route_id = r.id)::int AS trips_count
-                FROM routes r
-                LEFT JOIN operators o ON o.id = r.operator_id
-                WHERE r.id = ${id}
-            `;
-            if (!rows.length) return res.status(404).json({ error: 'Ruta no encontrada' });
-            return res.json(rows[0]);
-        }
+// ---------------------------------------------------------------------------
+// GET
+// ---------------------------------------------------------------------------
+async function handleGet(sql, req, res) {
+    const { region = 'boyaca', id, grouped } = req.query;
 
-        let query = `
-            SELECT r.id, r.origen, r.destino, r.via, r.ref, r.direction,
-                   r.resolucion, r.progreso_pct,
-                   CASE
-                     WHEN r.progreso_pct >= 100 AND r.osm_relation_id IS NOT NULL THEN 'publicada'
-                     WHEN r.progreso_pct >= 81 THEN 'aprobada'
-                     WHEN r.progreso_pct >= 21 THEN 'en_progreso'
-                     ELSE 'borrador'
-                   END AS estado,
-                   r.osm_relation_id, r.terminal_route_id, r.creada_en, r.actualizada_en,
-                   r.responsable_id, r.color, r.operator_id,
-                   o.nombre AS operator_nombre,
-                   (SELECT COUNT(*) FROM route_tasks t WHERE t.route_id = r.id AND t.estado != 'completada') AS tareas_pendientes
+    if (id) {
+        // Detalle de una ruta (incluye waypoints, resoluciones y la otra dirección)
+        const rows = await sql`
+            SELECT r.*, o.nombre AS operator_nombre
             FROM routes r
             LEFT JOIN operators o ON o.id = r.operator_id
-            WHERE r.region_id = $1
+            WHERE r.id = ${id}
         `;
-        const params = [region]; let idx = 2;
+        if (!rows.length) return res.status(404).json({ error: 'Ruta no encontrada' });
+        const route = rows[0];
 
-        if (estado) { query += ` AND r.estado = $${idx++}`; params.push(estado); }
-        if (operator_id) { query += ` AND r.operator_id = $${idx++}`; params.push(operator_id); }
-        if (search) {
-            query += ` AND (r.origen ILIKE $${idx} OR r.destino ILIKE $${idx} OR o.nombre ILIKE $${idx})`;
-            params.push(`%${search}%`); idx++;
-        }
-        query += ' ORDER BY r.destino, o.nombre';
+        const waypoints = await sql`
+            SELECT id, orden, nombre_text, stop_id
+            FROM route_waypoints WHERE route_id = ${id} ORDER BY orden
+        `;
 
-        const rows = await sql(query, params);
+        // Resoluciones viven en la ida (route_parent_id = NULL). La vuelta las
+        // busca a través de su padre.
+        const idaId = route.route_parent_id ?? route.id;
+        const resoluciones = await sql`
+            SELECT id, orden, numero, fecha, texto_original, pdf_url, pdf_key, notas
+            FROM route_resolutions WHERE route_id = ${idaId} ORDER BY orden
+        `;
 
-        // Stats
-        const total = rows.length;
-        const stats = {
-            total,
-            borrador: rows.filter(r => r.estado === 'borrador').length,
-            en_progreso: rows.filter(r => r.estado === 'en_progreso').length,
-            aprobada: rows.filter(r => r.estado === 'aprobada').length,
-            publicada: rows.filter(r => r.estado === 'publicada').length,
-            promedio_progreso: total ? Math.round(rows.reduce((s, r) => s + (r.progreso_pct || 0), 0) / total) : 0
-        };
+        const pair = await sql`
+            SELECT id, direction, origen_text, destino_text
+            FROM routes
+            WHERE id = ${route.route_parent_id ?? 0}
+               OR route_parent_id = ${route.id}
+               OR id = ${route.id}
+            ORDER BY direction
+        `;
 
-        return res.json({ ...stats, routes: rows });
+        return res.json({ ...route, waypoints, resoluciones, pair });
     }
 
-    // POST — crear ruta
-    if (req.method === 'POST') {
-        const { region_id = 'boyaca', operator_id, origen, destino, via, ref, red, color,
-                resolucion, direction = 'ida',
-                responsable_id, terminal_route_id } = req.body;
+    // Lista: trae todas las rutas de la región con sus waypoints + resoluciones agregados
+    const rows = await sql`
+        SELECT
+            r.id, r.region_id, r.operator_id,
+            r.origen_text, r.destino_text,
+            r.origen_stop_id, r.destino_stop_id,
+            r.direction, r.route_parent_id,
+            r.ref, r.notas, r.progreso_pct,
+            r.osm_relation_id, r.creada_en, r.actualizada_en,
+            o.nombre AS operator_nombre,
+            COALESCE((
+                SELECT json_agg(json_build_object('orden', w.orden, 'nombre_text', w.nombre_text, 'stop_id', w.stop_id) ORDER BY w.orden)
+                FROM route_waypoints w WHERE w.route_id = r.id
+            ), '[]'::json) AS waypoints,
+            COALESCE((
+                SELECT json_agg(json_build_object(
+                    'id', rr.id, 'numero', rr.numero, 'fecha', rr.fecha,
+                    'texto_original', rr.texto_original, 'pdf_url', rr.pdf_url
+                ) ORDER BY rr.orden)
+                FROM route_resolutions rr
+                WHERE rr.route_id = COALESCE(r.route_parent_id, r.id)
+            ), '[]'::json) AS resoluciones
+        FROM routes r
+        LEFT JOIN operators o ON o.id = r.operator_id
+        WHERE r.region_id = ${region}
+        ORDER BY r.origen_text, r.destino_text, o.nombre, r.direction
+    `;
 
-        if (!operator_id || !origen?.trim() || !destino?.trim())
-            return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
+    // Derivar estado desde progreso_pct + osm_relation_id
+    for (const r of rows) {
+        if (r.progreso_pct >= 100 && r.osm_relation_id) r.estado = 'publicada';
+        else if (r.progreso_pct >= 81) r.estado = 'aprobada';
+        else if (r.progreso_pct >= 21) r.estado = 'en_progreso';
+        else r.estado = 'borrador';
+    }
 
-        const row = await sql`
-            INSERT INTO routes (region_id, operator_id, origen, destino, via, ref, red, color,
-                resolucion, direction, responsable_id, terminal_route_id, estado)
-            VALUES (${region_id}, ${operator_id}, ${origen.trim()}, ${destino.trim()},
-                ${via?.trim() || null}, ${ref || null}, ${red || null}, ${color || null},
-                ${resolucion || null}, ${direction},
-                ${responsable_id || null}, ${terminal_route_id || null}, 'borrador')
+    const stats = {
+        total: rows.length,
+        borrador:    rows.filter(r => r.estado === 'borrador').length,
+        en_progreso: rows.filter(r => r.estado === 'en_progreso').length,
+        aprobada:    rows.filter(r => r.estado === 'aprobada').length,
+        publicada:   rows.filter(r => r.estado === 'publicada').length,
+        promedio_progreso: rows.length
+            ? Math.round(rows.reduce((s, r) => s + (r.progreso_pct || 0), 0) / rows.length)
+            : 0,
+    };
+
+    if (grouped) {
+        return res.json({ ...stats, groups: groupRoutes(rows) });
+    }
+    return res.json({ ...stats, routes: rows });
+}
+
+// Agrupa: { par-no-dirigido → vía → operador → [ida, vuelta] }
+function groupRoutes(rows) {
+    const norm = s => String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+    // 1) Agrupar por par no-dirigido: orden alfabético de (origen, destino)
+    //    para que Tunja→Sogamoso y Sogamoso→Tunja compartan grupo.
+    const byPair = new Map();
+    for (const r of rows) {
+        const [a, b] = [r.origen_text, r.destino_text].sort((x, y) => norm(x).localeCompare(norm(y)));
+        const pairKey = `${norm(a)}::${norm(b)}`;
+        if (!byPair.has(pairKey)) byPair.set(pairKey, { cityA: a, cityB: b, vias: new Map() });
+
+        // Normalizar la vía "canónica" para este par: ordenar según la ida
+        // (route_parent_id IS NULL). Para la vuelta, invertimos para que caiga
+        // en el mismo grupo que la ida.
+        const waypointNames = r.waypoints.map(w => w.nombre_text);
+        const canonicalVia = r.direction === 'vuelta' ? [...waypointNames].reverse() : waypointNames;
+        const viaKey = canonicalVia.map(norm).join('>');
+        const viaLabel = canonicalVia.length ? canonicalVia.join(' → ') : 'Directo';
+
+        const pair = byPair.get(pairKey);
+        if (!pair.vias.has(viaKey)) pair.vias.set(viaKey, { via_label: viaLabel, via: canonicalVia, operadores: new Map() });
+        const viaGroup = pair.vias.get(viaKey);
+
+        const opKey = r.operator_id;
+        if (!viaGroup.operadores.has(opKey)) {
+            viaGroup.operadores.set(opKey, {
+                operator_id: r.operator_id,
+                operator_nombre: r.operator_nombre,
+                ida: null, vuelta: null,
+                resoluciones: r.resoluciones,
+                ref: r.ref, notas: r.notas,
+            });
+        }
+        viaGroup.operadores.get(opKey)[r.direction] = r;
+    }
+
+    // Serializar Maps a arrays para JSON
+    const groups = [];
+    for (const { cityA, cityB, vias } of byPair.values()) {
+        const viasOut = [];
+        for (const { via_label, via, operadores } of vias.values()) {
+            const opsOut = [...operadores.values()];
+            viasOut.push({
+                via_label, via,
+                operadores: opsOut,
+                rutas: opsOut.length * 2,
+            });
+        }
+        // Orden: Directo primero, luego alfabético
+        viasOut.sort((a, b) =>
+            a.via_label === 'Directo' ? -1 : b.via_label === 'Directo' ? 1
+            : a.via_label.localeCompare(b.via_label));
+
+        groups.push({
+            pair_label: `${cityA} ↔ ${cityB}`,
+            cityA, cityB,
+            vias: viasOut,
+            total_rutas: viasOut.reduce((s, v) => s + v.rutas, 0),
+            total_operadores: new Set(
+                viasOut.flatMap(v => v.operadores.map(o => o.operator_id))
+            ).size,
+        });
+    }
+    groups.sort((a, b) => a.pair_label.localeCompare(b.pair_label));
+    return groups;
+}
+
+// ---------------------------------------------------------------------------
+// POST — crea ruta conceptual (ida + vuelta automática)
+// ---------------------------------------------------------------------------
+async function handlePost(sql, req, res) {
+    const {
+        region_id = 'boyaca',
+        operator_id,
+        origen, destino,
+        via = [],
+        ref, notas,
+        resoluciones = [],
+    } = req.body || {};
+
+    if (!operator_id || !origen?.trim() || !destino?.trim())
+        return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
+    if (!Array.isArray(via)) return res.status(400).json({ error: 'via debe ser array' });
+
+    try {
+        const [ida] = await sql`
+            INSERT INTO routes (region_id, operator_id, origen_text, destino_text, direction, ref, notas)
+            VALUES (${region_id}, ${operator_id}, ${origen.trim()}, ${destino.trim()}, 'ida', ${ref || null}, ${notas || null})
             RETURNING id
         `;
-        const routeId = row[0].id;
+        const [vuelta] = await sql`
+            INSERT INTO routes (region_id, operator_id, origen_text, destino_text, direction, route_parent_id, ref, notas)
+            VALUES (${region_id}, ${operator_id}, ${destino.trim()}, ${origen.trim()}, 'vuelta', ${ida.id}, ${ref || null}, ${notas || null})
+            RETURNING id
+        `;
 
-        // Generar tareas automáticas y calcular progreso inicial
-        await generateTasks(sql, routeId);
-        await recalcProgress(sql, routeId);
+        for (let i = 0; i < via.length; i++) {
+            await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${ida.id}, ${i + 1}, ${via[i]})`;
+            await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${vuelta.id}, ${i + 1}, ${via[via.length - 1 - i]})`;
+        }
+        for (let i = 0; i < resoluciones.length; i++) {
+            const r = resoluciones[i];
+            await sql`
+                INSERT INTO route_resolutions (route_id, orden, numero, fecha, texto_original, pdf_url, pdf_key, notas)
+                VALUES (${ida.id}, ${i + 1}, ${r.numero}, ${r.fecha || null}, ${r.texto_original || null}, ${r.pdf_url || null}, ${r.pdf_key || null}, ${r.notas || null})
+            `;
+        }
 
-        return res.json({ ok: true, id: routeId });
+        return res.json({ ok: true, id_ida: ida.id, id_vuelta: vuelta.id });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
+}
 
-    // PUT — actualizar ruta (estado NO se acepta: es auto-calculado)
-    if (req.method === 'PUT') {
-        const { id } = req.query;
-        if (!id) return res.status(400).json({ error: 'Falta id' });
+// ---------------------------------------------------------------------------
+// PUT — actualiza la ruta conceptual. El id puede ser el de ida o vuelta;
+// el cambio se propaga al par completo.
+// ---------------------------------------------------------------------------
+async function handlePut(sql, req, res) {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'Falta id' });
+    const { operator_id, origen, destino, via = [], ref, notas } = req.body || {};
 
-        const { operator_id, origen, destino, via, ref, red, color, resolucion,
-                direction, responsable_id, osm_relation_id } = req.body;
+    if (!operator_id || !origen?.trim() || !destino?.trim())
+        return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
 
-        if (!operator_id || !origen?.trim() || !destino?.trim())
-            return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
+    try {
+        const [row] = await sql`SELECT id, route_parent_id FROM routes WHERE id = ${id}`;
+        if (!row) return res.status(404).json({ error: 'Ruta no encontrada' });
+        const idaId = row.route_parent_id ?? row.id;
+        const [vuelta] = await sql`SELECT id FROM routes WHERE route_parent_id = ${idaId}`;
 
         await sql`
             UPDATE routes SET
-                operator_id = ${operator_id}, origen = ${origen}, destino = ${destino},
-                via = ${via?.trim() || null},
-                ref = ${ref || null}, red = ${red || null}, color = ${color || null},
-                resolucion = ${resolucion || null},
-                direction = ${direction},
-                responsable_id = ${responsable_id || null},
-                osm_relation_id = ${osm_relation_id || null},
+                operator_id = ${operator_id},
+                origen_text = ${origen.trim()}, destino_text = ${destino.trim()},
+                ref = ${ref || null}, notas = ${notas || null},
                 actualizada_en = NOW()
-            WHERE id = ${id}
+            WHERE id = ${idaId}
         `;
+        if (vuelta) {
+            await sql`
+                UPDATE routes SET
+                    operator_id = ${operator_id},
+                    origen_text = ${destino.trim()}, destino_text = ${origen.trim()},
+                    ref = ${ref || null}, notas = ${notas || null},
+                    actualizada_en = NOW()
+                WHERE id = ${vuelta.id}
+            `;
+        }
 
-        // Recalcular progreso (que a su vez define el estado)
-        await recalcProgress(sql, id);
+        // Reemplazar waypoints en ambas direcciones
+        await sql`DELETE FROM route_waypoints WHERE route_id = ${idaId}`;
+        if (vuelta) await sql`DELETE FROM route_waypoints WHERE route_id = ${vuelta.id}`;
+        for (let i = 0; i < via.length; i++) {
+            await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${idaId}, ${i + 1}, ${via[i]})`;
+            if (vuelta) await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${vuelta.id}, ${i + 1}, ${via[via.length - 1 - i]})`;
+        }
 
         return res.json({ ok: true });
-    }
-
-    // DELETE
-    if (req.method === 'DELETE') {
-        const { id } = req.query;
-        if (!id) return res.status(400).json({ error: 'Falta id' });
-        try {
-            await sql`DELETE FROM routes WHERE id = ${id}`;
-            return res.json({ ok: true });
-        } catch (err) {
-            return res.status(409).json({ error: 'No se puede eliminar: la ruta tiene datos asociados' });
-        }
-    }
-
-    res.status(405).json({ error: 'Método no permitido' });
-};
-
-async function generateTasks(sql, routeId) {
-    const tipos = ['localizar_paradas', 'ingresar_tarifas', 'asignar_paradas', 'trazar_ruta', 'ingresar_horarios'];
-    for (const tipo of tipos) {
-        await sql`
-            INSERT INTO route_tasks (route_id, tipo)
-            VALUES (${routeId}, ${tipo})
-            ON CONFLICT (route_id, tipo) DO NOTHING
-        `;
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 }
 
-async function recalcProgress(sql, routeId) {
-    const [route] = await sql`SELECT * FROM routes WHERE id = ${routeId}`;
-    if (!route) return;
-
-    let pct = 0;
-
-    // 20% datos básicos
-    if (route.operator_id && route.origen && route.destino && route.ref) pct += 20;
-
-    // 20% paradas
-    const [stopCount] = await sql`SELECT COUNT(*) FROM route_stops WHERE route_id = ${routeId}`;
-    if (parseInt(stopCount.count) >= 2) pct += 20;
-
-    // 20% trazado
-    const [shapeCount] = await sql`SELECT COUNT(*) FROM route_shapes WHERE route_id = ${routeId}`;
-    if (parseInt(shapeCount.count) > 0) pct += 20;
-
-    // 15% tarifas
-    const [fareCount] = await sql`SELECT COUNT(*) FROM route_fares WHERE route_id = ${routeId}`;
-    if (parseInt(fareCount.count) > 0) pct += 15;
-
-    // 15% horarios
-    const [tripCount] = await sql`SELECT COUNT(*) FROM route_trips WHERE route_id = ${routeId}`;
-    if (parseInt(tripCount.count) > 0) pct += 15;
-
-    // 10% OSM
-    if (route.osm_relation_id) pct += 10;
-
-    await sql`UPDATE routes SET progreso_pct = ${pct}, actualizada_en = NOW() WHERE id = ${routeId}`;
-
-    // Actualizar tareas automáticas
-    await updateTasks(sql, routeId, { stopCount: parseInt(stopCount.count), shapeCount: parseInt(shapeCount.count), fareCount: parseInt(fareCount.count), tripCount: parseInt(tripCount.count) });
-}
-
-async function updateTasks(sql, routeId, counts) {
-    if (counts.stopCount >= 2) {
-        await sql`UPDATE route_tasks SET estado = 'completada', completada_en = NOW() WHERE route_id = ${routeId} AND tipo = 'localizar_paradas' AND estado != 'completada'`;
-        await sql`UPDATE route_tasks SET estado = 'completada', completada_en = NOW() WHERE route_id = ${routeId} AND tipo = 'asignar_paradas' AND estado != 'completada'`;
+// ---------------------------------------------------------------------------
+// DELETE — elimina ruta conceptual (ida + vuelta + waypoints + resoluciones).
+// ---------------------------------------------------------------------------
+async function handleDelete(sql, req, res) {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'Falta id' });
+    try {
+        const [row] = await sql`SELECT id, route_parent_id FROM routes WHERE id = ${id}`;
+        if (!row) return res.status(404).json({ error: 'Ruta no encontrada' });
+        const idaId = row.route_parent_id ?? row.id;
+        // CASCADE en FKs se encarga de waypoints, resoluciones, vuelta.
+        await sql`DELETE FROM routes WHERE id = ${idaId}`;
+        return res.json({ ok: true });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
-    if (counts.shapeCount > 0)
-        await sql`UPDATE route_tasks SET estado = 'completada', completada_en = NOW() WHERE route_id = ${routeId} AND tipo = 'trazar_ruta' AND estado != 'completada'`;
-    if (counts.fareCount > 0)
-        await sql`UPDATE route_tasks SET estado = 'completada', completada_en = NOW() WHERE route_id = ${routeId} AND tipo = 'ingresar_tarifas' AND estado != 'completada'`;
-    if (counts.tripCount > 0)
-        await sql`UPDATE route_tasks SET estado = 'completada', completada_en = NOW() WHERE route_id = ${routeId} AND tipo = 'ingresar_horarios' AND estado != 'completada'`;
 }

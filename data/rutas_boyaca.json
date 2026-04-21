@@ -1,0 +1,3770 @@
+{
+  "region": "boyaca",
+  "operadores": [
+    {
+      "nombre": "Arcotrans"
+    },
+    {
+      "nombre": "Autoboy"
+    },
+    {
+      "nombre": "Berlinas"
+    },
+    {
+      "nombre": "Brasilia"
+    },
+    {
+      "nombre": "Citracom"
+    },
+    {
+      "nombre": "Coflonorte"
+    },
+    {
+      "nombre": "Comultrasnvilla"
+    },
+    {
+      "nombre": "Cooflotax"
+    },
+    {
+      "nombre": "Cootracero"
+    },
+    {
+      "nombre": "Cootrachica"
+    },
+    {
+      "nombre": "Cootrasnvalle Samaca"
+    },
+    {
+      "nombre": "Copetran"
+    },
+    {
+      "nombre": "Expreso Gaviota"
+    },
+    {
+      "nombre": "F. Magdalena"
+    },
+    {
+      "nombre": "Flota Boyaca"
+    },
+    {
+      "nombre": "Gran Colombiana"
+    },
+    {
+      "nombre": "La Reina"
+    },
+    {
+      "nombre": "La Verde"
+    },
+    {
+      "nombre": "Los Delfines"
+    },
+    {
+      "nombre": "Los Muiscas"
+    },
+    {
+      "nombre": "Los Patriotas"
+    },
+    {
+      "nombre": "Omega"
+    },
+    {
+      "nombre": "PazdeRio"
+    },
+    {
+      "nombre": "Rapido Duitama"
+    },
+    {
+      "nombre": "Ricaurte"
+    },
+    {
+      "nombre": "Simon Bolivar"
+    },
+    {
+      "nombre": "Sugamuxi"
+    },
+    {
+      "nombre": "Trans Pino"
+    },
+    {
+      "nombre": "Trassander"
+    },
+    {
+      "nombre": "Valle de Tenza"
+    }
+  ],
+  "rutas": [
+    {
+      "origen": "Tunja",
+      "destino": "Sogamoso",
+      "via": [
+        "Nobsa"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "493",
+          "fecha": "1993-01-01",
+          "texto_original": "1 RESOLUCIÒN 493 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sogamoso",
+      "via": [
+        "Nobsa"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "493",
+          "fecha": "1993-01-01",
+          "texto_original": "RESOLUCIÓN 493 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sogamoso",
+      "via": [
+        "Nobsa"
+      ],
+      "operador": "Cootracero",
+      "resoluciones": [
+        {
+          "numero": "RESOLUCION MINISTERIO RUTA TUNJA",
+          "fecha": null,
+          "texto_original": "RESOLUCION MINISTERIO RUTA TUNJA",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sogamoso",
+      "via": [
+        "Nobsa"
+      ],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "493",
+          "fecha": "1993-12-15",
+          "texto_original": "RES 493 15-12-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Duitama",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "2634",
+          "fecha": "1993-05-31",
+          "texto_original": "2 RESOLUCIÓN NO. 2634 DEL 31 DE MAYO DE 1993",
+          "pdf_url": null
+        },
+        {
+          "numero": "1368",
+          "fecha": "1993-03-16",
+          "texto_original": "RESOLUCIÓN NO. 1368 DEL 16 DE MARZO DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Duitama",
+      "via": [],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Duitama",
+      "via": [],
+      "operador": "Simon Bolivar",
+      "resoluciones": [
+        {
+          "numero": "3335",
+          "fecha": null,
+          "texto_original": "1. RESO. NO. 3335 HABILITACIÓN INTERMUNICIPAL_ RUTAS Y CAPACIDAD (1)",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Duitama",
+      "via": [],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "457",
+          "fecha": null,
+          "texto_original": "RES 457 21--01-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Santa Sofia",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00599",
+          "fecha": "2005-01-01",
+          "texto_original": "3 RESOLUCIÒN 000599 DE 2005",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Toca",
+      "via": [],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "00599",
+          "fecha": "2005-01-01",
+          "texto_original": "3 RESOLUCIÒN 000599 DE 2005",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Toca",
+      "via": [],
+      "operador": "Rapido Duitama",
+      "resoluciones": [
+        {
+          "numero": "4598",
+          "fecha": null,
+          "texto_original": "Resolución 4598",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Toca",
+      "via": [],
+      "operador": "Ricaurte",
+      "resoluciones": [
+        {
+          "numero": "1044",
+          "fecha": null,
+          "texto_original": "RESOLUCION 1044",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Toca",
+      "via": [],
+      "operador": "Simon Bolivar",
+      "resoluciones": [
+        {
+          "numero": "3335",
+          "fecha": null,
+          "texto_original": "1. RESO. NO. 3335 HABILITACIÓN INTERMUNICIPAL_ RUTAS Y CAPACIDAD (1)",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Puente Nacional",
+      "via": [
+        "Moniquira",
+        "Barbosa"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00599",
+          "fecha": "2005-01-01",
+          "texto_original": "3 RESOLUCIÒN 000599 DE 2005",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Puente Nacional",
+      "via": [
+        "Moniquira",
+        "Barbosa"
+      ],
+      "operador": "Ricaurte",
+      "resoluciones": [
+        {
+          "numero": "1044",
+          "fecha": null,
+          "texto_original": "RESOLUCION 1044",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        },
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Citracom",
+      "resoluciones": [
+        {
+          "numero": "2913",
+          "fecha": "1994-01-01",
+          "texto_original": "RESOLUCIÓN 2913 DE 1994",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Gran Colombiana",
+      "resoluciones": [
+        {
+          "numero": "0186",
+          "fecha": null,
+          "texto_original": "RESOLUCIÓN 0186",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Combita",
+      "via": [],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        },
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Gran Colombiana",
+      "resoluciones": [
+        {
+          "numero": "0186",
+          "fecha": null,
+          "texto_original": "RESOLUCIÓN 0186",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tuta",
+      "via": [
+        "El Barne",
+        "La Playa"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ventaquemada",
+      "via": [
+        "Puente de Boyaca"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        },
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ventaquemada",
+      "via": [
+        "Puente de Boyaca"
+      ],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ventaquemada",
+      "via": [
+        "Puente de Boyaca"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ventaquemada",
+      "via": [
+        "Puente de Boyaca"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ventaquemada",
+      "via": [
+        "Puente de Boyaca"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ventaquemada",
+      "via": [
+        "Puente de Boyaca"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Nuevo Colon",
+      "via": [
+        "Puente de Boyaca",
+        "Tierra Negra"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Nuevo Colon",
+      "via": [
+        "Puente de Boyaca",
+        "Tierra Negra"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Nuevo Colon",
+      "via": [
+        "Puente de Boyaca",
+        "Tierra Negra"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Nuevo Colon",
+      "via": [
+        "Puente de Boyaca",
+        "Tierra Negra"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Nuevo Colon",
+      "via": [
+        "Puente de Boyaca",
+        "Tierra Negra"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Nuevo Colon",
+      "via": [
+        "Puente de Boyaca",
+        "Tierra Negra"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Motavita",
+      "via": [
+        "El Salvial"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Motavita",
+      "via": [
+        "El Salvial"
+      ],
+      "operador": "Citracom",
+      "resoluciones": [
+        {
+          "numero": "2913",
+          "fecha": "1994-01-01",
+          "texto_original": "RESOLUCIÓN 2913 DE 1994",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Motavita",
+      "via": [
+        "El Salvial"
+      ],
+      "operador": "Ricaurte",
+      "resoluciones": [
+        {
+          "numero": "1044",
+          "fecha": null,
+          "texto_original": "RESOLUCION 1044",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Motavita",
+      "via": [
+        "El Salvial"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Motavita",
+      "via": [
+        "El Salvial"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Motavita",
+      "via": [
+        "El Salvial"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Moniquira",
+      "via": [
+        "Arcabuco"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Moniquira",
+      "via": [
+        "Arcabuco"
+      ],
+      "operador": "Citracom",
+      "resoluciones": [
+        {
+          "numero": "2913",
+          "fecha": "1994-01-01",
+          "texto_original": "RESOLUCIÓN 2913 DE 1994",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Moniquira",
+      "via": [
+        "Arcabuco"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Moniquira",
+      "via": [
+        "Arcabuco"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siachoque",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siachoque",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Citracom",
+      "resoluciones": [
+        {
+          "numero": "2913",
+          "fecha": "1994-01-01",
+          "texto_original": "RESOLUCIÓN 2913 DE 1994",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siachoque",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siachoque",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siachoque",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cienega",
+      "via": [
+        "Viracacha"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cienega",
+      "via": [
+        "Viracacha"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cienega",
+      "via": [
+        "Viracacha"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": null,
+          "texto_original": "5 RESOLUCIÒN 305 1993",
+          "pdf_url": null
+        },
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Ramiriqui",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Turmeque",
+      "via": [
+        "Ventaquemada"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Turmeque",
+      "via": [
+        "Ventaquemada"
+      ],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Turmeque",
+      "via": [
+        "Ventaquemada"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Turmeque",
+      "via": [
+        "Ventaquemada"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Turmeque",
+      "via": [
+        "Ventaquemada"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Turmeque",
+      "via": [
+        "Nuevo Colon"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tibana",
+      "via": [
+        "Jenesano"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tibana",
+      "via": [
+        "Jenesano"
+      ],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tibana",
+      "via": [
+        "Jenesano"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tibana",
+      "via": [
+        "Jenesano"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Tibana",
+      "via": [
+        "Jenesano"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-01-01",
+          "texto_original": "7 RESOLUCIÒN 315 DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Citracom",
+      "resoluciones": [
+        {
+          "numero": "2913",
+          "fecha": "1994-01-01",
+          "texto_original": "RESOLUCIÓN 2913 DE 1994",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Cootrachica",
+      "resoluciones": [
+        {
+          "numero": "315",
+          "fecha": "1993-08-25",
+          "texto_original": "RES 315 25-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Gran Colombiana",
+      "resoluciones": [
+        {
+          "numero": "0186",
+          "fecha": null,
+          "texto_original": "RESOLUCIÓN 0186",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Ricaurte",
+      "resoluciones": [
+        {
+          "numero": "1044",
+          "fecha": null,
+          "texto_original": "RESOLUCION 1044",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotaquira",
+      "via": [],
+      "operador": "Sugamuxi",
+      "resoluciones": [
+        {
+          "numero": "305",
+          "fecha": "1993-08-24",
+          "texto_original": "RESOLUCION 305 24-08-93",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Villa de Leyva",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "1368",
+          "fecha": "1993-03-16",
+          "texto_original": "RESOLUCIÓN NO. 1368 DEL 16 DE MARZO DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Villa de Leyva",
+      "via": [],
+      "operador": "Comultrasnvilla",
+      "resoluciones": [
+        {
+          "numero": "0135",
+          "fecha": null,
+          "texto_original": "Resolucion 0135",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Villa de Leyva",
+      "via": [],
+      "operador": "La Reina",
+      "resoluciones": [
+        {
+          "numero": "600",
+          "fecha": null,
+          "texto_original": "Resolucion 600 Trnas Reina Tunja",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Villa de Leyva",
+      "via": [],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Villa de Leyva",
+      "via": [],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Samaca",
+      "via": [
+        "Puente Boyaca"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "1368",
+          "fecha": "1993-03-16",
+          "texto_original": "RESOLUCIÓN NO. 1368 DEL 16 DE MARZO DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Samaca",
+      "via": [
+        "Puente Boyaca"
+      ],
+      "operador": "Cootrasnvalle Samaca",
+      "resoluciones": [
+        {
+          "numero": "3536",
+          "fecha": null,
+          "texto_original": "Resolucion 3536",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Samaca",
+      "via": [
+        "Puente Boyaca"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Samaca",
+      "via": [
+        "Puente Boyaca"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Samaca",
+      "via": [
+        "Puente Boyaca"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Santana",
+      "via": [
+        "Moniquira",
+        "Barbosa"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "1368",
+          "fecha": "1993-03-16",
+          "texto_original": "RESOLUCIÓN NO. 1368 DEL 16 DE MARZO DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Santana",
+      "via": [
+        "Moniquira",
+        "Barbosa"
+      ],
+      "operador": "Ricaurte",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Barbosa",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "1368",
+          "fecha": "1993-03-16",
+          "texto_original": "RESOLUCIÓN NO. 1368 DEL 16 DE MARZO DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Barbosa",
+      "via": [],
+      "operador": "Trassander",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Paz de Ariporo",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "1368",
+          "fecha": "1993-03-16",
+          "texto_original": "RESOLUCIÓN NO. 1368 DEL 16 DE MARZO DE 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Arcabuco",
+      "via": [],
+      "operador": "Arcotrans",
+      "resoluciones": [
+        {
+          "numero": "2010",
+          "fecha": null,
+          "texto_original": "RESOLUCIÓN 07 Diciembre 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Arcabuco",
+      "via": [],
+      "operador": "Citracom",
+      "resoluciones": [
+        {
+          "numero": "2913",
+          "fecha": "1994-01-01",
+          "texto_original": "RESOLUCIÓN 2913 DE 1994",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Raquira",
+      "via": [],
+      "operador": "Comultrasnvilla",
+      "resoluciones": [
+        {
+          "numero": "0135",
+          "fecha": null,
+          "texto_original": "Resolucion 0135",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Oicata",
+      "via": [],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Oicata",
+      "via": [],
+      "operador": "Gran Colombiana",
+      "resoluciones": [
+        {
+          "numero": "0186",
+          "fecha": null,
+          "texto_original": "RESOLUCIÓN 0186",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "San Pedro de Iguaque",
+      "via": [
+        "Piedra Gorda",
+        "Casablanca"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "San Pedro de Iguaque",
+      "via": [
+        "Piedra Gorda",
+        "Casablanca"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sote",
+      "via": [
+        "Motavita"
+      ],
+      "operador": "Cooflotax",
+      "resoluciones": [
+        {
+          "numero": "0104",
+          "fecha": "1999-01-01",
+          "texto_original": "RESOLUCION 0104 DE 1999",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chiquinquira",
+      "via": [
+        "Sachica"
+      ],
+      "operador": "Expreso Gaviota",
+      "resoluciones": [
+        {
+          "numero": "948",
+          "fecha": null,
+          "texto_original": "RESOL. 948 GAVIOTA",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chiquinquira",
+      "via": [
+        "Sachica"
+      ],
+      "operador": "Flota Boyaca",
+      "resoluciones": [
+        {
+          "numero": "1995",
+          "fecha": "1993-01-01",
+          "texto_original": "resolución 1995 de 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chiquinquira",
+      "via": [
+        "Sachica"
+      ],
+      "operador": "La Reina",
+      "resoluciones": [
+        {
+          "numero": "600",
+          "fecha": null,
+          "texto_original": "Resolucion 600 Trnas Reina Tunja",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chiquinquira",
+      "via": [
+        "Sachica"
+      ],
+      "operador": "La Verde",
+      "resoluciones": [
+        {
+          "numero": "403",
+          "fecha": null,
+          "texto_original": "Resolucion 403",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chiquinquira",
+      "via": [
+        "Sachica"
+      ],
+      "operador": "Trans Pino",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chiquinquira",
+      "via": [
+        "Arcabuco"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Paipa",
+      "via": [],
+      "operador": "Gran Colombiana",
+      "resoluciones": [
+        {
+          "numero": "0186",
+          "fecha": null,
+          "texto_original": "RESOLUCIÓN 0186",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Paipa",
+      "via": [],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Pauna",
+      "via": [
+        "Chiquinquira"
+      ],
+      "operador": "La Reina",
+      "resoluciones": [
+        {
+          "numero": "600",
+          "fecha": null,
+          "texto_original": "Resolucion 600 Trnas Reina Tunja",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Rondon",
+      "via": [
+        "Ramiriqui"
+      ],
+      "operador": "La Reina",
+      "resoluciones": [
+        {
+          "numero": "600",
+          "fecha": null,
+          "texto_original": "Resolucion 600 Trnas Reina Tunja",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Umbita",
+      "via": [
+        "Tibana",
+        "Garagoa"
+      ],
+      "operador": "La Reina",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Umbita",
+      "via": [
+        "Nuevo Colon"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Umbita",
+      "via": [
+        "Nuevo Colon"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Macanal",
+      "via": [
+        "Tibana",
+        "Garagoa"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Monterrey",
+      "via": [
+        "Tibana",
+        "Garagoa",
+        "Almeida"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Guayata",
+      "via": [
+        "Tibana",
+        "Garagoa",
+        "Almeida"
+      ],
+      "operador": "Los Delfines",
+      "resoluciones": [
+        {
+          "numero": "Resolucion Habilitacion",
+          "fecha": null,
+          "texto_original": "Resolucion Habilitacion",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Guateque",
+      "via": [
+        "Sisga"
+      ],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Guateque",
+      "via": [
+        "Sisga"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Guateque",
+      "via": [
+        "Tibana",
+        "Garagoa",
+        "Tenza"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Garagoa",
+      "via": [
+        "Tenza",
+        "Sisga"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Garagoa",
+      "via": [
+        "Turmeque"
+      ],
+      "operador": "Los Patriotas",
+      "resoluciones": [
+        {
+          "numero": "0619",
+          "fecha": null,
+          "texto_original": "RESOLUCION 0619 DEL 2002 POR LA CUAL SE RECONOCEN RUTAS Y HORAR",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Gachantiva",
+      "via": [
+        "Arcabuco"
+      ],
+      "operador": "Ricaurte",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Togui",
+      "via": [
+        "Moniquira"
+      ],
+      "operador": "Ricaurte",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sogamoso",
+      "via": [
+        "Toca",
+        "Pesca"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Villanueva",
+      "via": [
+        "Garagoa",
+        "San Luis de Gaceno"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Jenesano",
+      "via": [
+        "Soraca"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Chivor",
+      "via": [
+        "Garagoa",
+        "Tibana"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "La Union",
+      "via": [
+        "Tibana",
+        "Garagoa",
+        "Santa Maria"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "La Union",
+      "via": [
+        "Tibana",
+        "San Luis de Gaceno"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "La Capilla",
+      "via": [
+        "Tibana",
+        "Chinavita"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Pachavita",
+      "via": [
+        "Frontera"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Yopal",
+      "via": [
+        "Sogamoso",
+        "Agua Azul"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00120",
+          "fecha": null,
+          "texto_original": "8 RESOLUCION 001202 DE 08 ABRIL DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Yopal",
+      "via": [
+        "Sogamoso",
+        "Agua Azul"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Yopal",
+      "via": [
+        "Sogamoso",
+        "Agua Azul"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Aquitania",
+      "via": [
+        "Sogamoso",
+        "Firavitova",
+        "El Crucero"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Aquitania",
+      "via": [
+        "Sogamoso",
+        "Firavitova",
+        "El Crucero"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Belen",
+      "via": [
+        "Santa Rosa de Viterbo",
+        "Cerinza"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Belencito",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00120",
+          "fecha": null,
+          "texto_original": "8 RESOLUCION 001202 DE 08 ABRIL DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Belencito",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Chiscas",
+      "via": [
+        "Duitama",
+        "Capitalejo"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Chiscas",
+      "via": [
+        "Duitama",
+        "Capitalejo"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Chita",
+      "via": [],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Chita",
+      "via": [],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Corrales",
+      "via": [
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Corrales",
+      "via": [
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Duitama",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00120",
+          "fecha": null,
+          "texto_original": "8 RESOLUCION 001202 DE 08 ABRIL DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Duitama",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Duitama",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Duitama",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Floresta",
+      "via": [
+        "Duitama",
+        "Santa Rosa de Viterbo"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Gameza",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guican",
+      "via": [
+        "Capitalejo",
+        "El Cocuy",
+        "La Uvita"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guican",
+      "via": [
+        "Capitalejo",
+        "El Cocuy",
+        "La Uvita"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guican",
+      "via": [
+        "Capitalejo",
+        "El Cocuy",
+        "La Uvita"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Jerico",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Paz del Rio"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": [
+        {
+          "numero": "5704",
+          "fecha": null,
+          "texto_original": "Resolucion 5704",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "La Uvita",
+      "via": [
+        "Tunja",
+        "Duitama"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "La Uvita",
+      "via": [
+        "Tunja",
+        "Duitama"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Mongua",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Mongui",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Mongui",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Nobsa",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Sogamoso"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Paz de Ariporo",
+      "via": [
+        "Tunja",
+        "Sogamoso",
+        "Yopal"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00120",
+          "fecha": null,
+          "texto_original": "8 RESOLUCION 001202 DE 08 ABRIL DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Paz de Ariporo",
+      "via": [
+        "Tunja",
+        "Sogamoso",
+        "Yopal"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Pesca",
+      "via": [],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Paz de Rio",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Cerinza",
+        "Belen"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "San Mateo",
+      "via": [],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "San Mateo",
+      "via": [],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Rosa de Viterbo",
+      "via": [],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Sativanorte",
+      "via": [],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Socha",
+      "via": [],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Socota",
+      "via": [],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Sogamoso",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00120",
+          "fecha": null,
+          "texto_original": "8 RESOLUCION 001202 DE 08 ABRIL DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Sogamoso",
+      "via": [],
+      "operador": "Coflonorte",
+      "resoluciones": [
+        {
+          "numero": "1202",
+          "fecha": "2010-01-01",
+          "texto_original": "RESOLUCIÓN 1202 DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Sogamoso",
+      "via": [],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tame",
+      "via": [
+        "Socha"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tame",
+      "via": [
+        "Socha"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tasco",
+      "via": [
+        "Duitama",
+        "Santa Rosa de Viterbo",
+        "Belen"
+      ],
+      "operador": "PazdeRio",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tasco",
+      "via": [
+        "Duitama",
+        "Santa Rosa de Viterbo",
+        "Belen"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Toca",
+      "via": [],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tota",
+      "via": [],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tunja",
+      "via": [],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00120",
+          "fecha": null,
+          "texto_original": "8 RESOLUCION 001202 DE 08 ABRIL DE 2010",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tunja",
+      "via": [],
+      "operador": "F. Magdalena",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tunja",
+      "via": [],
+      "operador": "Los Muiscas",
+      "resoluciones": [
+        {
+          "numero": "007",
+          "fecha": null,
+          "texto_original": "RESOLUCION 007",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Tunja",
+        "Barbosa",
+        "Socorro",
+        "San Gil"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00066",
+          "fecha": null,
+          "texto_original": "9 RESOLUCION 000664 DE 28 FEBRERO DE 2012",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Tunja",
+        "Barbosa",
+        "Socorro",
+        "San Gil"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "158",
+          "fecha": null,
+          "texto_original": "RESO 158",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Tunja",
+        "Barbosa",
+        "Socorro",
+        "San Gil"
+      ],
+      "operador": "Berlinas",
+      "resoluciones": [
+        {
+          "numero": "00947",
+          "fecha": null,
+          "texto_original": "RESOLUCION 00947",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Tunja",
+        "Barbosa",
+        "Socorro",
+        "San Gil"
+      ],
+      "operador": "Brasilia",
+      "resoluciones": [
+        {
+          "numero": "00947",
+          "fecha": null,
+          "texto_original": "RESOLUCION 00947",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Tunja",
+        "Barbosa",
+        "Socorro",
+        "San Gil"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Tunja",
+        "Barbosa",
+        "Socorro",
+        "San Gil"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cucuta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "00947",
+          "fecha": null,
+          "texto_original": "RESOLUCION 00947",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cucuta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "5216",
+          "fecha": null,
+          "texto_original": "RESO 5216-RUTAS VARIAS",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cucuta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Berlinas",
+      "resoluciones": [
+        {
+          "numero": "00947",
+          "fecha": null,
+          "texto_original": "RESOLUCION 00947",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cucuta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Brasilia",
+      "resoluciones": [
+        {
+          "numero": "00947",
+          "fecha": null,
+          "texto_original": "RESOLUCION 00947",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cucuta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cucuta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Marta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "01535",
+          "fecha": null,
+          "texto_original": "RESOLUCION 01535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Marta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "1535",
+          "fecha": null,
+          "texto_original": "RESO 1535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Marta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Berlinas",
+      "resoluciones": [
+        {
+          "numero": "01535",
+          "fecha": null,
+          "texto_original": "RESOLUCION 01535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Marta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Brasilia",
+      "resoluciones": [
+        {
+          "numero": "1535",
+          "fecha": null,
+          "texto_original": "res 1535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Marta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Marta",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cartagena",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": [
+        {
+          "numero": "01535",
+          "fecha": null,
+          "texto_original": "RESOLUCION 01535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cartagena",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "1535",
+          "fecha": null,
+          "texto_original": "RESO 1535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cartagena",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Berlinas",
+      "resoluciones": [
+        {
+          "numero": "01535",
+          "fecha": null,
+          "texto_original": "RESOLUCION 01535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cartagena",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Brasilia",
+      "resoluciones": [
+        {
+          "numero": "1535",
+          "fecha": null,
+          "texto_original": "res 1535",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cartagena",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cartagena",
+      "via": [
+        "Tunja",
+        "Duitama",
+        "Pamplona"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "El Banco",
+      "via": [
+        "Tunja",
+        "Bucaramanga",
+        "Aguachica"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "4356",
+          "fecha": null,
+          "texto_original": "RESO 4356",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "El Banco",
+      "via": [
+        "Tunja",
+        "Bucaramanga",
+        "Aguachica"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guamal",
+      "via": [
+        "Tunja",
+        "Bucaramanga",
+        "Aguachica",
+        "El Burro",
+        "Tamalameque",
+        "El Banco"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "4952",
+          "fecha": null,
+          "texto_original": "RESO 4952",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guamal",
+      "via": [
+        "Tunja",
+        "Bucaramanga",
+        "Aguachica",
+        "El Burro",
+        "Tamalameque",
+        "El Banco"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guamal",
+      "via": [
+        "Tunja",
+        "Bucaramanga",
+        "Aguachica",
+        "El Burro",
+        "Tamalameque",
+        "El Banco"
+      ],
+      "operador": "Trassander",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Moniquira",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Expreso Gaviota",
+      "resoluciones": [
+        {
+          "numero": "652",
+          "fecha": null,
+          "texto_original": "RESOL. 652 GAVIOTA",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Puente Nacional",
+      "via": [
+        "Tunja",
+        "Moniquira",
+        "Barbosa"
+      ],
+      "operador": "Expreso Gaviota",
+      "resoluciones": [
+        {
+          "numero": "652",
+          "fecha": null,
+          "texto_original": "RESOL. 652 GAVIOTA",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Villa de Leyva",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "La Reina",
+      "resoluciones": [
+        {
+          "numero": "600",
+          "fecha": null,
+          "texto_original": "Resolucion 600 Trnas Reina Tunja",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Villa de Leyva",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Valle de Tenza",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Gambita",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "La Reina",
+      "resoluciones": [
+        {
+          "numero": "600",
+          "fecha": null,
+          "texto_original": "Resolucion 600 Trnas Reina Tunja",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Bucaramanga",
+      "via": [
+        "Duitama"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Ocaña",
+      "via": [
+        "Tunja",
+        "Bucaramanga"
+      ],
+      "operador": "Autoboy",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Ocaña",
+      "via": [
+        "Tunja",
+        "Bucaramanga"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "5216",
+          "fecha": null,
+          "texto_original": "RESO 5216-RUTAS VARIAS",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Ocaña",
+      "via": [
+        "Tunja",
+        "Bucaramanga"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Puerto Berrio",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Chitaraque",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Santa Sofia",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Togui",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Barrancabermeja",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cimitarra",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Guadalupe",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Suaita",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Velez",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Omega",
+      "resoluciones": [
+        {
+          "numero": "1222",
+          "fecha": "1992-03-04",
+          "texto_original": "Res. 1222 del 04-03-1992 Modif Res. 3506 del 24-11-2004",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Miraflores",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Miraflores",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Paez",
+      "via": [
+        "Tunja",
+        "Miraflores"
+      ],
+      "operador": "Rapido Duitama",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Paez",
+      "via": [
+        "Tunja",
+        "Miraflores"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Cienega",
+      "via": [
+        "Tunja"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "San Eduardo",
+      "via": [
+        "Tunja",
+        "Miraflores"
+      ],
+      "operador": "Simon Bolivar",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Arauca",
+      "via": [
+        "Socha"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Saravena",
+      "via": [
+        "Socha",
+        "Tame",
+        "Fortul"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Bogotá",
+      "destino": "Tunja",
+      "via": [
+        "Ubate",
+        "Chiquinquira",
+        "Samaca"
+      ],
+      "operador": "Flota Boyaca",
+      "resoluciones": [
+        {
+          "numero": "1995",
+          "fecha": "1993-01-01",
+          "texto_original": "resolución 1995 de 1993",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Bucaramanga",
+      "destino": "Sogamoso",
+      "via": [
+        "San Gil",
+        "Oiba",
+        "Barbosa",
+        "Tunja",
+        "Duitama"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "915",
+          "fecha": null,
+          "texto_original": "RESO 915",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Puerto Berrio",
+      "destino": "Bogota",
+      "via": [
+        "Barbosa",
+        "Tunja"
+      ],
+      "operador": "Copetran",
+      "resoluciones": [
+        {
+          "numero": "5216",
+          "fecha": null,
+          "texto_original": "RESO 5216-RUTAS VARIAS",
+          "pdf_url": null
+        }
+      ]
+    },
+    {
+      "origen": "Yopal",
+      "destino": "Bogota",
+      "via": [
+        "Duitama",
+        "Tunja"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Yopal",
+      "destino": "Sogamoso",
+      "via": [
+        "Sogamoso",
+        "Tunja",
+        "Oiba",
+        "San Gil"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    },
+    {
+      "origen": "Aguazul",
+      "destino": "Bogota",
+      "via": [
+        "Sogamoso",
+        "Tunja"
+      ],
+      "operador": "Sugamuxi",
+      "resoluciones": []
+    }
+  ]
+}
