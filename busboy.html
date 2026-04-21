@@ -168,11 +168,16 @@
 
         .fase-body h3 { font-size: 1.45rem; margin-bottom: 4px; }
         .fase-body .respon {
-            display: inline-block;
+            display: inline-flex; align-items: center; gap: 10px;
             background: var(--paper-2); color: #2a2e50;
-            padding: 4px 12px; border-radius: 20px;
-            font-size: 0.78rem; font-weight: 600;
+            padding: 6px 14px 6px 8px; border-radius: 30px;
+            font-size: 0.82rem; font-weight: 600;
             margin-bottom: 14px;
+        }
+        .fase-body .respon img {
+            height: 26px; width: 26px; object-fit: contain;
+            background: white; padding: 3px; border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
         }
         .fase-done .respon { background: #e0fae8; color: #1a6b3a; }
         .fase-next .respon { background: #fff4de; color: #8b6014; }
@@ -275,6 +280,22 @@
         .role-card h3 { font-size: 1rem; }
         .role-card .who { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 8px; }
         .role-card p { color: #555; font-size: 0.88rem; line-height: 1.55; }
+
+        /* Aliados */
+        .allies {
+            margin-top: 40px; padding: 34px 28px;
+            background: white; border: 1px solid var(--paper-2);
+            border-radius: 14px;
+        }
+        .allies h3 { text-align: center; font-size: 0.82rem; font-weight: 700; color: var(--muted); letter-spacing: 1.6px; text-transform: uppercase; margin-bottom: 22px; }
+        .allies .logos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 48px; }
+        .allies .logos img {
+            max-height: 54px; max-width: 160px; width: auto; object-fit: contain;
+            filter: grayscale(20%); opacity: .88; transition: filter .2s, opacity .2s, transform .2s;
+        }
+        .allies .logos img:hover { filter: none; opacity: 1; transform: scale(1.04); }
+        .allies .logos .ally-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .allies .logos .ally-name { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
 
         .contact-box {
             margin-top: 44px; padding: 28px; background: var(--navy);
@@ -402,7 +423,7 @@
                 <div class="fase-num">01<small>Completada</small></div>
                 <div class="fase-body">
                     <h3>El dato base — qué rutas existen</h3>
-                    <span class="respon">Responsable: Terminal de Tunja</span>
+                    <span class="respon"><img src="/assets/logos/terminal-tunja.png" alt="Terminal de Tunja"> Responsable: Terminal de Tunja</span>
                     <p>El terminal consolidó por primera vez el listado maestro de todas las rutas que operan desde Tunja: qué empresas, con qué resolución, hacia qué destinos, con qué recorridos intermedios.</p>
 
                     <div class="fase-stats">
@@ -434,7 +455,7 @@
                 <div class="fase-num">02<small>En preparación</small></div>
                 <div class="fase-body">
                     <h3>El trazado — por dónde pasa cada ruta</h3>
-                    <span class="respon">Responsable: Colegio Salesiano</span>
+                    <span class="respon"><img src="/assets/logos/salesiano.png" alt="Colegio Salesiano"> Responsable: Colegio Salesiano</span>
                     <p>Sobre el listado maestro, estudiantes del Colegio Salesiano trazarán cada trayecto en un mapa de calles reales usando OpenStreetMap y Valhalla. Cada ida y cada vuelta tendrá su propia geometría y su propia relación pública en OSM, navegable por cualquier persona del mundo.</p>
                     <div class="map-wrap">
                         <div class="map-svg" aria-hidden="true">
@@ -604,13 +625,31 @@
             </div>
         </div>
 
+        <div class="allies">
+            <h3>Aliados del proyecto</h3>
+            <div class="logos">
+                <div class="ally-item">
+                    <img src="/assets/logos/terminal-tunja.png" alt="Terminal de Tunja">
+                    <span class="ally-name">Terminal de Tunja</span>
+                </div>
+                <div class="ally-item">
+                    <img src="/assets/logos/salesiano.png" alt="Colegio Salesiano">
+                    <span class="ally-name">Colegio Salesiano</span>
+                </div>
+                <div class="ally-item">
+                    <img src="/assets/logos/trufi.png" alt="Trufi Association">
+                    <span class="ally-name">Trufi Association</span>
+                </div>
+            </div>
+        </div>
+
         <div class="contact-box">
             <div class="msg">
                 <h3>¿Quieres sumarte o saber más?</h3>
                 <p>Escríbenos. Esta presentación es pública — compártela con quien creas que puede aportar.</p>
             </div>
             <div class="links">
-                <a href="mailto:hola@busboy.app">hola@busboy.app</a>
+                <a href="mailto:leonardo.gutierrez@trufi-association.org">leonardo.gutierrez@trufi-association.org</a>
                 <a href="https://rutas.busboy.app/rutas.html" target="_blank">Ver plataforma</a>
                 <a href="https://github.com/leoguti/tp-routes" target="_blank">Código abierto ↗</a>
             </div>
