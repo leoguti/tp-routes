@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busboy — Información abierta para el transporte público de Boyacá</title>
+    <meta name="description" content="Proyecto colaborativo para crear la fuente central de información del transporte público de Boyacá. Datos abiertos, GTFS, OpenStreetMap." />
+
+    <style>
+        :root {
+            --navy: #0f1129;
+            --navy-2: #1a1d45;
+            --ink: #16183a;
+            --accent: #4a9eff;
+            --accent-2: #2a5ec8;
+            --warm: #f7b84b;
+            --green: #27ae60;
+            --red: #e74c3c;
+            --muted: #6872aa;
+            --paper: #f7f9fd;
+            --paper-2: #eef2f9;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            color: var(--ink);
+            background: var(--paper);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== Nav mínimo ========== */
+        .top-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            padding: 14px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background .3s, border-color .3s;
+            border-bottom: 1px solid transparent;
+        }
+        .top-nav.scrolled { background: rgba(15,17,41,.92); backdrop-filter: blur(10px); border-color: rgba(255,255,255,.08); }
+        .logo { color: white; font-weight: 800; font-size: 1.05rem; letter-spacing: -.4px; }
+        .logo span { color: var(--accent); }
+        .top-nav a { color: rgba(255,255,255,.85); text-decoration: none; font-size: 0.82rem; margin-left: 20px; }
+        .top-nav a:hover { color: white; }
+
+        /* ========== Hero ========== */
+        .hero {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at top, #1a1d4d 0%, var(--navy) 55%, #090b20 100%);
+            color: white;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 120px 24px 60px;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(74,158,255,.14) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(247,184,75,.1) 0%, transparent 40%);
+            pointer-events: none;
+        }
+        .hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; position: relative; }
+        .hero-tag {
+            display: inline-block;
+            background: rgba(74,158,255,.15);
+            border: 1px solid rgba(74,158,255,.35);
+            color: var(--accent);
+            padding: 6px 14px; border-radius: 40px;
+            font-size: 0.78rem; font-weight: 600; letter-spacing: .4px;
+            margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5.5vw, 4.2rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -1.5px;
+            margin-bottom: 24px;
+            max-width: 950px;
+        }
+        .hero h1 em { font-style: normal; color: var(--warm); }
+        .hero h1 .highlight { color: var(--accent); }
+        .hero p.lead {
+            font-size: clamp(1rem, 1.6vw, 1.22rem);
+            color: #bcc6e5; max-width: 640px;
+            margin-bottom: 36px;
+        }
+        .hero .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 22px; border-radius: 10px;
+            font-size: 0.92rem; font-weight: 600; text-decoration: none;
+            border: 1px solid transparent; cursor: pointer;
+            transition: transform .12s, background .12s, border-color .12s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #2a87f5; transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: white; border-color: rgba(255,255,255,.3); }
+        .btn-outline:hover { border-color: white; background: rgba(255,255,255,.05); }
+
+        .scroll-hint {
+            position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,.45); font-size: 0.78rem;
+            animation: bob 1.8s ease-in-out infinite;
+        }
+        @keyframes bob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 8px); } }
+
+        /* ========== Secciones base ========== */
+        section { padding: 96px 24px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .section-tag { color: var(--accent-2); font-size: 0.78rem; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 14px; }
+        h2 { font-size: clamp(1.6rem, 3.4vw, 2.6rem); font-weight: 800; line-height: 1.15; margin-bottom: 20px; letter-spacing: -.5px; }
+        h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
+        p.big { font-size: clamp(1rem, 1.5vw, 1.15rem); color: #3a3e5c; max-width: 720px; }
+        .section-paper { background: var(--paper); }
+        .section-alt { background: var(--paper-2); }
+        .section-dark { background: var(--navy); color: white; }
+        .section-dark h2, .section-dark .section-tag { color: white; }
+        .section-dark .section-tag { color: var(--warm); }
+        .section-dark p { color: #c3cae6; }
+
+        /* Animación al entrar en viewport */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal.in { opacity: 1; transform: none; }
+
+        /* ========== Problema ========== */
+        .problem-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px; margin-top: 36px;
+        }
+        .problem-card {
+            background: white; border: 1px solid var(--paper-2);
+            border-radius: 14px; padding: 26px;
+            box-shadow: 0 4px 14px rgba(16,18,58,.05);
+        }
+        .problem-card .emoji { font-size: 2rem; margin-bottom: 10px; }
+        .problem-card h3 { color: var(--ink); }
+        .problem-card p { color: #555; font-size: 0.93rem; }
+
+        /* ========== Visión ========== */
+        .vision-quote {
+            border-left: 5px solid var(--warm);
+            padding: 10px 0 10px 20px;
+            font-size: clamp(1.1rem, 2vw, 1.45rem);
+            font-style: italic; color: #2a2e50;
+            margin: 24px 0 18px; max-width: 760px;
+            line-height: 1.45;
+        }
+
+        /* ========== Fases (el corazón) ========== */
+        .fases { margin-top: 40px; }
+        .fase {
+            display: grid; grid-template-columns: 110px 1fr; gap: 28px;
+            padding: 40px 0; border-top: 1px solid var(--paper-2);
+            align-items: start;
+        }
+        .fase:first-child { border-top: none; padding-top: 10px; }
+        .fase-num {
+            font-size: 3rem; font-weight: 900;
+            color: var(--accent-2); letter-spacing: -2px; line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+        .fase-num small { display: block; font-size: 0.66rem; color: var(--muted); font-weight: 700; letter-spacing: 1.2px; margin-top: 6px; text-transform: uppercase; }
+        .fase-done .fase-num { color: var(--green); }
+        .fase-next .fase-num { color: var(--warm); }
+        .fase-future .fase-num { color: var(--muted); }
+
+        .fase-body h3 { font-size: 1.45rem; margin-bottom: 4px; }
+        .fase-body .respon {
+            display: inline-block;
+            background: var(--paper-2); color: #2a2e50;
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .fase-done .respon { background: #e0fae8; color: #1a6b3a; }
+        .fase-next .respon { background: #fff4de; color: #8b6014; }
+        .fase-body p { color: #4a4e6c; font-size: 0.98rem; }
+
+        .fase-stats {
+            display: flex; gap: 28px; flex-wrap: wrap;
+            margin: 20px 0; padding: 16px 20px;
+            background: #e8fae8; border-radius: 10px; border-left: 4px solid var(--green);
+        }
+        .fase-stats .stat-num { font-size: 1.7rem; font-weight: 900; color: #1a6b3a; line-height: 1; }
+        .fase-stats .stat-lbl { font-size: 0.72rem; color: #3a6b40; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; font-weight: 600; }
+
+        .fase-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--accent-2); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+        .fase-link:hover { color: var(--accent); }
+
+        /* ========== Diagrama metro (hero de Fase 1) ========== */
+        .metro-demo {
+            margin: 26px 0 6px; padding: 24px 18px;
+            background: #fafcff; border: 1px solid #dde6f5; border-radius: 12px;
+            overflow-x: auto;
+        }
+        .metro-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 14px; }
+        .metro-row { display: flex; align-items: flex-start; min-width: max-content; }
+        .metro-stop { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .metro-dot { width: 16px; height: 16px; border-radius: 50%; background: white; border: 3px solid var(--accent-2); }
+        .metro-stop.term .metro-dot { background: var(--accent-2); width: 20px; height: 20px; }
+        .metro-lbl { font-size: 0.78rem; font-weight: 600; color: #2a3e7a; margin-top: 7px; white-space: nowrap; padding: 0 8px; }
+        .metro-stop.term .metro-lbl { font-weight: 800; color: var(--ink); font-size: 0.85rem; }
+        .metro-line { flex: 1; min-width: 50px; height: 4px; background: var(--accent-2); margin-top: 9px; border-radius: 2px; }
+        .metro-stop.term .metro-line-offset { margin-top: 11px; }
+
+        /* ========== Mini mapa Boyacá ========== */
+        .map-wrap { display: flex; gap: 36px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+        .map-svg { flex: 0 0 320px; max-width: 100%; }
+        .map-svg svg { width: 100%; height: auto; }
+        .map-note { flex: 1; min-width: 240px; }
+        .map-note ul { list-style: none; padding: 0; margin-top: 14px; }
+        .map-note li { padding: 6px 0; color: #4a4e6c; font-size: 0.95rem; }
+        .map-note li strong { color: var(--ink); }
+
+        /* ========== Objetivo: GTFS ========== */
+        .flow {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px; margin-top: 34px; align-items: stretch;
+        }
+        .flow-box {
+            background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+            padding: 22px 18px; border-radius: 12px; position: relative;
+        }
+        .flow-box h4 { font-size: 0.96rem; color: white; margin-bottom: 6px; font-weight: 700; }
+        .flow-box p { font-size: 0.82rem; color: #aab; }
+        .flow-box .icon { font-size: 1.6rem; margin-bottom: 10px; }
+        .flow-box.highlight { background: rgba(247,184,75,.1); border-color: rgba(247,184,75,.4); }
+        .flow-box.highlight h4 { color: var(--warm); }
+
+        /* ========== Horizonte app ========== */
+        .features-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px; margin-top: 36px;
+        }
+        .feat {
+            background: white; border: 1px solid var(--paper-2);
+            border-radius: 14px; padding: 22px;
+            box-shadow: 0 2px 8px rgba(16,18,58,.04);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .feat:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(16,18,58,.1); }
+        .feat .emoji { font-size: 1.8rem; display: block; margin-bottom: 10px; }
+        .feat h3 { font-size: 1rem; margin-bottom: 6px; }
+        .feat p { color: #555; font-size: 0.87rem; line-height: 1.55; }
+
+        /* ========== Datos abiertos ========== */
+        .open-banner {
+            margin-top: 34px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .open-chip {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+            padding: 18px 20px; border-radius: 12px;
+        }
+        .open-chip h4 { font-size: 0.92rem; color: white; margin-bottom: 4px; }
+        .open-chip p { font-size: 0.78rem; color: #aab; }
+
+        /* ========== Cierre con roles + contacto ========== */
+        .roles-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px; margin-top: 36px;
+        }
+        .role-card {
+            background: white; border: 1px solid var(--paper-2);
+            border-radius: 14px; padding: 22px;
+            border-top: 4px solid var(--accent-2);
+        }
+        .role-card.done    { border-top-color: var(--green); }
+        .role-card.active  { border-top-color: var(--warm); }
+        .role-card.citizen { border-top-color: #a55eea; }
+        .role-card.ally    { border-top-color: var(--red); }
+        .role-card h3 { font-size: 1rem; }
+        .role-card .who { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 8px; }
+        .role-card p { color: #555; font-size: 0.88rem; line-height: 1.55; }
+
+        .contact-box {
+            margin-top: 44px; padding: 28px; background: var(--navy);
+            color: white; border-radius: 16px;
+            display: flex; gap: 22px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+        }
+        .contact-box .msg h3 { color: white; font-size: 1.2rem; margin-bottom: 4px; }
+        .contact-box .msg p { color: #aab; font-size: 0.9rem; }
+        .contact-box .links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .contact-box a { color: white; background: rgba(255,255,255,.12); padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.86rem; }
+        .contact-box a:hover { background: rgba(255,255,255,.22); }
+
+        footer {
+            padding: 32px 24px; text-align: center;
+            background: var(--navy); color: #78809e;
+            font-size: 0.82rem;
+        }
+        footer a { color: #aab; text-decoration: none; }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 680px) {
+            section { padding: 72px 20px; }
+            .fase { grid-template-columns: 1fr; gap: 8px; padding: 28px 0; }
+            .fase-num { font-size: 2.2rem; }
+            .contact-box { flex-direction: column; align-items: flex-start; }
+            .top-nav a { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- =========================== NAV =========================== -->
+<nav class="top-nav" id="topnav">
+    <div class="logo">Bus<span>boy</span></div>
+    <div>
+        <a href="#problema">El problema</a>
+        <a href="#fases">Cómo se construye</a>
+        <a href="#app">La app</a>
+        <a href="#roles">Tu rol</a>
+    </div>
+</nav>
+
+<!-- =========================== HERO =========================== -->
+<header class="hero">
+    <div class="hero-inner">
+        <span class="hero-tag">Busboy · Transporte público de Boyacá</span>
+        <h1>
+            El <em>enemigo</em> del transporte público<br>
+            es la <span class="highlight">falta de información</span>.
+        </h1>
+        <p class="lead">
+            Busboy es una plataforma abierta y colaborativa para que Boyacá tenga,
+            por primera vez, una fuente central de información de su transporte
+            público: rutas, horarios, tarifas, paradas y estado del servicio en tiempo real.
+        </p>
+        <div class="cta-row">
+            <a href="#problema" class="btn btn-primary">Conoce el proyecto</a>
+            <a href="https://rutas.busboy.app/rutas.html" class="btn btn-outline" target="_blank">Ver las rutas cargadas →</a>
+        </div>
+    </div>
+    <div class="scroll-hint">↓ desplázate</div>
+</header>
+
+<!-- =========================== PROBLEMA =========================== -->
+<section id="problema" class="section-paper">
+    <div class="container reveal">
+        <div class="section-tag">El problema</div>
+        <h2>Hoy, moverse en Boyacá es adivinar.</h2>
+        <p class="big">
+            No hay una fuente confiable y pública sobre qué buses hay, a dónde van,
+            a qué hora salen o si vienen en camino. La información vive en papel,
+            en Excel, en la memoria de cada funcionario y en los letreros del terminal.
+        </p>
+
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="emoji">🚌❓</div>
+                <h3>"¿Este bus va hasta…?"</h3>
+                <p>Un pasajero promedio invierte más tiempo averiguando la ruta que viajándola. No hay un planeador público que conozca las rutas reales.</p>
+            </div>
+            <div class="problem-card">
+                <div class="emoji">🗺️🕳️</div>
+                <h3>Datos dispersos</h3>
+                <p>Cada empresa y terminal guarda su propia lista. Nadie tiene el mapa completo. Google Maps no conoce las rutas intermunicipales de la región.</p>
+            </div>
+            <div class="problem-card">
+                <div class="emoji">⏱️🤷</div>
+                <h3>Nada en tiempo real</h3>
+                <p>No se sabe si el bus viene, si hay paro o desvío, si llegas a tu cita. La información existe, pero no llega al usuario.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================== VISIÓN =========================== -->
+<section class="section-alt">
+    <div class="container reveal">
+        <div class="section-tag">La visión</div>
+        <h2>Una fuente central del transporte público, construida con la región.</h2>
+        <div class="vision-quote">
+            Información abierta, colaborativa y viva — construida por el terminal, los colegios,
+            la comunidad y las instituciones que hoy operan el transporte. De abajo hacia arriba,
+            por fases, con responsables claros.
+        </div>
+        <p class="big">
+            Busboy no es una app que se lanza y ya. Es una plataforma que se construye paso a paso.
+            Cada fase produce datos utilizables inmediatamente y suma una capa sobre la anterior.
+        </p>
+    </div>
+</section>
+
+<!-- =========================== FASES =========================== -->
+<section id="fases" class="section-paper">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-tag">Cómo se construye</div>
+            <h2>Tres fases. Tres responsables. Un dato abierto para toda Boyacá.</h2>
+            <p class="big">Cada fase tiene un actor principal. Ninguno puede hacerlo solo — y nadie empieza de cero porque se construye sobre lo anterior.</p>
+        </div>
+
+        <div class="fases">
+
+            <!-- FASE 1 -->
+            <div class="fase fase-done reveal">
+                <div class="fase-num">01<small>Completada</small></div>
+                <div class="fase-body">
+                    <h3>El dato base — qué rutas existen</h3>
+                    <span class="respon">Responsable: Terminal de Tunja</span>
+                    <p>El terminal consolidó por primera vez el listado maestro de todas las rutas que operan desde Tunja: qué empresas, con qué resolución, hacia qué destinos, con qué recorridos intermedios.</p>
+
+                    <div class="fase-stats">
+                        <div><div class="stat-num">504</div><div class="stat-lbl">Trayectos</div></div>
+                        <div><div class="stat-num">30</div><div class="stat-lbl">Empresas</div></div>
+                        <div><div class="stat-num">192</div><div class="stat-lbl">Resoluciones</div></div>
+                        <div><div class="stat-num">117</div><div class="stat-lbl">Pares de ciudades</div></div>
+                    </div>
+
+                    <div class="metro-demo">
+                        <div class="metro-label">Ejemplo de recorrido — Tunja ↔ Bogotá vía Sogamoso → Duitama</div>
+                        <div class="metro-row">
+                            <div class="metro-stop term"><div class="metro-dot"></div><div class="metro-lbl">Tunja</div></div>
+                            <div class="metro-line metro-line-offset"></div>
+                            <div class="metro-stop"><div class="metro-dot"></div><div class="metro-lbl">Sogamoso</div></div>
+                            <div class="metro-line"></div>
+                            <div class="metro-stop"><div class="metro-dot"></div><div class="metro-lbl">Duitama</div></div>
+                            <div class="metro-line"></div>
+                            <div class="metro-stop term"><div class="metro-dot"></div><div class="metro-lbl">Bogotá</div></div>
+                        </div>
+                    </div>
+
+                    <a href="https://rutas.busboy.app/rutas.html" target="_blank" class="fase-link">Ver el listado maestro en vivo →</a>
+                </div>
+            </div>
+
+            <!-- FASE 2 -->
+            <div class="fase fase-next reveal">
+                <div class="fase-num">02<small>En preparación</small></div>
+                <div class="fase-body">
+                    <h3>El trazado — por dónde pasa cada ruta</h3>
+                    <span class="respon">Responsable: Colegio Salesiano</span>
+                    <p>Sobre el listado maestro, estudiantes del Colegio Salesiano trazarán cada trayecto en un mapa de calles reales usando OpenStreetMap y Valhalla. Cada ida y cada vuelta tendrá su propia geometría y su propia relación pública en OSM, navegable por cualquier persona del mundo.</p>
+                    <div class="map-wrap">
+                        <div class="map-svg" aria-hidden="true">
+                            <!-- Mapa conceptual de Boyacá -->
+                            <svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M40,50 C80,30 140,40 180,30 C230,20 280,55 290,100 C300,150 260,210 200,220 C150,230 90,215 60,180 C30,150 25,90 40,50 Z"
+                                    fill="#eef2f9" stroke="#c0c9dd" stroke-width="1.5"/>
+                                <!-- líneas conectando -->
+                                <line x1="110" y1="130" x2="170" y2="115" stroke="#2a5ec8" stroke-width="2.5"/>
+                                <line x1="170" y1="115" x2="210" y2="140" stroke="#2a5ec8" stroke-width="2.5"/>
+                                <line x1="210" y1="140" x2="245" y2="165" stroke="#2a5ec8" stroke-width="2.5"/>
+                                <line x1="110" y1="130" x2="85" y2="180" stroke="#4a9eff" stroke-width="2" stroke-dasharray="4,3" opacity=".7"/>
+                                <line x1="110" y1="130" x2="55" y2="100" stroke="#4a9eff" stroke-width="2" stroke-dasharray="4,3" opacity=".7"/>
+                                <!-- puntos -->
+                                <circle cx="110" cy="130" r="9" fill="#0f1129"/>
+                                <circle cx="110" cy="130" r="4" fill="white"/>
+                                <text x="110" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#0f1129">Tunja</text>
+                                <circle cx="170" cy="115" r="6" fill="#2a5ec8"/>
+                                <text x="170" y="105" text-anchor="middle" font-size="9" fill="#2a3e7a">Duitama</text>
+                                <circle cx="210" cy="140" r="7" fill="#2a5ec8"/>
+                                <text x="220" y="135" font-size="9" fill="#2a3e7a">Sogamoso</text>
+                                <circle cx="245" cy="165" r="5" fill="#2a5ec8"/>
+                                <text x="250" y="177" font-size="9" fill="#2a3e7a">Aguazul</text>
+                                <circle cx="85" cy="180" r="5" fill="#4a9eff"/>
+                                <text x="85" y="195" text-anchor="middle" font-size="9" fill="#2a3e7a">Chiquinquirá</text>
+                                <circle cx="55" cy="100" r="5" fill="#4a9eff"/>
+                                <text x="50" y="92" text-anchor="end" font-size="9" fill="#2a3e7a">Moniquirá</text>
+                            </svg>
+                        </div>
+                        <div class="map-note">
+                            <h3 style="font-size:1rem">Qué se hace en esta fase</h3>
+                            <ul>
+                                <li>🛣️ <strong>Trazado geográfico</strong> de cada trayecto sobre OSM.</li>
+                                <li>📍 <strong>Ubicación</strong> de terminales y paradas con coordenadas reales.</li>
+                                <li>🔗 <strong>Relación OSM</strong> independiente para cada ida y cada vuelta.</li>
+                                <li>🌐 <strong>Datos abiertos</strong> desde el primer día — cualquiera puede verlos o usarlos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 3 -->
+            <div class="fase fase-future reveal">
+                <div class="fase-num">03<small>Próxima</small></div>
+                <div class="fase-body">
+                    <h3>Las capacidades — que el conocimiento quede en la región</h3>
+                    <span class="respon">Responsable: Institución Educativa Carlos Arturo Torres</span>
+                    <p>Formar estudiantes en mapeo colaborativo, datos abiertos y análisis de transporte. Que el know-how no dependa de un aliado externo: que se quede en Boyacá, que crezca con cada generación y que se replique en otros municipios.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- =========================== GTFS =========================== -->
+<section class="section-dark">
+    <div class="container reveal">
+        <div class="section-tag">El objetivo técnico</div>
+        <h2>Todo esto alimenta un <span style="color:var(--warm)">feed GTFS</span> — el idioma universal del transporte público.</h2>
+        <p class="big" style="color:#c3cae6">
+            GTFS es el estándar que entienden Google Maps, Moovit, Transit y cualquier
+            app de planeación de rutas del mundo. Cuando Boyacá tenga su GTFS, el
+            transporte público será visible en todas esas aplicaciones sin que nadie
+            tenga que pedirle permiso a nadie.
+        </p>
+
+        <div class="flow">
+            <div class="flow-box"><div class="icon">📋</div><h4>Listado maestro</h4><p>Rutas, operadores, resoluciones (Fase 1)</p></div>
+            <div class="flow-box"><div class="icon">🗺️</div><h4>Trazado + paradas</h4><p>Geometría real sobre OSM (Fase 2)</p></div>
+            <div class="flow-box"><div class="icon">⏱️</div><h4>Horarios y tarifas</h4><p>Integrados desde el terminal</p></div>
+            <div class="flow-box highlight"><div class="icon">📦</div><h4>GTFS público</h4><p>Descargable, abierto, universal</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================== HORIZONTE APP =========================== -->
+<section id="app" class="section-paper">
+    <div class="container reveal">
+        <div class="section-tag">El horizonte</div>
+        <h2>Una app para que el transporte público se deje usar.</h2>
+        <p class="big">Con el dato estandarizado, sobre el mismo GTFS, se construye una aplicación pública que el ciudadano y el despachador usan a diario.</p>
+
+        <div class="features-grid">
+            <div class="feat">
+                <span class="emoji">🧭</span>
+                <h3>Planeador de rutas</h3>
+                <p>"¿Cómo voy de Tunja a Aguazul?" — con transbordos, tiempos estimados y tarifa.</p>
+            </div>
+            <div class="feat">
+                <span class="emoji">📡</span>
+                <h3>Tiempo real</h3>
+                <p>Dónde viene el bus ahora, cuánto falta para que llegue a tu parada.</p>
+            </div>
+            <div class="feat">
+                <span class="emoji">💳</span>
+                <h3>Pagos integrados</h3>
+                <p>Comprar el tiquete desde la app, sin pelear con efectivo ni filas.</p>
+            </div>
+            <div class="feat">
+                <span class="emoji">📣</span>
+                <h3>Reportes ciudadanos</h3>
+                <p>Avisar sobre bloqueos, demoras o incidentes; la plataforma los publica y avisa a los demás usuarios.</p>
+            </div>
+            <div class="feat">
+                <span class="emoji">🤖</span>
+                <h3>Chatbot para despachadores</h3>
+                <p>Por chat, con ayuda de IA, el despachador reporta el estado del servicio. La información llega al usuario al instante.</p>
+            </div>
+            <div class="feat">
+                <span class="emoji">🏛️</span>
+                <h3>Fuente central</h3>
+                <p>Una sola plataforma donde autoridad, empresa, usuario y ciudadano conversan con información coherente.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================== DATOS ABIERTOS =========================== -->
+<section class="section-dark">
+    <div class="container reveal">
+        <div class="section-tag">El principio</div>
+        <h2>La información pública es un <span style="color:var(--warm)">derecho público</span>.</h2>
+        <p class="big" style="color:#c3cae6">
+            Todo lo que construimos vive en estándares abiertos. OpenStreetMap para el mapa.
+            GTFS para los datos de servicio. Cualquier persona, empresa o institución puede
+            consumirlos, auditarlos y construir encima — sin pedir permiso, sin pagar licencias,
+            sin depender de un único proveedor.
+        </p>
+        <div class="open-banner">
+            <div class="open-chip"><h4>OpenStreetMap</h4><p>El "Wikipedia" de los mapas. Editado por la comunidad, libre para todos.</p></div>
+            <div class="open-chip"><h4>GTFS</h4><p>Estándar internacional de transporte público. Lo consume Google Maps.</p></div>
+            <div class="open-chip"><h4>Código abierto</h4><p>La plataforma misma es auditable. Cada línea es pública.</p></div>
+            <div class="open-chip"><h4>Replicable</h4><p>Lo que funcione en Boyacá, sirve a cualquier otra región que lo adopte.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================== ROLES + CONTACTO =========================== -->
+<section id="roles" class="section-paper">
+    <div class="container reveal">
+        <div class="section-tag">Tu rol</div>
+        <h2>¿Dónde entras tú?</h2>
+        <p class="big">Este proyecto solo avanza si cada actor asume su parte. Esto es lo que le pedimos a cada quien.</p>
+
+        <div class="roles-grid">
+            <div class="role-card done">
+                <div class="who">Terminal de Tunja</div>
+                <h3>Ya cumplieron el paso 1</h3>
+                <p>Consolidaron el listado maestro. Ahora acompañen a los colegios en la siguiente etapa y compartan horarios y tarifas.</p>
+            </div>
+            <div class="role-card active">
+                <div class="who">Colegios</div>
+                <h3>Hagan el trazado</h3>
+                <p>El Salesiano asume la Fase 2, Carlos Arturo Torres forma las capacidades. Es trabajo real, con impacto regional, y el estudiante aprende cartografía digital y datos abiertos.</p>
+            </div>
+            <div class="role-card citizen">
+                <div class="who">Ciudadanía</div>
+                <h3>Usen y corrijan</h3>
+                <p>Compartan el proyecto, prueben el listado maestro, reporten errores, sugieran rutas faltantes. El dato mejora porque la gente lo usa.</p>
+            </div>
+            <div class="role-card ally">
+                <div class="who">Aliados e instituciones</div>
+                <h3>Súmense</h3>
+                <p>Autoridad de movilidad, empresas, ONGs, universidades, desarrolladores: hay lugar para todos. Escriban y conversamos qué pueden aportar.</p>
+            </div>
+        </div>
+
+        <div class="contact-box">
+            <div class="msg">
+                <h3>¿Quieres sumarte o saber más?</h3>
+                <p>Escríbenos. Esta presentación es pública — compártela con quien creas que puede aportar.</p>
+            </div>
+            <div class="links">
+                <a href="mailto:hola@busboy.app">hola@busboy.app</a>
+                <a href="https://rutas.busboy.app/rutas.html" target="_blank">Ver plataforma</a>
+                <a href="https://github.com/leoguti/tp-routes" target="_blank">Código abierto ↗</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div>Busboy · Información abierta para el transporte público de Boyacá</div>
+    <div style="margin-top:6px">
+        Un proyecto con Terminal de Tunja, colegios de la región y <a href="https://trufi.app" target="_blank">Trufi Association</a>.
+        Datos en <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a>.
+    </div>
+</footer>
+
+<script>
+    // Nav fija pone color al hacer scroll
+    const nav = document.getElementById('topnav');
+    const toggleNav = () => nav.classList.toggle('scrolled', window.scrollY > 20);
+    toggleNav();
+    window.addEventListener('scroll', toggleNav, { passive: true });
+
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(r => io.observe(r));
+</script>
+
+</body>
+</html>
