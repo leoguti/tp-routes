@@ -434,6 +434,69 @@
         }
         .trufi-note strong { color: var(--ink); }
 
+        /* ========== Busboy ya existe ========== */
+        .live-sec {
+            padding: 100px 24px;
+            background:
+                radial-gradient(ellipse at top right, rgba(74,158,255,.14) 0%, transparent 55%),
+                radial-gradient(ellipse at bottom left, rgba(247,184,75,.1) 0%, transparent 55%),
+                var(--navy);
+            color: white;
+        }
+        .live-card {
+            max-width: 980px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 260px; gap: 44px;
+            padding: 44px 40px;
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+            border-radius: 20px; backdrop-filter: blur(10px);
+            align-items: center;
+        }
+        .live-card .live-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(39,174,96,.18); border: 1px solid rgba(39,174,96,.45);
+            color: #4ed488; padding: 5px 12px; border-radius: 30px;
+            font-size: 0.76rem; font-weight: 700; letter-spacing: .5px;
+            margin-bottom: 14px;
+        }
+        .live-card .live-tag::before {
+            content: ''; width: 7px; height: 7px; border-radius: 50%; background: #4ed488;
+            box-shadow: 0 0 0 0 rgba(78,212,136,.7);
+            animation: pulse 1.6s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(78,212,136,.7); }
+            70% { box-shadow: 0 0 0 10px rgba(78,212,136,0); }
+            100% { box-shadow: 0 0 0 0 rgba(78,212,136,0); }
+        }
+        .live-card h2 { color: white; font-size: clamp(1.6rem, 3vw, 2.3rem); margin-bottom: 14px; line-height: 1.15; }
+        .live-card p { color: #c8d0ea; font-size: 0.98rem; line-height: 1.6; }
+        .live-card p + p { margin-top: 10px; }
+        .live-card strong { color: white; }
+        .live-url {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 18px; padding: 13px 22px;
+            background: var(--warm); color: #2a1a00;
+            border-radius: 10px; font-weight: 800; text-decoration: none;
+            font-size: 0.98rem;
+        }
+        .live-url:hover { background: #ffcc6b; transform: translateY(-1px); }
+        .live-visual {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            padding: 24px; background: rgba(255,255,255,.05); border-radius: 16px; border: 1px dashed rgba(255,255,255,.15);
+        }
+        .live-visual .icn { font-size: 4.5rem; }
+        .live-visual .covers { font-size: 0.78rem; color: #8aa0d0; text-align: center; letter-spacing: .4px; text-transform: uppercase; font-weight: 700; }
+        .live-visual .city-list { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .live-visual .city-list span {
+            background: rgba(74,158,255,.2); border: 1px solid rgba(74,158,255,.45);
+            color: #b8d4ff; padding: 4px 10px; border-radius: 20px;
+            font-size: 0.82rem; font-weight: 700;
+        }
+
+        @media (max-width: 760px) {
+            .live-card { grid-template-columns: 1fr; padding: 32px 24px; gap: 28px; }
+        }
+
         /* ========== Horizonte app ========== */
         .features-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -571,6 +634,7 @@
         <a href="#fases">Fases</a>
         <a href="#app">La app</a>
         <a href="#aliados">Aliados</a>
+        <a href="https://busboy.app" target="_blank" style="color:var(--warm); font-weight:700;">↓ Descargar</a>
     </div>
 </nav>
 
@@ -589,8 +653,10 @@
                 público: rutas, horarios, tarifas, paradas y estado del servicio en tiempo real.
             </p>
             <div class="cta-row">
-                <a href="#problema" class="btn btn-primary">Conoce el proyecto</a>
+                <a href="https://busboy.app" target="_blank" class="btn btn-primary">📱 Descarga Busboy</a>
+                <a href="#problema" class="btn btn-outline">Conoce el proyecto</a>
             </div>
+            <p style="color:#8aa0d0; font-size:0.83rem; margin-top:14px">Ya disponible para <strong style="color:#fff">Sogamoso y Duitama</strong> — ampliando a toda la región.</p>
         </div>
         <div class="hero-qr">
             <img src="/assets/qr/busboy-small.png" alt="QR a rutas.busboy.app/busboy">
@@ -1078,6 +1144,42 @@
 </section>
 
 
+<!-- =========================== BUSBOY YA EXISTE =========================== -->
+<section class="live-sec">
+    <div class="live-card reveal">
+        <div>
+            <span class="live-tag">En vivo · descargable hoy</span>
+            <h2>Busboy ya funciona. <span style="color:var(--warm)">Y se puede descargar.</span></h2>
+            <p>
+                La app está publicada en <strong>busboy.app</strong> y hoy cubre el
+                transporte urbano de <strong>Sogamoso</strong> y <strong>Duitama</strong>.
+                Cualquier persona puede bajarla en su celular y planificar rutas dentro
+                de estas dos ciudades en este momento.
+            </p>
+            <p>
+                Lo que viene: sumar el transporte urbano de <strong>Tunja</strong>,
+                integrar el intermunicipal de toda Boyacá que estamos consolidando en
+                la Fase 1, y extender progresivamente a más municipios de la región.
+            </p>
+            <a href="https://busboy.app" target="_blank" class="live-url">busboy.app →</a>
+        </div>
+        <div class="live-visual">
+            <div class="icn">📱</div>
+            <div class="covers">Cubre hoy</div>
+            <div class="city-list">
+                <span>🏙️ Sogamoso</span>
+                <span>🏙️ Duitama</span>
+            </div>
+            <div class="covers" style="margin-top:6px; color:#f7b84b">Próximamente</div>
+            <div class="city-list">
+                <span style="background:rgba(247,184,75,.18); border-color:rgba(247,184,75,.45); color:#f7b84b">Tunja</span>
+                <span style="background:rgba(247,184,75,.18); border-color:rgba(247,184,75,.45); color:#f7b84b">+ Región</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+
 <!-- =========================== HORIZONTE APP =========================== -->
 <section id="app" class="section-paper">
     <div class="container reveal">
@@ -1247,6 +1349,7 @@
             </div>
             <div class="links">
                 <a href="mailto:leonardo.gutierrez@trufi-association.org">leonardo.gutierrez@trufi-association.org</a>
+                <a href="https://busboy.app" target="_blank">Descarga la app ↗</a>
             </div>
         </div>
     </div>
