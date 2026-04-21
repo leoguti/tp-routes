@@ -245,7 +245,7 @@ async function handlePost(sql, req, res) {
 async function handlePut(sql, req, res) {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'Falta id' });
-    const { operator_id, origen, destino, via = [], ref, notas } = req.body || {};
+    const { operator_id, origen, destino, via = [], ref, notas, resoluciones } = req.body || {};
 
     if (!operator_id || !origen?.trim() || !destino?.trim())
         return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
@@ -281,6 +281,23 @@ async function handlePut(sql, req, res) {
         for (let i = 0; i < via.length; i++) {
             await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${idaId}, ${i + 1}, ${via[i]})`;
             if (vuelta) await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${vuelta.id}, ${i + 1}, ${via[via.length - 1 - i]})`;
+        }
+
+        // Reemplazar resoluciones si el cliente las envía. Si el campo no viene
+        // (undefined), no se tocan — permite actualizar sólo datos básicos.
+        if (Array.isArray(resoluciones)) {
+            await sql`DELETE FROM route_resolutions WHERE route_id = ${idaId}`;
+            for (let i = 0; i < resoluciones.length; i++) {
+                const r = resoluciones[i];
+                if (!r.numero) continue;
+                await sql`
+                    INSERT INTO route_resolutions
+                        (route_id, orden, numero, fecha, texto_original, pdf_url, pdf_key, notas)
+                    VALUES (${idaId}, ${i + 1}, ${r.numero}, ${r.fecha || null},
+                            ${r.texto_original || null}, ${r.pdf_url || null},
+                            ${r.pdf_key || null}, ${r.notas || null})
+                `;
+            }
         }
 
         return res.json({ ok: true });

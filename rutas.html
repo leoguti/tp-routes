@@ -141,6 +141,30 @@
         .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
         .loader { text-align: center; padding: 40px; color: #aab; font-size: 0.9rem; }
+
+        /* Botones "agregar" al final de cada nivel */
+        .add-row { padding: 10px 20px 14px 54px; }
+        .add-row .btn-add { background: #eef3ff; color: #2a3e7a; border: 1px dashed #b8c4e2; padding: 8px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+        .add-row .btn-add:hover { background: #dde6f9; border-style: solid; }
+
+        .via-add { padding: 10px 20px 12px 80px; }
+        .via-add .btn-add { background: #f5faff; color: #196f3d; border: 1px dashed #b8e0c4; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .via-add .btn-add:hover { background: #e5f5ea; border-style: solid; }
+
+        /* Campos bloqueados en el modal */
+        .form-group input:disabled, .form-group select:disabled {
+            background: #f4f5f8; color: #555; cursor: not-allowed; border-color: #e0e2e8;
+        }
+        .form-group .locked-hint { color: #888; font-size: 0.7rem; font-style: italic; }
+
+        /* Editor de resoluciones */
+        .res-editor { border: 1px dashed #dde3ee; border-radius: 8px; padding: 10px; background: #fafbfe; margin-top: 6px; }
+        .res-editor .res-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+        .res-editor .res-row input { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 6px 9px; font-size: 0.83rem; }
+        .res-editor .res-row .rm { background: #fde; color: #900; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; }
+        .res-editor .empty-hint { color: #888; font-size: 0.75rem; font-style: italic; padding: 4px 0; }
+        .res-editor .res-row input[type=date] { max-width: 140px; flex: 0 0 auto; }
+        .res-editor .res-row input[placeholder="Número"] { max-width: 130px; flex: 0 0 auto; }
     </style>
 </head>
 <body>
@@ -219,6 +243,13 @@
     </div>
     <div class="form-row">
         <div class="form-group">
+            <label>Resoluciones</label>
+            <div id="f-res-list" class="res-editor"></div>
+            <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addResolutionRow()">+ Agregar resolución</button>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
             <label>Ref (código interno)</label>
             <input id="f-ref" type="text" />
         </div>
@@ -229,7 +260,7 @@
             <textarea id="f-notas" rows="2"></textarea>
         </div>
     </div>
-    <small id="f-hint" style="color:#888">Las resoluciones se editan desde el detalle de la ruta.</small>
+    <small id="f-hint" style="color:#888"></small>
     <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
         <button id="f-delete" class="btn btn-danger" style="display:none" onclick="deleteRoute()">Eliminar</button>
@@ -249,6 +280,7 @@ const state = {
     collapsed: new Set(),    // keys colapsados
     editing: null,           // { id_ida } si se está editando
     viasDraft: [],
+    resolucionesDraft: [],   // [{ numero, fecha, texto_original }]
 };
 
 function norm(s) {
@@ -336,6 +368,7 @@ function render() {
 function renderPair(pair) {
     const key = `p:${pair.pair_label}`;
     const collapsed = state.collapsed.has(key);
+    const pairJson = JSON.stringify({cityA: pair.cityA, cityB: pair.cityB}).replace(/'/g,"&#39;");
     return `
     <div class="pair-group">
         <div class="pair-head" onclick="toggle('${escapeAttr(key)}')">
@@ -346,6 +379,9 @@ function renderPair(pair) {
         </div>
         <div class="pair-body ${collapsed ? 'collapsed' : ''}">
             ${pair.vias.map(v => renderVia(pair, v)).join('')}
+            <div class="add-row">
+                <button class="btn-add" onclick='openAddVia(${pairJson})'>+ Agregar recorrido a ${escapeHtml(pair.pair_label)}</button>
+            </div>
         </div>
     </div>`;
 }
@@ -367,6 +403,9 @@ function renderVia(pair, via) {
         <div class="via-body ${collapsed ? 'collapsed' : ''}">
             ${renderRouteDiagram(pair, via)}
             ${via.operadores.map(op => renderOp(pair, via, op)).join('')}
+            <div class="via-add">
+                <button class="btn-add" onclick='openAddOperator(${JSON.stringify({cityA: pair.cityA, cityB: pair.cityB, via: via.via, via_label: via.via_label}).replace(/'/g,"&#39;")})'>+ Agregar empresa a este recorrido</button>
+            </div>
         </div>
     </div>`;
 }
@@ -445,26 +484,75 @@ function expandAll(expand) {
 
 // ---- Modal crear / editar -----
 
-function openCreate() {
+function resetModal() {
     state.editing = null;
     state.viasDraft = [];
-    document.getElementById('modal-title').textContent = 'Nueva ruta';
-    document.getElementById('f-operator').innerHTML =
-        state.operators.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+    state.resolucionesDraft = [];
+    state.lockFields = {};
     document.getElementById('f-origen').value = '';
     document.getElementById('f-destino').value = '';
+    document.getElementById('f-origen').disabled = false;
+    document.getElementById('f-destino').disabled = false;
     document.getElementById('f-via-input').value = '';
+    document.getElementById('f-via-input').disabled = false;
     document.getElementById('f-ref').value = '';
     document.getElementById('f-notas').value = '';
+    document.getElementById('f-hint').textContent = '';
     document.getElementById('f-delete').style.display = 'none';
+    document.getElementById('f-operator').innerHTML =
+        state.operators.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
     renderViasDraft();
-    document.getElementById('modal-bg').classList.add('open');
+    renderResList();
+}
+
+function openCreate() {
+    resetModal();
+    document.getElementById('modal-title').textContent = 'Nueva ruta';
+    document.getElementById('f-hint').textContent =
+        'Define una ruta completa: origen, destino, recorrido y la empresa que la opera.';
+    openModal();
+}
+
+// Agregar recorrido a un par existente: ciudades bloqueadas, vía vacía, operador abierto.
+function openAddVia({cityA, cityB}) {
+    resetModal();
+    document.getElementById('modal-title').textContent = `Nuevo recorrido en ${cityA} ↔ ${cityB}`;
+    document.getElementById('f-hint').textContent =
+        'Agrega una variante del recorrido (por ejemplo "vía Tunja → Duitama"). Las ciudades origen y destino ya están fijas.';
+    document.getElementById('f-origen').value = cityA;
+    document.getElementById('f-destino').value = cityB;
+    document.getElementById('f-origen').disabled = true;
+    document.getElementById('f-destino').disabled = true;
+    openModal();
+}
+
+// Agregar empresa a un recorrido existente: ciudades y vía bloqueadas.
+function openAddOperator({cityA, cityB, via, via_label}) {
+    resetModal();
+    document.getElementById('modal-title').textContent =
+        `Nueva empresa en ${cityA} ↔ ${cityB} (${via_label})`;
+    document.getElementById('f-hint').textContent =
+        'Se creará la ruta con el mismo recorrido, asignada a la empresa que elijas.';
+    document.getElementById('f-origen').value = cityA;
+    document.getElementById('f-destino').value = cityB;
+    document.getElementById('f-origen').disabled = true;
+    document.getElementById('f-destino').disabled = true;
+    state.viasDraft = [...(via || [])];
+    document.getElementById('f-via-input').disabled = true;
+    renderViasDraft();
+    openModal();
 }
 
 function openEdit({pair, via_label, op}) {
+    resetModal();
     state.editing = { id_ida: op.ida?.id || op.vuelta?.id };
     const r = op.ida || op.vuelta;
     state.viasDraft = (r.waypoints || []).map(w => w.nombre_text);
+    state.resolucionesDraft = (op.resoluciones || []).map(r => ({
+        numero: r.numero || '',
+        fecha: (r.fecha || '').slice(0, 10),
+        texto_original: r.texto_original || '',
+    }));
     document.getElementById('modal-title').textContent = 'Editar ruta';
     document.getElementById('f-operator').innerHTML =
         state.operators.map(o => `<option value="${o.id}" ${o.id===op.operator_id?'selected':''}>${o.nombre}</option>`).join('');
@@ -472,11 +560,13 @@ function openEdit({pair, via_label, op}) {
     document.getElementById('f-destino').value = op.ida?.destino_text || op.vuelta?.origen_text || '';
     document.getElementById('f-ref').value = op.ref || '';
     document.getElementById('f-notas').value = op.notas || '';
-    document.getElementById('f-via-input').value = '';
     document.getElementById('f-delete').style.display = '';
     renderViasDraft();
-    document.getElementById('modal-bg').classList.add('open');
+    renderResList();
+    openModal();
 }
+
+function openModal() { document.getElementById('modal-bg').classList.add('open'); }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 
@@ -496,6 +586,31 @@ function renderViasDraft() {
 }
 function removeVia(i) { state.viasDraft.splice(i, 1); renderViasDraft(); }
 
+function renderResList() {
+    const c = document.getElementById('f-res-list');
+    if (!state.resolucionesDraft.length) {
+        c.innerHTML = `<div class="empty-hint">Sin resoluciones. Usa "+ Agregar resolución" para añadir una.</div>`;
+        return;
+    }
+    c.innerHTML = state.resolucionesDraft.map((r, i) => `
+        <div class="res-row">
+            <input placeholder="Número" value="${escapeHtml(r.numero || '')}"
+                oninput="updateRes(${i},'numero',this.value)"/>
+            <input type="date" value="${escapeHtml(r.fecha || '')}"
+                oninput="updateRes(${i},'fecha',this.value)"/>
+            <input placeholder="Texto original (opcional)" value="${escapeHtml(r.texto_original || '')}"
+                oninput="updateRes(${i},'texto_original',this.value)"/>
+            <button type="button" class="rm" onclick="removeResolutionRow(${i})" title="Quitar">×</button>
+        </div>
+    `).join('');
+}
+function updateRes(i, field, value) { state.resolucionesDraft[i][field] = value; }
+function addResolutionRow() {
+    state.resolucionesDraft.push({ numero: '', fecha: '', texto_original: '' });
+    renderResList();
+}
+function removeResolutionRow(i) { state.resolucionesDraft.splice(i, 1); renderResList(); }
+
 async function saveRoute() {
     const body = {
         region_id: state.region,
@@ -505,6 +620,13 @@ async function saveRoute() {
         via:      [...state.viasDraft],
         ref:      document.getElementById('f-ref').value.trim() || null,
         notas:    document.getElementById('f-notas').value.trim() || null,
+        resoluciones: state.resolucionesDraft
+            .map((r, i) => ({
+                numero: (r.numero || '').trim(),
+                fecha: r.fecha || null,
+                texto_original: (r.texto_original || '').trim() || null,
+            }))
+            .filter(r => r.numero),
     };
     if (!body.operator_id || !body.origen || !body.destino) {
         alertMsg('Operador, origen y destino son obligatorios', 'error');
