@@ -138,7 +138,7 @@ function groupRoutes(rows) {
         const waypointNames = r.waypoints.map(w => w.nombre_text);
         const canonicalVia = r.direction === 'vuelta' ? [...waypointNames].reverse() : waypointNames;
         const viaKey = canonicalVia.map(norm).join('>');
-        const viaLabel = canonicalVia.length ? canonicalVia.join(' → ') : 'Directo';
+        const viaLabel = canonicalVia.length ? 'vía ' + canonicalVia.join(' → ') : 'Directo';
 
         const pair = byPair.get(pairKey);
         if (!pair.vias.has(viaKey)) pair.vias.set(viaKey, { via_label: viaLabel, via: canonicalVia, operadores: new Map() });
