@@ -37,51 +37,63 @@
         .btn-danger { background: #e74c3c; color: white; }
         .btn-danger:hover { background: #c0392b; }
 
+        /* Leyenda superior */
+        .legend { background: #fffbe8; border: 1px solid #fce9a4; color: #7a5d1a; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.5; }
+        .legend b { color: #5a4410; }
+
         /* Jerarquía */
         .tree { background: transparent; }
         .empty { text-align: center; padding: 56px 20px; color: #aab; font-size: 0.9rem; }
 
-        /* Nivel 1: par ↔ */
-        .pair-group { background: white; border-radius: 10px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
-        .pair-head { display: flex; align-items: center; padding: 14px 18px; cursor: pointer; background: #fbfcff; border-bottom: 1px solid #edf0f7; user-select: none; }
-        .pair-head:hover { background: #f5f7ff; }
-        .pair-head .chev { font-size: 0.85rem; margin-right: 10px; color: #6872aa; width: 14px; display: inline-block; }
-        .pair-head .title { font-size: 1rem; font-weight: 700; color: #1a1a3e; flex: 1; }
-        .pair-head .meta  { font-size: 0.78rem; color: #888; margin-left: 12px; }
-
+        /* Nivel 1: Ruta (par de ciudades) */
+        .pair-group { background: white; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(26,26,62,.07); overflow: hidden; border: 1px solid #e6ecf5; }
+        .pair-head { display: flex; align-items: center; padding: 16px 20px; cursor: pointer; background: linear-gradient(90deg, #1a1a3e 0%, #2a2a5e 100%); color: white; user-select: none; }
+        .pair-head:hover { background: linear-gradient(90deg, #2a2a5e 0%, #3a3a6e 100%); }
+        .pair-head .chev { font-size: 0.9rem; margin-right: 10px; width: 14px; display: inline-block; }
+        .pair-head .tag { background: rgba(255,255,255,.18); padding: 2px 8px; border-radius: 10px; font-size: 0.68rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; margin-right: 10px; }
+        .pair-head .title { font-size: 1.1rem; font-weight: 800; flex: 1; }
+        .pair-head .meta  { font-size: 0.78rem; opacity: .75; margin-left: 12px; }
         .pair-body.collapsed { display: none; }
 
-        /* Nivel 2: vía */
-        .via-group { border-bottom: 1px solid #edf0f7; }
-        .via-group:last-child { border-bottom: none; }
-        .via-head { display: flex; align-items: center; padding: 10px 18px 10px 40px; background: #f8faff; cursor: pointer; user-select: none; }
-        .via-head:hover { background: #f0f4ff; }
+        /* Nivel 2: Recorrido (vía) */
+        .via-group { border-top: 1px solid #edf0f7; }
+        .via-group:first-child { border-top: none; }
+        .via-head { display: flex; align-items: center; padding: 11px 20px 11px 30px; background: #f4f7fc; cursor: pointer; user-select: none; border-left: 4px solid #c7d2e8; }
+        .via-head:hover { background: #ebf0fa; }
         .via-head .chev { font-size: 0.8rem; margin-right: 8px; color: #6872aa; width: 12px; display: inline-block; }
-        .via-head .title { font-size: 0.88rem; font-weight: 600; color: #2a2a5e; flex: 1; }
-        .via-head .meta  { font-size: 0.76rem; color: #888; }
+        .via-head .tag { background: #d9e1f4; color: #2a3e7a; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; margin-right: 10px; }
+        .via-head .title { font-size: 0.92rem; font-weight: 600; color: #2a2a5e; flex: 1; }
+        .via-head .meta  { font-size: 0.76rem; color: #777; }
         .via-body.collapsed { display: none; }
 
-        /* Nivel 3: operador */
-        .op-group { padding: 8px 18px 12px 62px; border-top: 1px dashed #eff2f8; }
-        .op-group:first-child { border-top: none; }
-        .op-head { display: flex; align-items: center; padding: 6px 0 8px; }
-        .op-head .name { font-weight: 700; font-size: 0.86rem; color: #1a1a3e; flex: 1; }
-        .op-head .actions { display: flex; gap: 6px; }
+        /* Nivel 3: Empresa (operador) — tarjeta plana que contiene todo */
+        .op-group { padding: 10px 20px 10px 54px; }
+        .op-card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: white; border: 1px solid #e2e7f1; border-radius: 10px; margin-top: 6px; }
+        .op-card:first-child { margin-top: 0; }
+        .op-card:hover { border-color: #b8c4e2; }
+        .op-card .op-tag { background: #e9f7ef; color: #196f3d; padding: 3px 9px; border-radius: 10px; font-size: 0.66rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+        .op-card .op-name { font-weight: 700; font-size: 0.95rem; color: #1a1a3e; flex: 1; }
+        .op-card .op-res  { display: flex; flex-wrap: wrap; gap: 4px; }
+        .op-card .op-dirs { display: flex; gap: 6px; }
+        .op-card .op-acts { display: flex; gap: 6px; }
 
-        /* Filas ida/vuelta */
-        .dir-row { display: flex; align-items: center; padding: 6px 10px; border-radius: 6px; background: #fafbfe; margin-top: 4px; font-size: 0.84rem; }
-        .dir-row:hover { background: #f0f4ff; }
-        .dir-chip { display: inline-block; background: #e8ecf8; color: #1a1a3e; padding: 2px 9px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; margin-right: 10px; text-transform: uppercase; letter-spacing: .3px; }
-        .dir-chip.vuelta { background: #fff0e0; color: #e67e22; }
-        .dir-row .od { flex: 1; color: #333; }
-        .dir-row .stop-tag { font-size: 0.7rem; color: #aab; margin-left: 8px; }
-        .dir-row .prog { font-size: 0.78rem; color: #555; min-width: 44px; text-align: right; font-weight: 600; margin-right: 10px; }
+        /* Botones de dirección (accesos a detalle) */
+        .dir-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; text-decoration: none; font-size: 0.78rem; font-weight: 600; border: 1px solid; white-space: nowrap; }
+        .dir-btn.ida    { background: #eaf2ff; color: #1e4fa0; border-color: #b4ccf0; }
+        .dir-btn.ida:hover { background: #d9e7fb; }
+        .dir-btn.vuelta { background: #fff1e3; color: #a85a10; border-color: #f2cfa5; }
+        .dir-btn.vuelta:hover { background: #ffe3c9; }
+        .dir-btn .arrow { font-size: 0.95rem; }
 
         /* Chips de resolución */
-        .res-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; margin-left: 62px; }
-        .res-chip { background: #eef3ff; color: #2a3e7a; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .res-chip { background: #eef3ff; color: #2a3e7a; padding: 2px 9px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
         .res-chip .pdf { color: #27ae60; margin-left: 4px; }
         .res-chip.missing { background: #fff0f0; color: #c0392b; }
+
+        @media (max-width: 720px) {
+            .op-card { flex-wrap: wrap; }
+            .op-card .op-name { width: 100%; }
+        }
 
         /* Alert */
         .alert { padding: 10px 14px; border-radius: 7px; margin-bottom: 14px; font-size: 0.83rem; display: none; }
@@ -138,9 +150,17 @@
         <select id="filter-op">
             <option value="">Todos los operadores</option>
         </select>
-        <button class="btn btn-ghost btn-sm" onclick="expandAll(true)">Expandir</button>
-        <button class="btn btn-ghost btn-sm" onclick="expandAll(false)">Colapsar</button>
+        <button class="btn btn-ghost btn-sm" onclick="expandAll(true)">Expandir todo</button>
+        <button class="btn btn-ghost btn-sm" onclick="expandAll(false)">Colapsar todo</button>
         <button class="btn btn-primary" onclick="openCreate()">+ Nueva ruta</button>
+    </div>
+
+    <div class="legend">
+        <b>Cómo leer esta lista:</b>
+        Cada tarjeta azul es una <b>ruta entre dos ciudades</b> (ej. Bogotá ↔ Sogamoso).
+        Dentro hay uno o más <b>recorridos</b> (directo, o por ciertas ciudades).
+        En cada recorrido están las <b>empresas</b> que lo operan, con botones
+        para ver el detalle de la <b>ida</b> y la <b>vuelta</b>.
     </div>
 
     <div id="tree" class="tree"><div class="loader">Cargando…</div></div>
@@ -298,8 +318,9 @@ function renderPair(pair) {
     <div class="pair-group">
         <div class="pair-head" onclick="toggle('${escapeAttr(key)}')">
             <span class="chev">${collapsed ? '▸' : '▾'}</span>
+            <span class="tag">Ruta</span>
             <span class="title">${escapeHtml(pair.pair_label)}</span>
-            <span class="meta">${pair.total_rutas} rutas · ${pair.total_operadores} operadores · ${pair.vias.length} vía(s)</span>
+            <span class="meta">${pair.total_operadores} empresa${pair.total_operadores!==1?'s':''} · ${pair.vias.length} recorrido${pair.vias.length!==1?'s':''}</span>
         </div>
         <div class="pair-body ${collapsed ? 'collapsed' : ''}">
             ${pair.vias.map(v => renderVia(pair, v)).join('')}
@@ -310,12 +331,16 @@ function renderPair(pair) {
 function renderVia(pair, via) {
     const key = `v:${pair.pair_label}::${via.via_label}`;
     const collapsed = state.collapsed.has(key);
+    const recorrido = via.via_label === 'Directo'
+        ? 'Recorrido directo (sin paradas intermedias)'
+        : 'Recorrido ' + via.via_label;  // "vía X → Y"
     return `
     <div class="via-group">
         <div class="via-head" onclick="toggle('${escapeAttr(key)}')">
             <span class="chev">${collapsed ? '▸' : '▾'}</span>
-            <span class="title">${escapeHtml(via.via_label)}</span>
-            <span class="meta">${via.operadores.length} operador(es)</span>
+            <span class="tag">Recorrido</span>
+            <span class="title">${escapeHtml(recorrido)}</span>
+            <span class="meta">${via.operadores.length} empresa${via.operadores.length!==1?'s':''}</span>
         </div>
         <div class="via-body ${collapsed ? 'collapsed' : ''}">
             ${via.operadores.map(op => renderOp(pair, via, op)).join('')}
@@ -326,36 +351,25 @@ function renderVia(pair, via) {
 function renderOp(pair, via, op) {
     const ida    = op.ida;
     const vuelta = op.vuelta;
+    const resoluciones = renderResChips(op.resoluciones);
+
     return `
     <div class="op-group">
-        <div class="op-head">
-            <span class="name">${escapeHtml(op.operator_nombre)}</span>
-            <div class="actions">
+        <div class="op-card">
+            <span class="op-tag">Empresa</span>
+            <span class="op-name">${escapeHtml(op.operator_nombre)}</span>
+            <span class="op-res">${resoluciones}</span>
+            <span class="op-dirs">
+                ${ida    ? `<a class="dir-btn ida"    href="/ruta.html?id=${ida.id}"><span class="arrow">→</span> Ida</a>` : ''}
+                ${vuelta ? `<a class="dir-btn vuelta" href="/ruta.html?id=${vuelta.id}"><span class="arrow">←</span> Vuelta</a>` : ''}
+            </span>
+            <span class="op-acts">
                 <button class="btn btn-ghost btn-sm"
-                    onclick='openEdit(${JSON.stringify({pair: pair.pair_label, via_label: via.via_label, op})})'>
+                    onclick='openEdit(${JSON.stringify({pair: pair.pair_label, via_label: via.via_label, op}).replace(/'/g,"&#39;")})'>
                     Editar
                 </button>
-            </div>
+            </span>
         </div>
-        ${renderDirRow('Ida', ida)}
-        ${renderDirRow('Vuelta', vuelta)}
-        <div class="res-chips">${renderResChips(op.resoluciones)}</div>
-    </div>`;
-}
-
-function renderDirRow(label, r) {
-    if (!r) return `<div class="dir-row" style="opacity:.5">
-        <span class="dir-chip ${label==='Vuelta'?'vuelta':''}">${label}</span>
-        <span class="od">— (no existe)</span></div>`;
-    const linked = r.origen_stop_id || r.destino_stop_id ? '🔗' : '';
-    return `
-    <div class="dir-row">
-        <span class="dir-chip ${r.direction==='vuelta'?'vuelta':''}">${label}</span>
-        <span class="od">${escapeHtml(r.origen_text)} → ${escapeHtml(r.destino_text)}
-            ${linked ? `<span class="stop-tag">${linked} linkeada</span>` : ''}
-        </span>
-        <span class="prog">${r.progreso_pct || 0}%</span>
-        <a class="btn btn-ghost btn-sm" href="/ruta.html?id=${r.id}">Detalle</a>
     </div>`;
 }
 
