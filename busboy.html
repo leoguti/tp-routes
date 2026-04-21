@@ -61,7 +61,20 @@
                 radial-gradient(circle at 80% 70%, rgba(247,184,75,.1) 0%, transparent 40%);
             pointer-events: none;
         }
-        .hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; position: relative; }
+        .hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; position: relative; display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: center; }
+        .hero-text { min-width: 0; }
+        .hero-qr {
+            background: white; padding: 16px; border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.35);
+            text-align: center; max-width: 210px;
+        }
+        .hero-qr img { width: 170px; height: 170px; display: block; margin: 0 auto; }
+        .hero-qr .qr-lbl { display: block; font-size: 0.78rem; color: var(--ink); font-weight: 700; margin-top: 10px; }
+        .hero-qr .qr-sub { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+        @media (max-width: 900px) {
+            .hero-inner { grid-template-columns: 1fr; }
+            .hero-qr { margin-top: 12px; justify-self: flex-start; }
+        }
         .hero-tag {
             display: inline-block;
             background: rgba(74,158,255,.15);
@@ -147,6 +160,37 @@
             margin: 24px 0 18px; max-width: 760px;
             line-height: 1.45;
         }
+
+        /* ========== Roadmap / timeline de hitos ========== */
+        .roadmap { margin: 40px 0 20px; padding: 30px 20px 24px; background: white; border: 1px solid var(--paper-2); border-radius: 14px; overflow-x: auto; }
+        .roadmap-track { display: flex; align-items: flex-start; min-width: max-content; }
+        .rm-stop { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; min-width: 150px; padding: 0 4px; }
+        .rm-dot {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: white; border: 4px solid var(--muted); position: relative; z-index: 1;
+        }
+        .rm-stop.done    .rm-dot { background: var(--green); border-color: var(--green); }
+        .rm-stop.active  .rm-dot { background: var(--warm); border-color: var(--warm); box-shadow: 0 0 0 6px rgba(247,184,75,.2); }
+        .rm-stop.next    .rm-dot { background: white; border-color: var(--accent-2); }
+        .rm-stop.future  .rm-dot { background: white; border-color: #c0c9dd; border-style: dashed; }
+        .rm-phase { font-size: 0.66rem; color: var(--muted); font-weight: 800; letter-spacing: 1.4px; margin-top: 10px; text-transform: uppercase; }
+        .rm-stop.done   .rm-phase { color: var(--green); }
+        .rm-stop.active .rm-phase { color: #a85a10; }
+        .rm-title { font-size: 0.85rem; font-weight: 700; color: var(--ink); margin-top: 4px; text-align: center; max-width: 140px; line-height: 1.25; }
+        .rm-stop.future .rm-title { color: #5a6080; }
+        .rm-line {
+            flex: 1 1 20px; min-width: 30px; height: 4px; background: var(--paper-2);
+            margin-top: 12px; border-radius: 2px;
+        }
+        .rm-line.done { background: var(--green); }
+        .rm-line.active { background: linear-gradient(90deg, var(--green), var(--warm)); }
+        .rm-legend { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 0.76rem; color: var(--muted); }
+        .rm-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .rm-legend .sw { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .rm-legend .sw.done   { background: var(--green); }
+        .rm-legend .sw.active { background: var(--warm); }
+        .rm-legend .sw.next   { background: white; border: 3px solid var(--accent-2); box-sizing: border-box; }
+        .rm-legend .sw.future { background: white; border: 3px dashed #c0c9dd; box-sizing: border-box; }
 
         /* ========== Fases (el corazón) ========== */
         .fases { margin-top: 40px; }
@@ -281,6 +325,24 @@
         .role-card .who { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 8px; }
         .role-card p { color: #555; font-size: 0.88rem; line-height: 1.55; }
 
+        /* Aliados y financiación — sección explicativa */
+        .fund-grid {
+            display: grid; grid-template-columns: 1.3fr 1fr; gap: 34px;
+            margin-top: 36px; align-items: start;
+        }
+        .fund-main p strong { color: var(--ink); }
+        .fund-ask {
+            background: white; border: 1px solid var(--paper-2);
+            border-radius: 14px; padding: 26px;
+            box-shadow: 0 4px 14px rgba(16,18,58,.05);
+        }
+        .fund-ask h3 { font-size: 1.05rem; color: var(--ink); margin-bottom: 14px; }
+        .fund-ask ul { list-style: none; padding: 0; margin: 0; }
+        .fund-ask li { padding: 8px 0; border-top: 1px solid var(--paper-2); color: #4a4e6c; font-size: 0.9rem; }
+        .fund-ask li:first-child { border-top: none; }
+        .fund-ask li strong { color: var(--ink); }
+        @media (max-width: 760px) { .fund-grid { grid-template-columns: 1fr; } }
+
         /* Aliados */
         .allies {
             margin-top: 40px; padding: 34px 28px;
@@ -349,8 +411,9 @@
     <div class="logo">Bus<span>boy</span></div>
     <div>
         <a href="#problema">El problema</a>
-        <a href="#fases">Cómo se construye</a>
+        <a href="#fases">Fases</a>
         <a href="#app">La app</a>
+        <a href="#aliados">Aliados</a>
         <a href="#roles">Tu rol</a>
     </div>
 </nav>
@@ -358,18 +421,25 @@
 <!-- =========================== HERO =========================== -->
 <header class="hero">
     <div class="hero-inner">
-        <span class="hero-tag">Busboy · Transporte público de Boyacá</span>
-        <h1>
-            El <em>enemigo</em> del transporte público<br>
-            es la <span class="highlight">falta de información</span>.
-        </h1>
-        <p class="lead">
-            Busboy es una plataforma abierta y colaborativa para que Boyacá tenga,
-            por primera vez, una fuente central de información de su transporte
-            público: rutas, horarios, tarifas, paradas y estado del servicio en tiempo real.
-        </p>
-        <div class="cta-row">
-            <a href="#problema" class="btn btn-primary">Conoce el proyecto</a>
+        <div class="hero-text">
+            <span class="hero-tag">Busboy · Transporte público de Boyacá</span>
+            <h1>
+                El <em>enemigo</em> del transporte público<br>
+                es la <span class="highlight">falta de información</span>.
+            </h1>
+            <p class="lead">
+                Busboy es una plataforma abierta y colaborativa para que Boyacá tenga,
+                por primera vez, una fuente central de información de su transporte
+                público: rutas, horarios, tarifas, paradas y estado del servicio en tiempo real.
+            </p>
+            <div class="cta-row">
+                <a href="#problema" class="btn btn-primary">Conoce el proyecto</a>
+            </div>
+        </div>
+        <div class="hero-qr">
+            <img src="/assets/qr/busboy-small.png" alt="QR a rutas.busboy.app/busboy">
+            <span class="qr-lbl">Escanea y síguela en tu celular</span>
+            <span class="qr-sub">rutas.busboy.app/busboy</span>
         </div>
     </div>
     <div class="scroll-hint">↓ desplázate</div>
@@ -379,28 +449,44 @@
 <section id="problema" class="section-paper">
     <div class="container reveal">
         <div class="section-tag">El problema</div>
-        <h2>Hoy, moverse en Boyacá es adivinar.</h2>
+        <h2>En Boyacá, moverse en bus es adivinar.</h2>
         <p class="big">
-            No hay una fuente confiable y pública sobre qué buses hay, a dónde van,
-            a qué hora salen o si vienen en camino. La información vive en papel,
-            en Excel, en la memoria de cada funcionario y en los letreros del terminal.
+            No existe una fuente confiable y pública que diga qué rutas hay, a qué hora
+            salen, qué tarifas cobran, por dónde pasan, o si la vía está bloqueada.
+            La información existe — pero está atrapada en papel, en grupos de WhatsApp,
+            en la memoria de despachadores, en cuadernos de cada terminal. No llega al usuario.
         </p>
 
         <div class="problem-grid">
             <div class="problem-card">
-                <div class="emoji">🚌❓</div>
-                <h3>"¿Este bus va hasta…?"</h3>
-                <p>Un pasajero promedio invierte más tiempo averiguando la ruta que viajándola. No hay un planeador público que conozca las rutas reales.</p>
+                <div class="emoji">💬</div>
+                <h3>La información vive en WhatsApp</h3>
+                <p>Horarios, cambios de ruta, bloqueos, tarifas — todo se mueve por chats internos de operadores y grupos ciudadanos. Si no estás en el grupo correcto, no te enteras.</p>
             </div>
             <div class="problem-card">
-                <div class="emoji">🗺️🕳️</div>
+                <div class="emoji">📄</div>
+                <h3>Y en papel</h3>
+                <p>Cada terminal y cada empresa tiene su propia lista impresa. Nadie tiene el mapa completo. No hay un planeador público, ni Google Maps conoce las rutas intermunicipales.</p>
+            </div>
+            <div class="problem-card">
+                <div class="emoji">🚧</div>
+                <h3>Los bloqueos los descubres al llegar</h3>
+                <p>Cuando hay un derrumbe, un paro o una vía cerrada, no hay canal oficial que avise. Te enteras cuando el bus no avanza o cuando alguien lo publica en una red social.</p>
+            </div>
+            <div class="problem-card">
+                <div class="emoji">☎️</div>
+                <h3>Sin contacto con los operadores</h3>
+                <p>No hay una vía directa entre el usuario y la empresa que opera. No sabes a quién reclamar, con quién confirmar un horario, ni cómo reportar un problema.</p>
+            </div>
+            <div class="problem-card">
+                <div class="emoji">🗺️</div>
                 <h3>Datos dispersos</h3>
-                <p>Cada empresa y terminal guarda su propia lista. Nadie tiene el mapa completo. Google Maps no conoce las rutas intermunicipales de la región.</p>
+                <p>Terminal, alcaldía, operadores, ciudadanos — cada uno tiene pedazos del rompecabezas. Nadie tiene la foto completa del transporte público de la región.</p>
             </div>
             <div class="problem-card">
-                <div class="emoji">⏱️🤷</div>
+                <div class="emoji">⏱️</div>
                 <h3>Nada en tiempo real</h3>
-                <p>No se sabe si el bus viene, si hay paro o desvío, si llegas a tu cita. La información existe, pero no llega al usuario.</p>
+                <p>No sabes si el bus viene, a cuántos minutos está, si llegas a tu cita médica o a tu clase. La información existe en algún lado — pero no llega al celular del usuario.</p>
             </div>
         </div>
     </div>
@@ -428,8 +514,60 @@
     <div class="container">
         <div class="reveal">
             <div class="section-tag">Cómo se construye</div>
-            <h2>Tres fases. Tres responsables. Un dato abierto para toda Boyacá.</h2>
-            <p class="big">Cada fase tiene un actor principal. Ninguno puede hacerlo solo — y nadie empieza de cero porque se construye sobre lo anterior.</p>
+            <h2>Un camino por fases. Cada una genera valor por sí sola.</h2>
+            <p class="big">Ninguna fase se construye de cero: cada una suma una capa de información sobre la anterior. Empezamos por lo básico y llegamos hasta una app pública con tiempo real.</p>
+        </div>
+
+        <div class="roadmap reveal" aria-label="Hoja de ruta del proyecto">
+            <div class="roadmap-track">
+                <div class="rm-stop done">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">En marcha</div>
+                    <div class="rm-title">Listado maestro de rutas</div>
+                </div>
+                <div class="rm-line active"></div>
+                <div class="rm-stop active">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">Próximo</div>
+                    <div class="rm-title">Trazado en OSM + paradas</div>
+                </div>
+                <div class="rm-line"></div>
+                <div class="rm-stop next">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">Fase 3</div>
+                    <div class="rm-title">Horarios, tarifas y capacidades</div>
+                </div>
+                <div class="rm-line"></div>
+                <div class="rm-stop next">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">Fase 4</div>
+                    <div class="rm-title">Feed GTFS público</div>
+                </div>
+                <div class="rm-line"></div>
+                <div class="rm-stop future">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">Fase 5</div>
+                    <div class="rm-title">App con planeador de rutas</div>
+                </div>
+                <div class="rm-line"></div>
+                <div class="rm-stop future">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">Fase 6</div>
+                    <div class="rm-title">Tiempo real, pagos y chatbot</div>
+                </div>
+                <div class="rm-line"></div>
+                <div class="rm-stop future">
+                    <div class="rm-dot"></div>
+                    <div class="rm-phase">Fase 7</div>
+                    <div class="rm-title">Replicar en otras regiones</div>
+                </div>
+            </div>
+            <div class="rm-legend">
+                <span><span class="sw done"></span>En marcha</span>
+                <span><span class="sw active"></span>Próximo</span>
+                <span><span class="sw next"></span>Planificado</span>
+                <span><span class="sw future"></span>Futuro</span>
+            </div>
         </div>
 
         <div class="fases">
@@ -610,6 +748,53 @@
     </div>
 </section>
 
+<!-- =========================== ALIADOS Y FINANCIACIÓN =========================== -->
+<section id="aliados" class="section-alt">
+    <div class="container reveal">
+        <div class="section-tag">Aliados y financiación</div>
+        <h2>Queremos empezar ya — y necesitamos aliados para hacerlo crecer.</h2>
+
+        <div class="fund-grid">
+            <div class="fund-main">
+                <p class="big">
+                    Hoy Busboy avanza <strong>pro bono</strong>. Trufi Association, que ha
+                    trabajado en transporte público en más de 15 países, aporta la
+                    metodología, la tecnología y el acompañamiento. Leonardo Gutiérrez
+                    coordina desde Colombia — un país donde este tipo de proyecto
+                    <strong>nunca se ha hecho</strong>. Empezamos porque creemos que la
+                    información pública es un derecho público; no esperamos a que
+                    alguien nos pague para arrancar.
+                </p>
+                <p class="big" style="margin-top:14px">
+                    Pero para que esto escale, llegue a más regiones y tenga equipo
+                    dedicado, necesitamos <strong>aliados</strong> que aporten recursos,
+                    capacidades institucionales o visibilidad. Estamos buscando apoyo
+                    a nivel local, nacional e internacional.
+                </p>
+            </div>
+
+            <div class="fund-ask">
+                <h3>¿Quién puede ayudar?</h3>
+                <ul>
+                    <li><strong>Instituciones públicas</strong> — alcaldías, gobernación, Ministerio de Transporte, ANI.</li>
+                    <li><strong>Cooperación internacional</strong> — BID, GIZ, UE, agencias bilaterales.</li>
+                    <li><strong>Fundaciones y filantropía</strong> — movilidad sostenible, datos abiertos, inclusión digital.</li>
+                    <li><strong>Empresa privada</strong> — operadores del transporte, tecnología, responsabilidad social.</li>
+                    <li><strong>Academia</strong> — universidades con líneas en movilidad, datos, desarrollo regional.</li>
+                </ul>
+                <a href="mailto:leonardo.gutierrez@trufi-association.org?subject=Quiero%20apoyar%20Busboy" class="btn btn-primary" style="margin-top:14px; background:var(--accent-2);">Quiero apoyar →</a>
+            </div>
+        </div>
+
+        <p class="big" style="margin-top:32px; font-style:italic; color:#4a4e6c">
+            Si Boyacá funciona, tenemos una metodología replicable para todo el país.
+            La apuesta no es solo por Tunja — es por un modelo de transporte público
+            abierto que Colombia no tiene todavía.
+        </p>
+    </div>
+</section>
+
+
 <!-- =========================== ROLES + CONTACTO =========================== -->
 <section id="roles" class="section-paper">
     <div class="container reveal">
@@ -637,16 +822,6 @@
                 <div class="who">Aliados e instituciones</div>
                 <h3>Súmense</h3>
                 <p>Autoridad de movilidad, empresas, ONGs, universidades, desarrolladores: hay lugar para todos. Escriban y conversamos qué pueden aportar.</p>
-            </div>
-        </div>
-
-        <div class="qr-box">
-            <img src="/assets/qr/busboy-small.png" alt="Código QR a rutas.busboy.app/busboy">
-            <div class="qr-text">
-                <h3>📱 Llévatela en tu celular</h3>
-                <p>Escanea el código para abrir esta presentación en tu teléfono.
-                   Compártela con quien creas que puede sumarse al proyecto.</p>
-                <span class="qr-url">rutas.busboy.app/busboy</span>
             </div>
         </div>
 
