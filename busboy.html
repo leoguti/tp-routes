@@ -355,6 +355,51 @@
         .flow-box.highlight { background: rgba(247,184,75,.1); border-color: rgba(247,184,75,.4); }
         .flow-box.highlight h4 { color: var(--warm); }
 
+        /* ========== Región: urbano + intermunicipal (diferenciador) ========== */
+        .region-sec {
+            padding: 100px 24px;
+            background: linear-gradient(180deg, #fff 0%, #f4f9ff 100%);
+            border-top: 1px solid #dfeaf5;
+            border-bottom: 1px solid #dfeaf5;
+        }
+        .region-lead { max-width: 820px; color: #2e3a5a; font-size: 1.05rem; line-height: 1.7; }
+        .region-lead strong { color: var(--ink); }
+        .region-lead .pill {
+            display: inline-block;
+            background: linear-gradient(135deg, #f7b84b, #f39c12);
+            color: #3a2a00; padding: 2px 10px; border-radius: 20px;
+            font-weight: 700; font-size: 0.85rem; letter-spacing: .2px;
+        }
+
+        .region-diagram {
+            margin: 40px auto 10px; max-width: 900px;
+            padding: 30px 20px; background: white;
+            border: 1px solid var(--paper-2); border-radius: 16px;
+            overflow-x: auto;
+        }
+        .region-diagram svg { width: 100%; height: auto; display: block; min-width: 640px; }
+
+        .region-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px; margin-top: 26px;
+        }
+        .region-stat {
+            background: white; border: 1px solid var(--paper-2); border-radius: 12px;
+            padding: 18px 16px;
+        }
+        .region-stat .lbl { font-size: 0.66rem; color: var(--muted); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+        .region-stat .city { font-size: 1.1rem; font-weight: 800; color: var(--ink); margin-top: 4px; }
+        .region-stat .status { font-size: 0.82rem; color: #3a3e5c; margin-top: 6px; }
+        .region-stat.ready .status { color: #1a6b3a; font-weight: 600; }
+        .region-stat.building .status { color: #a85a10; font-weight: 600; }
+
+        .region-quote {
+            margin-top: 28px; padding: 20px 24px;
+            background: #fff8ec; border-left: 4px solid var(--warm);
+            border-radius: 10px; font-size: 0.96rem; color: #5a4410; font-style: italic;
+        }
+        .region-quote strong { color: var(--ink); font-style: normal; }
+
         /* ========== Trufi app — ya existe en el mundo ========== */
         .trufi-sec { background: #fff8ec; border-top: 1px solid #f2e3bf; border-bottom: 1px solid #f2e3bf; }
         .trufi-lead {
@@ -833,6 +878,135 @@
         </div>
     </div>
 </section>
+
+<!-- =========================== ALCANCE: REGIONAL URBANO + INTERMUNICIPAL =========================== -->
+<section class="region-sec">
+    <div class="container reveal">
+        <div class="section-tag" style="color:#1a6b3a">Lo que hace único este proyecto</div>
+        <h2>Transporte <span style="color:#2a5ec8">urbano</span> e <span style="color:#e67e22">intermunicipal</span> en una sola planeación.</h2>
+
+        <p class="region-lead">
+            Normalmente las apps de transporte público cubren una sola ciudad grande:
+            Bogotá, Medellín, Cali. El usuario llega al límite de la ciudad y la aplicación
+            se acaba. Para una región como Boyacá eso no sirve — la gente se mueve
+            <strong>entre</strong> ciudades todo el tiempo: del barrio de Tunja a un hospital
+            en Duitama, de una vereda cerca de Sogamoso al centro de Tunja.
+        </p>
+        <p class="region-lead" style="margin-top:14px">
+            Busboy propone algo distinto: <span class="pill">un solo GTFS regional</span>
+            que junta el transporte <strong>urbano</strong> dentro de cada ciudad con el
+            <strong>intermunicipal</strong> entre ellas. El usuario planifica el viaje
+            completo — con transbordos — desde una esquina hasta cualquier otra dentro
+            de la región.
+        </p>
+
+        <div class="region-diagram">
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" aria-label="Diagrama de la región Boyacá: ciudades urbanas conectadas por rutas intermunicipales">
+
+                <!-- Líneas intermunicipales -->
+                <g stroke="#e67e22" stroke-width="5" fill="none" stroke-linecap="round">
+                    <line x1="165" y1="170" x2="395" y2="150"/>
+                    <line x1="425" y1="150" x2="625" y2="170"/>
+                    <line x1="165" y1="170" x2="625" y2="170" stroke-dasharray="10,8" opacity=".35"/>
+                </g>
+                <text x="265" y="140" fill="#a85a10" font-size="13" font-weight="700">Intermunicipal</text>
+                <text x="495" y="140" fill="#a85a10" font-size="13" font-weight="700">Intermunicipal</text>
+
+                <!-- Tunja -->
+                <g>
+                    <circle cx="110" cy="170" r="58" fill="#eef3ff" stroke="#2a5ec8" stroke-width="3"/>
+                    <!-- rutas urbanas internas -->
+                    <line x1="85" y1="150" x2="135" y2="190" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <line x1="90" y1="190" x2="135" y2="150" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <line x1="110" y1="135" x2="110" y2="205" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <circle cx="85" cy="150" r="4" fill="#2a5ec8"/>
+                    <circle cx="135" cy="190" r="4" fill="#2a5ec8"/>
+                    <circle cx="90" cy="190" r="4" fill="#2a5ec8"/>
+                    <circle cx="135" cy="150" r="4" fill="#2a5ec8"/>
+                    <circle cx="110" cy="135" r="4" fill="#2a5ec8"/>
+                    <circle cx="110" cy="205" r="4" fill="#2a5ec8"/>
+                    <circle cx="110" cy="170" r="7" fill="#0f1129"/>
+                    <text x="110" y="260" text-anchor="middle" font-size="18" font-weight="800" fill="#0f1129">Tunja</text>
+                    <text x="110" y="278" text-anchor="middle" font-size="11" fill="#a85a10" font-weight="700">En producción</text>
+                </g>
+
+                <!-- Duitama -->
+                <g>
+                    <circle cx="410" cy="150" r="52" fill="#eef3ff" stroke="#2a5ec8" stroke-width="3"/>
+                    <line x1="387" y1="130" x2="433" y2="170" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <line x1="390" y1="170" x2="432" y2="128" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <line x1="410" y1="115" x2="410" y2="185" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <circle cx="387" cy="130" r="4" fill="#2a5ec8"/>
+                    <circle cx="433" cy="170" r="4" fill="#2a5ec8"/>
+                    <circle cx="390" cy="170" r="4" fill="#2a5ec8"/>
+                    <circle cx="432" cy="128" r="4" fill="#2a5ec8"/>
+                    <circle cx="410" cy="115" r="4" fill="#2a5ec8"/>
+                    <circle cx="410" cy="185" r="4" fill="#2a5ec8"/>
+                    <circle cx="410" cy="150" r="7" fill="#0f1129"/>
+                    <text x="410" y="235" text-anchor="middle" font-size="17" font-weight="800" fill="#0f1129">Duitama</text>
+                    <text x="410" y="253" text-anchor="middle" font-size="11" fill="#1a6b3a" font-weight="700">Datos urbanos ✓</text>
+                </g>
+
+                <!-- Sogamoso -->
+                <g>
+                    <circle cx="670" cy="170" r="58" fill="#eef3ff" stroke="#2a5ec8" stroke-width="3"/>
+                    <line x1="645" y1="150" x2="695" y2="190" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <line x1="650" y1="190" x2="695" y2="150" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <line x1="670" y1="135" x2="670" y2="205" stroke="#2a5ec8" stroke-width="2" opacity=".7"/>
+                    <circle cx="645" cy="150" r="4" fill="#2a5ec8"/>
+                    <circle cx="695" cy="190" r="4" fill="#2a5ec8"/>
+                    <circle cx="650" cy="190" r="4" fill="#2a5ec8"/>
+                    <circle cx="695" cy="150" r="4" fill="#2a5ec8"/>
+                    <circle cx="670" cy="135" r="4" fill="#2a5ec8"/>
+                    <circle cx="670" cy="205" r="4" fill="#2a5ec8"/>
+                    <circle cx="670" cy="170" r="7" fill="#0f1129"/>
+                    <text x="670" y="260" text-anchor="middle" font-size="18" font-weight="800" fill="#0f1129">Sogamoso</text>
+                    <text x="670" y="278" text-anchor="middle" font-size="11" fill="#1a6b3a" font-weight="700">Datos urbanos ✓</text>
+                </g>
+
+                <!-- Leyenda -->
+                <g transform="translate(20,20)">
+                    <circle cx="10" cy="10" r="6" fill="none" stroke="#2a5ec8" stroke-width="2"/>
+                    <circle cx="10" cy="10" r="2" fill="#2a5ec8"/>
+                    <text x="24" y="14" font-size="12" fill="#3a3e5c">Rutas urbanas</text>
+                    <line x1="130" y1="10" x2="170" y2="10" stroke="#e67e22" stroke-width="4"/>
+                    <text x="178" y="14" font-size="12" fill="#3a3e5c">Rutas intermunicipales</text>
+                </g>
+            </svg>
+        </div>
+
+        <div class="region-stats">
+            <div class="region-stat ready">
+                <div class="lbl">Transporte urbano</div>
+                <div class="city">Sogamoso</div>
+                <div class="status">✓ Datos disponibles</div>
+            </div>
+            <div class="region-stat ready">
+                <div class="lbl">Transporte urbano</div>
+                <div class="city">Duitama</div>
+                <div class="status">✓ Datos disponibles</div>
+            </div>
+            <div class="region-stat building">
+                <div class="lbl">Transporte urbano</div>
+                <div class="city">Tunja</div>
+                <div class="status">En producción</div>
+            </div>
+            <div class="region-stat ready">
+                <div class="lbl">Transporte intermunicipal</div>
+                <div class="city">Boyacá</div>
+                <div class="status">504 trayectos cargados</div>
+            </div>
+        </div>
+
+        <div class="region-quote">
+            <strong>Esto no se ha hecho en Colombia.</strong> Hay apps de TP para ciudades
+            gigantes, pero no hay una que resuelva la planeación <em>regional</em> —
+            urbano más intermunicipal. Si funciona en Boyacá, es un modelo replicable a
+            todas las regiones del país.
+        </div>
+    </div>
+</section>
+
 
 <!-- =========================== TRUFI APP YA EXISTE =========================== -->
 <section class="trufi-sec" style="padding:96px 24px">
