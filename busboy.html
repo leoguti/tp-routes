@@ -428,10 +428,11 @@
             border-radius: 14px; padding: 22px;
             border-top: 4px solid var(--accent-2);
         }
-        .role-card.done    { border-top-color: var(--green); }
-        .role-card.active  { border-top-color: var(--warm); }
-        .role-card.citizen { border-top-color: #a55eea; }
-        .role-card.ally    { border-top-color: var(--red); }
+        .role-card.done     { border-top-color: var(--green); }
+        .role-card.operator { border-top-color: #16a0c2; }
+        .role-card.active   { border-top-color: var(--warm); }
+        .role-card.citizen  { border-top-color: #a55eea; }
+        .role-card.ally     { border-top-color: var(--red); }
         .role-card h3 { font-size: 1rem; }
         .role-card .who { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; margin-bottom: 8px; }
         .role-card p { color: #555; font-size: 0.88rem; line-height: 1.55; }
@@ -624,8 +625,8 @@
     <div class="container">
         <div class="reveal">
             <div class="section-tag">Cómo se construye</div>
-            <h2>Un camino por fases. Cada una genera valor por sí sola.</h2>
-            <p class="big">Ninguna fase se construye de cero: cada una suma una capa de información sobre la anterior. Empezamos por lo básico y llegamos hasta una app pública con tiempo real.</p>
+            <h2>Dos fases concretas. Una meta clara: el GTFS.</h2>
+            <p class="big">Cada fase suma una capa de información sobre la anterior y genera valor por sí sola. Vamos de lo básico institucional hasta publicar el estándar internacional que abre la puerta al resto.</p>
         </div>
 
         <div class="roadmap reveal" aria-label="Hoja de ruta del proyecto">
@@ -641,19 +642,13 @@
                     <div class="rm-stop done">
                         <div class="rm-dot"></div>
                         <div class="rm-phase">En marcha</div>
-                        <div class="rm-title">Listado maestro de rutas</div>
+                        <div class="rm-title">Listado maestro: rutas, horarios, tarifas</div>
                     </div>
                     <div class="rm-line active"></div>
                     <div class="rm-stop active">
                         <div class="rm-dot"></div>
                         <div class="rm-phase">Próximo</div>
                         <div class="rm-title">Trazado en OSM + paradas</div>
-                    </div>
-                    <div class="rm-line"></div>
-                    <div class="rm-stop next">
-                        <div class="rm-dot"></div>
-                        <div class="rm-phase">Fase 3</div>
-                        <div class="rm-title">Horarios, tarifas y capacidades</div>
                     </div>
                     <div class="rm-line"></div>
                     <div class="rm-stop next">
@@ -707,8 +702,8 @@
             <div class="fase fase-done reveal">
                 <div class="fase-num">01<small>En marcha</small></div>
                 <div class="fase-body">
-                    <h3>El dato base — qué rutas existen</h3>
-                    <p>Por primera vez se está construyendo el listado maestro de todas las rutas que operan desde Tunja: qué empresas, con qué resolución, hacia qué destinos, con qué recorridos intermedios. Primer avance importante — aún falta completar datos y sumar horarios y tarifas.</p>
+                    <h3>Los datos del terminal — qué, quién, a qué hora y cuánto cuesta</h3>
+                    <p>Por primera vez se está construyendo el listado maestro completo de lo que opera desde Tunja: empresas, resoluciones, rutas con sus recorridos intermedios, <strong>horarios de despacho</strong> y <strong>tarifas</strong>. Toda la información institucional básica que el terminal y las empresas ya tienen — lo que hace falta es consolidarla y publicarla.</p>
 
                     <div class="fase-stats">
                         <div><div class="stat-num">504</div><div class="stat-lbl">Trayectos</div></div>
@@ -716,6 +711,7 @@
                         <div><div class="stat-num">192</div><div class="stat-lbl">Resoluciones</div></div>
                         <div><div class="stat-num">117</div><div class="stat-lbl">Pares de ciudades</div></div>
                     </div>
+                    <p style="color:#4a4e6c; font-size:0.92rem; margin-top:6px"><em>Siguiente paso inmediato dentro de esta fase: cargar los horarios de despacho y las tarifas vigentes por tramo.</em></p>
 
                     <div class="metro-demo">
                         <div class="metro-label">Ejemplo de recorrido — Tunja ↔ Bogotá vía Sogamoso → Duitama</div>
@@ -738,7 +734,7 @@
                 <div class="fase-num">02<small>En preparación</small></div>
                 <div class="fase-body">
                     <h3>El trazado — por dónde pasa cada ruta</h3>
-                    <p>Sobre el listado maestro, estudiantes de instituciones educativas de la región trazarán cada trayecto en un mapa de calles reales usando OpenStreetMap y Valhalla. Cada ida y cada vuelta tendrá su propia geometría y su propia relación pública en OSM, navegable por cualquier persona del mundo.</p>
+                    <p>Sobre el listado maestro, estudiantes de instituciones educativas de la región trazarán cada trayecto en un mapa de calles reales usando OpenStreetMap y Valhalla. Cada ida y cada vuelta tendrá su propia geometría y su propia relación pública en OSM, navegable por cualquier persona del mundo. Los estudiantes aprenden cartografía digital y datos abiertos mientras hacen un trabajo real — la capacidad queda en la región.</p>
                     <div class="map-wrap">
                         <div class="map-svg" aria-hidden="true">
                             <!-- Mapa conceptual de Boyacá -->
@@ -780,12 +776,12 @@
                 </div>
             </div>
 
-            <!-- FASE 3 -->
+            <!-- META -->
             <div class="fase fase-future reveal">
-                <div class="fase-num">03<small>Próxima</small></div>
+                <div class="fase-num">🎯<small>Meta</small></div>
                 <div class="fase-body">
-                    <h3>Las capacidades — que el conocimiento quede en la región</h3>
-                    <p>Formar estudiantes en mapeo colaborativo, datos abiertos y análisis de transporte. Que el know-how no dependa de un aliado externo: que se quede en Boyacá, que crezca con cada generación y que se replique en otros municipios. Buscamos colegios y universidades que quieran sumarse.</p>
+                    <h3>Feed GTFS público para Boyacá</h3>
+                    <p>Con las fases anteriores completas, se publica el GTFS: el estándar internacional de transporte público. A partir de ese momento, cualquier app de planeación de rutas del mundo —incluyendo la aplicación open source de Trufi— puede consumirlo. Ese es el punto en el que el proyecto cruza de "datos" a "servicio ciudadano".</p>
                 </div>
             </div>
 
@@ -1025,6 +1021,11 @@
                 <div class="who">Terminal de Tunja</div>
                 <h3>Lideran el paso 1</h3>
                 <p>Están construyendo el listado maestro — primer gran avance. Aún falta completar resoluciones, horarios y tarifas, y acompañar a los colegios en la siguiente etapa.</p>
+            </div>
+            <div class="role-card operator">
+                <div class="who">Empresas de transporte</div>
+                <h3>Usen la plataforma y crezcan con ella</h3>
+                <p>Aporten horarios, rutas y tarifas reales. A cambio, llegan a más pasajeros, informan directamente sobre cambios y desvíos, y usan los datos para mejorar su operación. Más información pública = más confianza = más viajes.</p>
             </div>
             <div class="role-card active">
                 <div class="who">Instituciones educativas</div>
