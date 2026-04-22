@@ -592,6 +592,17 @@
         }
 
         /* ========== Horizonte app ========== */
+        .phase-feats { margin-top: 40px; padding: 24px; background: white; border: 1px solid var(--paper-2); border-radius: 14px; box-shadow: 0 2px 8px rgba(16,18,58,.04); }
+        .phase-feats.phase-now { border-left: 5px solid var(--green); }
+        .phase-feats.phase-next { border-left: 5px solid var(--warm); }
+        .phase-feats.phase-later { border-left: 5px solid var(--muted); background: #fafbff; }
+        .phase-feats-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+        .pf-chip { padding: 5px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; letter-spacing: .3px; }
+        .pf-chip.done   { background: #e8fae8; color: #1a6b3a; }
+        .pf-chip.active { background: #fff4de; color: #8b6014; }
+        .pf-chip.future { background: #f0f0f5; color: #5a6080; }
+        .pf-scope { font-size: 0.78rem; color: var(--muted); font-style: italic; }
+
         .features-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 18px; margin-top: 36px;
@@ -608,6 +619,33 @@
         .feat p { color: #555; font-size: 0.87rem; line-height: 1.55; }
 
         /* ========== Datos abiertos ========== */
+        .osm-chip-big {
+            display: grid; grid-template-columns: 90px 1fr; gap: 22px;
+            padding: 22px 26px; margin: 30px 0 24px;
+            background: rgba(126,188,111,.12);
+            border: 1px solid rgba(126,188,111,.35);
+            border-radius: 14px;
+        }
+        .osm-chip-mark {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: linear-gradient(135deg, #7ebc6f 0%, #4a9e45 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem;
+            box-shadow: 0 6px 16px rgba(126,188,111,.25);
+            flex-shrink: 0;
+        }
+        .osm-chip-big h3 { color: white; font-size: 1.15rem; margin-bottom: 6px; }
+        .osm-chip-big p { color: #c3cae6; font-size: 0.92rem; line-height: 1.55; }
+        .osm-chip-link {
+            display: inline-block; margin-top: 8px;
+            color: #8cdca2; text-decoration: none; font-weight: 700; font-size: 0.84rem;
+        }
+        .osm-chip-link:hover { color: #b5e9c4; }
+        @media (max-width: 560px) {
+            .osm-chip-big { grid-template-columns: 1fr; text-align: center; }
+            .osm-chip-mark { margin: 0 auto; }
+        }
+
         .open-banner {
             margin-top: 34px;
             display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -727,7 +765,7 @@
         <a href="#problema">El problema</a>
         <a href="#fases">Fases</a>
         <a href="#app">La app</a>
-        <a href="#aliados">Aliados</a>
+        <a href="#roles">Súmate</a>
         <a href="https://busboy.app" target="_blank" style="color:var(--warm); font-weight:700;">↓ Descargar</a>
     </div>
 </nav>
@@ -750,7 +788,6 @@
                 <a href="https://busboy.app" target="_blank" class="btn btn-primary">📱 Descarga Busboy</a>
                 <a href="#problema" class="btn btn-outline">Conoce el proyecto</a>
             </div>
-            <p style="color:#8aa0d0; font-size:0.83rem; margin-top:14px">Ya disponible para <strong style="color:#fff">Sogamoso y Duitama</strong> — ampliando a toda la región.</p>
         </div>
         <div class="hero-qr">
             <img src="/assets/qr/busboy-small.png" alt="QR a rutas.busboy.app/busboy">
@@ -868,19 +905,19 @@
                     <div class="rm-line"></div>
                     <div class="rm-stop future">
                         <div class="rm-dot"></div>
-                        <div class="rm-phase">Fase 5</div>
+                        <div class="rm-phase">Con aliados</div>
                         <div class="rm-title">App con planeador de rutas</div>
                     </div>
                     <div class="rm-line"></div>
                     <div class="rm-stop future">
                         <div class="rm-dot"></div>
-                        <div class="rm-phase">Fase 6</div>
+                        <div class="rm-phase">Con aliados</div>
                         <div class="rm-title">Tiempo real, pagos y chatbot</div>
                     </div>
                     <div class="rm-line"></div>
                     <div class="rm-stop future">
                         <div class="rm-dot"></div>
-                        <div class="rm-phase">Fase 7</div>
+                        <div class="rm-phase">Con aliados</div>
                         <div class="rm-title">Replicar en otras regiones</div>
                     </div>
                 </div>
@@ -1172,20 +1209,28 @@
 </section>
 
 
-<!-- =========================== TRUFI APP YA EXISTE =========================== -->
-<section class="trufi-sec" style="padding:96px 24px">
+<!-- =========================== NADIE ES PROFETA (fusión Trufi + Profeta) =========================== -->
+<section class="prophet-sec">
     <div class="container reveal">
-        <div class="section-tag" style="color:#a85a10">El aporte de Trufi</div>
-        <h2>La app de planificación ya existe. Y ya funciona.</h2>
-        <p class="trufi-lead">
-            Trufi Association desarrolla una aplicación de planificación de transporte
-            público <strong>de código abierto</strong> que hoy es usada por cientos de miles
-            de personas en tres continentes. Cuando Boyacá publique su GTFS,
-            <strong>la app se despliega sobre él</strong> — no hay que inventarla, ya está.
-            Ese es el aporte tecnológico que traemos al proyecto.
+        <div class="section-tag" style="color:#a85a10">Nadie es profeta en su tierra</div>
+        <h2>Trabajamos en cuatro países. <span style="color:#a85a10">Desde Colombia.</span> En Colombia, apenas empezamos.</h2>
+
+        <p class="prophet-lead">
+            Desde Boyacá — específicamente <strong>desde Duitama, desde el Colegio
+            Salesiano, con la coordinación de Trufi Association</strong> — se han
+            acompañado proyectos de transporte público abierto en lugares donde hoy hay
+            apps públicas funcionando. No es teoría: es trabajo hecho, con resultados
+            que ya atienden a cientos de miles de personas.
         </p>
 
-        <div class="cities-grid">
+        <p class="prophet-lead" style="margin-top:12px">
+            Trufi Association desarrolla una aplicación de planificación de transporte
+            público <strong>de código abierto</strong> que hoy usan cientos de miles de
+            personas en tres continentes. Cuando Boyacá publique su GTFS, la app se
+            despliega sobre él — no hay que inventarla, ya está.
+        </p>
+
+        <div class="cities-grid" style="margin-top:28px">
             <div class="city star">
                 <div class="flag">🇧🇴</div>
                 <div>
@@ -1228,43 +1273,7 @@
             </div>
         </div>
 
-        <div class="trufi-note">
-            <strong>Busboy ya existe en Colombia</strong> — hoy funciona en Sogamoso y Duitama.
-            Lo verdaderamente nuevo de Boyacá está en <strong>integrar lo urbano con lo
-            intermunicipal</strong> en un territorio de ciudades medianas conectadas
-            (Tunja, Duitama, Sogamoso y sus pueblos) — no una megaciudad con periferia,
-            sino una red de ciudades. Esa topología no la resuelve ninguna app existente
-            del mundo; es el aporte que Boyacá puede hacer.
-        </div>
-    </div>
-</section>
-
-
-<!-- =========================== NADIE ES PROFETA EN SU TIERRA =========================== -->
-<section class="prophet-sec">
-    <div class="container reveal">
-        <div class="section-tag" style="color:#a85a10">Nadie es profeta en su tierra</div>
-        <h2>Trabajamos en cuatro países. <span style="color:#a85a10">Desde Colombia.</span> En Colombia, apenas empezamos.</h2>
-
-        <p class="prophet-lead">
-            Desde Boyacá — específicamente <strong>desde Duitama, desde el Colegio
-            Salesiano, con la coordinación de Trufi Association</strong> — se han
-            acompañado proyectos de transporte público abierto en lugares donde hoy hay
-            apps públicas funcionando. No es teoría: es trabajo hecho, con resultados
-            que ya atienden a cientos de miles de personas.
-        </p>
-
-        <div class="prophet-countries">
-            <span class="from">🇨🇴 Desde Colombia</span>
-            <span class="arrow">→</span>
-            <span class="to">🇲🇽 Estado de México</span>
-            <span class="to">🇲🇽 Oaxaca</span>
-            <span class="to">🇵🇪 Trujillo</span>
-            <span class="to">🇵🇪 Arequipa</span>
-            <span class="to">🇧🇴 Cochabamba <strong>(300 000+ usuarios)</strong></span>
-        </div>
-
-        <div class="prophet-punch">
+        <div class="prophet-punch" style="margin-top:32px">
             Y en <em>Colombia</em> apenas hemos empezado. <br>
             Este es el momento de llevarlo a casa.
             <strong>Busboy es ese paso.</strong>
@@ -1338,43 +1347,85 @@
 </section>
 
 
-<!-- =========================== HORIZONTE APP =========================== -->
+<!-- =========================== QUÉ VIENE — features por fase =========================== -->
 <section id="app" class="section-paper">
     <div class="container reveal">
-        <div class="section-tag">Qué resuelve la app</div>
-        <h2>Lo que la ciudadanía va a poder hacer.</h2>
-        <p class="big">Estas no son ideas futuras — son las funciones reales que la app ya ofrece en otras ciudades y que llegarán a Boyacá una vez publicado el GTFS.</p>
+        <div class="section-tag">Qué viene</div>
+        <h2>Lo que Busboy ofrece hoy — y lo que sumará con cada etapa.</h2>
+        <p class="big">La app crece con los datos. Cada fase habilita nuevas funciones para el usuario final.</p>
 
-        <div class="features-grid">
-            <div class="feat">
-                <span class="emoji">🧭</span>
-                <h3>Planeador de rutas</h3>
-                <p>"¿Cómo voy de Tunja a Aguazul?" — con transbordos, tiempos estimados y tarifa.</p>
+        <!-- ✓ Hoy -->
+        <div class="phase-feats phase-now">
+            <div class="phase-feats-head">
+                <span class="pf-chip done">✓ Hoy en busboy.app</span>
+                <span class="pf-scope">Sogamoso y Duitama</span>
             </div>
-            <div class="feat">
-                <span class="emoji">📡</span>
-                <h3>Tiempo real</h3>
-                <p>Dónde viene el bus ahora, cuánto falta para que llegue a tu parada.</p>
+            <div class="features-grid">
+                <div class="feat">
+                    <span class="emoji">🧭</span>
+                    <h3>Planeador urbano</h3>
+                    <p>Dentro de Sogamoso y Duitama: ¿cómo voy del barrio X al hospital Y?, con transbordos y tiempos.</p>
+                </div>
+                <div class="feat">
+                    <span class="emoji">🏙️</span>
+                    <h3>Mapa de rutas</h3>
+                    <p>Ver qué buses pasan por cada parada, en qué dirección, en cada ciudad cubierta.</p>
+                </div>
             </div>
-            <div class="feat">
-                <span class="emoji">💳</span>
-                <h3>Pagos integrados</h3>
-                <p>Comprar el tiquete desde la app, sin pelear con efectivo ni filas.</p>
+        </div>
+
+        <!-- 🔜 Próximamente -->
+        <div class="phase-feats phase-next">
+            <div class="phase-feats-head">
+                <span class="pf-chip active">🔜 Al publicar el GTFS</span>
+                <span class="pf-scope">Siguiente hito del proyecto</span>
             </div>
-            <div class="feat">
-                <span class="emoji">📣</span>
-                <h3>Reportes ciudadanos</h3>
-                <p>Avisar sobre bloqueos, demoras o incidentes; la plataforma los publica y avisa a los demás usuarios.</p>
+            <div class="features-grid">
+                <div class="feat">
+                    <span class="emoji">🗺️</span>
+                    <h3>Intermunicipal completo</h3>
+                    <p>Planificar viajes entre ciudades: Tunja → Aguazul, con todas sus paradas y empresas.</p>
+                </div>
+                <div class="feat">
+                    <span class="emoji">🔗</span>
+                    <h3>Urbano + intermunicipal</h3>
+                    <p>De un barrio de Duitama al centro de Sogamoso, con transbordos entre los dos sistemas.</p>
+                </div>
+                <div class="feat">
+                    <span class="emoji">🏛️</span>
+                    <h3>Fuente central</h3>
+                    <p>Una plataforma donde autoridades, empresas y ciudadanos conversan con información coherente.</p>
+                </div>
             </div>
-            <div class="feat">
-                <span class="emoji">🤖</span>
-                <h3>Chatbot para despachadores</h3>
-                <p>Por chat, con ayuda de IA, el despachador reporta el estado del servicio. La información llega al usuario al instante.</p>
+        </div>
+
+        <!-- ⏭ Con aliados -->
+        <div class="phase-feats phase-later">
+            <div class="phase-feats-head">
+                <span class="pf-chip future">⏭ Con aliados y financiación</span>
+                <span class="pf-scope">Requiere recursos dedicados</span>
             </div>
-            <div class="feat">
-                <span class="emoji">🏛️</span>
-                <h3>Fuente central</h3>
-                <p>Una sola plataforma donde autoridad, empresa, usuario y ciudadano conversan con información coherente.</p>
+            <div class="features-grid">
+                <div class="feat">
+                    <span class="emoji">📡</span>
+                    <h3>Tiempo real</h3>
+                    <p>Dónde viene el bus ahora, cuánto falta para que llegue a tu parada.</p>
+                </div>
+                <div class="feat">
+                    <span class="emoji">💳</span>
+                    <h3>Pagos integrados</h3>
+                    <p>Comprar el tiquete desde la app, sin pelear con efectivo ni filas.</p>
+                </div>
+                <div class="feat">
+                    <span class="emoji">📣</span>
+                    <h3>Reportes ciudadanos</h3>
+                    <p>Avisar sobre bloqueos, demoras o incidentes; la plataforma los difunde.</p>
+                </div>
+                <div class="feat">
+                    <span class="emoji">🤖</span>
+                    <h3>Chatbot para despachadores</h3>
+                    <p>Por chat, con IA, el despachador reporta el estado; la información llega al usuario al instante.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1386,74 +1437,43 @@
         <div class="section-tag">El principio</div>
         <h2>La información pública es un <span style="color:var(--warm)">derecho público</span>.</h2>
         <p class="big" style="color:#c3cae6">
-            Todo lo que construimos vive en estándares abiertos. OpenStreetMap para el mapa.
-            GTFS para los datos de servicio. Cualquier persona, empresa o institución puede
-            consumirlos, auditarlos y construir encima — sin pedir permiso, sin pagar licencias,
-            sin depender de un único proveedor.
+            Los datos que generamos <strong style="color:#fff">no van a Google ni a una empresa
+            privada</strong>. Van a OpenStreetMap. Cualquier persona, empresa o institución
+            puede consumirlos, auditarlos y construir encima — sin pedir permiso, sin pagar
+            licencias, sin depender de nadie.
         </p>
+
+        <!-- Subsección destacada: OSM como hogar de los datos -->
+        <div class="osm-chip-big">
+            <div class="osm-chip-mark">🗺️</div>
+            <div>
+                <h3>Los datos viven en OpenStreetMap</h3>
+                <p>El mapa libre del mundo, construido por más de 10 millones de personas. Si el proyecto desaparece mañana, los datos siguen ahí — pertenecen a la región y al planeta.</p>
+                <a href="https://www.openstreetmap.org" target="_blank" class="osm-chip-link">openstreetmap.org ↗</a>
+            </div>
+        </div>
+
         <div class="open-banner">
-            <div class="open-chip"><h4>OpenStreetMap</h4><p>El "Wikipedia" de los mapas. Editado por la comunidad, libre para todos.</p></div>
-            <div class="open-chip"><h4>GTFS</h4><p>Estándar internacional de transporte público. Lo consume Google Maps.</p></div>
+            <div class="open-chip"><h4>GTFS</h4><p>Estándar internacional de transporte público. Lo consume Google Maps, Moovit y cualquier app del mundo.</p></div>
             <div class="open-chip"><h4>Código abierto</h4><p>La plataforma misma es auditable. Cada línea es pública.</p></div>
-            <div class="open-chip"><h4>Replicable</h4><p>Lo que funcione en Boyacá, sirve a cualquier otra región que lo adopte.</p></div>
+            <div class="open-chip"><h4>Replicable</h4><p>Lo que funcione en Boyacá sirve a cualquier otra región.</p></div>
         </div>
     </div>
 </section>
 
-<!-- =========================== ALIADOS Y FINANCIACIÓN =========================== -->
-<section id="aliados" class="section-alt">
+<!-- =========================== CIERRE: ROLES + ALIADOS + FINANCIACIÓN + CONTACTO =========================== -->
+<section id="roles" class="section-alt">
     <div class="container reveal">
-        <div class="section-tag">Aliados y financiación</div>
-        <h2>Queremos empezar ya — y necesitamos aliados para hacerlo crecer.</h2>
-
-        <div class="fund-grid">
-            <div class="fund-main">
-                <p class="big">
-                    Hoy Busboy avanza <strong>pro bono</strong>. Trufi Association, que ha
-                    trabajado en transporte público en más de 15 países, aporta la
-                    metodología, la tecnología y el acompañamiento. Leonardo Gutiérrez
-                    coordina desde Colombia — un país donde este tipo de proyecto
-                    <strong>nunca se ha hecho</strong>. Empezamos porque creemos que la
-                    información pública es un derecho público; no esperamos a que
-                    alguien nos pague para arrancar.
-                </p>
-                <p class="big" style="margin-top:14px">
-                    Pero para que esto escale, llegue a más regiones y tenga equipo
-                    dedicado, necesitamos <strong>aliados</strong> que aporten recursos,
-                    capacidades institucionales o visibilidad. Estamos buscando apoyo
-                    a nivel local, nacional e internacional.
-                </p>
-            </div>
-
-            <div class="fund-ask">
-                <h3>¿Quién puede ayudar?</h3>
-                <ul>
-                    <li><strong>Instituciones públicas</strong> — alcaldías, gobernación, Ministerio de Transporte, ANI.</li>
-                    <li><strong>Cooperación internacional</strong> — BID, GIZ, UE, agencias bilaterales.</li>
-                    <li><strong>Fundaciones y filantropía</strong> — movilidad sostenible, datos abiertos, inclusión digital.</li>
-                    <li><strong>Empresa privada</strong> — operadores del transporte, tecnología, responsabilidad social.</li>
-                    <li><strong>Academia</strong> — universidades con líneas en movilidad, datos, desarrollo regional.</li>
-                </ul>
-                <a href="mailto:leonardo.gutierrez@trufi-association.org?subject=Quiero%20apoyar%20Busboy" class="btn btn-primary" style="margin-top:14px; background:var(--accent-2);">Quiero apoyar →</a>
-            </div>
-        </div>
-
-        <p class="big" style="margin-top:32px; font-style:italic; color:#4a4e6c">
-            Si Boyacá funciona, tenemos una metodología replicable para todo el país.
-            La apuesta no es solo por Tunja — es por un modelo de transporte público
-            abierto que Colombia no tiene todavía.
+        <div class="section-tag">Súmate</div>
+        <h2>¿Dónde entras tú en este proyecto?</h2>
+        <p class="big">
+            Busboy avanza hoy <strong>pro bono</strong> — Trufi Association aporta la
+            metodología, Leonardo Gutiérrez coordina desde Colombia, y empezamos porque
+            creemos que la información pública es un derecho público. Para que escale,
+            cada actor tiene un rol.
         </p>
-    </div>
-</section>
 
-
-<!-- =========================== ROLES + CONTACTO =========================== -->
-<section id="roles" class="section-paper">
-    <div class="container reveal">
-        <div class="section-tag">Tu rol</div>
-        <h2>¿Dónde entras tú?</h2>
-        <p class="big">Este proyecto solo avanza si cada actor asume su parte. Esto es lo que le pedimos a cada quien.</p>
-
+        <!-- Roles: 5 actores -->
         <div class="roles-grid">
             <div class="role-card done">
                 <div class="who">Terminal de Tunja</div>
@@ -1473,17 +1493,18 @@
             <div class="role-card citizen">
                 <div class="who">Ciudadanía</div>
                 <h3>Usen y corrijan</h3>
-                <p>Compartan el proyecto, prueben el listado maestro, reporten errores, sugieran rutas faltantes. El dato mejora porque la gente lo usa.</p>
+                <p>Descarguen la app, prueben el listado maestro, reporten errores, sugieran rutas faltantes. El dato mejora porque la gente lo usa.</p>
             </div>
             <div class="role-card ally">
-                <div class="who">Aliados e instituciones</div>
-                <h3>Súmense</h3>
-                <p>Autoridad de movilidad, empresas, ONGs, universidades, desarrolladores: hay lugar para todos. Escriban y conversamos qué pueden aportar.</p>
+                <div class="who">Aliados y financiación</div>
+                <h3>Súmense con recursos</h3>
+                <p>Instituciones públicas (alcaldías, gobernación, Ministerio, ANI), cooperación internacional (BID, GIZ, UE), fundaciones, empresa privada, academia. Sin recursos llegamos hasta el GTFS; con recursos, la app completa llega mucho antes.</p>
             </div>
         </div>
 
+        <!-- Aliados actuales -->
         <div class="allies">
-            <h3>Aliados del proyecto</h3>
+            <h3>Ya acompañan el proyecto</h3>
             <div class="logos">
                 <div class="ally-item">
                     <img src="/assets/logos/terminal-tunja.png" alt="Terminal de Tunja">
@@ -1500,14 +1521,22 @@
             </div>
         </div>
 
+        <!-- Frase de cierre -->
+        <p class="big" style="margin-top:34px; text-align:center; font-style:italic; color:#4a4e6c; max-width:780px; margin-left:auto; margin-right:auto">
+            Si Boyacá funciona, tenemos una metodología replicable para todo el país.
+            La apuesta no es solo por Tunja — es por un modelo de transporte público
+            abierto que Colombia no tiene todavía.
+        </p>
+
+        <!-- Contacto unificado -->
         <div class="contact-box">
             <div class="msg">
                 <h3>¿Quieres sumarte o saber más?</h3>
                 <p>Escríbenos. Esta presentación es pública — compártela con quien creas que puede aportar.</p>
             </div>
             <div class="links">
-                <a href="mailto:leonardo.gutierrez@trufi-association.org">leonardo.gutierrez@trufi-association.org</a>
-                <a href="https://busboy.app" target="_blank">Descarga la app ↗</a>
+                <a href="mailto:leonardo.gutierrez@trufi-association.org?subject=Quiero%20apoyar%20Busboy">leonardo.gutierrez@trufi-association.org</a>
+                <a href="https://busboy.app" target="_blank">📱 Descarga la app ↗</a>
             </div>
         </div>
     </div>
