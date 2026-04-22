@@ -502,6 +502,23 @@
         .video-placeholder .title { font-size: 1.05rem; font-weight: 800; }
         .video-placeholder .sub { font-size: 0.82rem; color: #aab; letter-spacing: .4px; }
         .video-caption { margin-top: 12px; color: var(--muted); font-size: 0.85rem; text-align: center; }
+        .video-refs {
+            margin-top: 18px; padding: 18px 22px;
+            background: white; border: 1px solid #f2d9b0; border-radius: 12px;
+            display: flex; gap: 20px; flex-wrap: wrap; align-items: center;
+            font-size: 0.9rem; color: #3a3e5c; line-height: 1.5;
+        }
+        .video-refs strong { color: var(--ink); }
+        .video-refs .ref-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .video-refs a {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--ink); color: white;
+            padding: 8px 14px; border-radius: 8px;
+            text-decoration: none; font-weight: 600; font-size: 0.84rem;
+        }
+        .video-refs a:hover { background: #2a2e50; }
+        .video-refs a.soft { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+        .video-refs a.soft:hover { background: var(--paper-2); }
         .video-badge {
             display: inline-flex; align-items: center; gap: 6px;
             background: #0f1129; color: white;
@@ -1261,6 +1278,22 @@
                         allowfullscreen></iframe>
             </div>
             <div class="video-caption">El proyecto del Estado de México — con los datos procesados desde Duitama. Lo mismo que queremos hacer aquí para Boyacá.</div>
+
+            <div class="video-refs">
+                <div style="flex:1; min-width:220px">
+                    <strong>Y algo muy especial:</strong> del proyecto en México también
+                    participó el <strong>Colegio Salesiano</strong>. Es el mismo modelo
+                    pedagógico que queremos replicar en Boyacá.
+                </div>
+                <div class="ref-links">
+                    <a href="https://ciudadesytransporte.mx/wp-content/uploads/2025/11/datos_que_mueven_ciudades_mapadata.pdf" target="_blank" rel="noopener">
+                        📄 Ver publicación (PDF)
+                    </a>
+                    <a href="https://ciudadesytransporte.mx/mapadata-datos-que-mueven-ciudades/" target="_blank" rel="noopener" class="soft">
+                        Conocer más sobre MapaData ↗
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
