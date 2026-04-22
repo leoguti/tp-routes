@@ -502,6 +502,14 @@
         .video-placeholder .title { font-size: 1.05rem; font-weight: 800; }
         .video-placeholder .sub { font-size: 0.82rem; color: #aab; letter-spacing: .4px; }
         .video-caption { margin-top: 12px; color: var(--muted); font-size: 0.85rem; text-align: center; }
+        .video-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #0f1129; color: white;
+            padding: 7px 14px; border-radius: 30px;
+            font-size: 0.78rem; font-weight: 600;
+            margin-bottom: 12px; letter-spacing: .2px;
+        }
+        .video-badge strong { color: var(--warm); }
 
         /* ========== Busboy ya existe ========== */
         .live-sec {
@@ -1243,6 +1251,7 @@
         </div>
 
         <div class="video-wrap">
+            <div class="video-badge">📍 Procesado desde <strong>Duitama, Boyacá</strong></div>
             <div class="video-frame">
                 <iframe src="https://www.youtube.com/embed/LB0OpxDLFnQ"
                         title="Nuestra experiencia en México"
@@ -1251,7 +1260,7 @@
                         referrerpolicy="strict-origin-when-cross-origin"
                         allowfullscreen></iframe>
             </div>
-            <div class="video-caption">Un recorrido corto por lo que construimos en el Estado de México antes de empezar en Boyacá.</div>
+            <div class="video-caption">El proyecto del Estado de México — con los datos procesados desde Duitama. Lo mismo que queremos hacer aquí para Boyacá.</div>
         </div>
     </div>
 </section>
