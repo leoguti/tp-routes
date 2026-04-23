@@ -184,29 +184,29 @@
     <div id="alert" class="alert"></div>
 
     <div class="stats-row">
-        <div class="stat-box"><div class="num" id="s-rutas">—</div><div class="lbl">Rutas</div></div>
-        <div class="stat-box accent"><div class="num" id="s-pares">—</div><div class="lbl">Pares O↔D</div></div>
-        <div class="stat-box accent"><div class="num" id="s-ops">—</div><div class="lbl">Operadores</div></div>
+        <div class="stat-box"><div class="num" id="s-rutas">—</div><div class="lbl">Trayectos</div></div>
+        <div class="stat-box accent"><div class="num" id="s-pares">—</div><div class="lbl">Corredores</div></div>
+        <div class="stat-box accent"><div class="num" id="s-ops">—</div><div class="lbl">Empresas</div></div>
         <div class="stat-box good"><div class="num" id="s-res">—</div><div class="lbl">Resoluciones</div></div>
         <div class="stat-box warn"><div class="num" id="s-sinres">—</div><div class="lbl">Sin resolución</div></div>
     </div>
 
     <div class="toolbar">
-        <input id="search" type="text" placeholder="Buscar por ciudad, operador o vía…" />
+        <input id="search" type="text" placeholder="Buscar por ciudad, empresa o ruta…" />
         <select id="filter-op">
-            <option value="">Todos los operadores</option>
+            <option value="">Todas las empresas</option>
         </select>
         <button class="btn btn-ghost btn-sm" onclick="expandAll(true)">Expandir todo</button>
         <button class="btn btn-ghost btn-sm" onclick="expandAll(false)">Colapsar todo</button>
-        <button class="btn btn-primary" onclick="openCreate()">+ Nueva ruta</button>
+        <button class="btn btn-primary" onclick="openCreate()">+ Nuevo corredor</button>
     </div>
 
     <div class="legend">
-        <b>Cómo leer esta lista:</b>
-        Cada tarjeta azul es una <b>ruta entre dos ciudades</b> (ej. Bogotá ↔ Sogamoso).
-        Dentro hay uno o más <b>recorridos</b> (directo, o por ciertas ciudades).
-        En cada recorrido están las <b>empresas</b> que lo operan, con botones
-        para ver el detalle de la <b>ida</b> y la <b>vuelta</b>.
+        <b>Cómo leer esta lista (4 niveles):</b>
+        <b>1. Corredor</b> = par de ciudades (ej. Bogotá ↔ Sogamoso).
+        <b>2. Ruta</b> = variante del corredor según el camino (directa o por ciertas ciudades).
+        <b>3. Empresa</b> = operador que corre esa ruta.
+        <b>4. Trayecto</b> = cada sentido (ida o vuelta) — lo que luego se publica como relación en OpenStreetMap.
     </div>
 
     <div id="tree" class="tree"><div class="loader">Cargando…</div></div>
@@ -216,10 +216,10 @@
 <!-- Modal crear/editar ruta -->
 <div id="modal-bg" class="modal-bg">
   <div class="modal">
-    <h2 id="modal-title">Nueva ruta</h2>
+    <h2 id="modal-title">Nuevo corredor</h2>
     <div class="form-row">
         <div class="form-group">
-            <label>Operador *</label>
+            <label>Empresa *</label>
             <select id="f-operator" required></select>
         </div>
     </div>
@@ -305,7 +305,7 @@ async function load() {
 
         // Llenar filtro y select del modal
         const filterSel = document.getElementById('filter-op');
-        filterSel.innerHTML = '<option value="">Todos los operadores</option>';
+        filterSel.innerHTML = '<option value="">Todas las empresas</option>';
         for (const o of state.operators) {
             filterSel.innerHTML += `<option value="${o.id}">${o.nombre}</option>`;
         }
@@ -358,7 +358,7 @@ function render() {
     const groups = (state.data.groups || []).filter(matches);
 
     if (!groups.length) {
-        tree.innerHTML = `<div class="empty">No hay rutas que coincidan.</div>`;
+        tree.innerHTML = `<div class="empty">No hay resultados.</div>`;
         return;
     }
 
@@ -373,14 +373,14 @@ function renderPair(pair) {
     <div class="pair-group">
         <div class="pair-head" onclick="toggle('${escapeAttr(key)}')">
             <span class="chev">${collapsed ? '▸' : '▾'}</span>
-            <span class="tag">Ruta</span>
+            <span class="tag">Corredor</span>
             <span class="title">${escapeHtml(pair.pair_label)}</span>
-            <span class="meta">${pair.total_operadores} empresa${pair.total_operadores!==1?'s':''} · ${pair.vias.length} recorrido${pair.vias.length!==1?'s':''}</span>
+            <span class="meta">${pair.total_operadores} empresa${pair.total_operadores!==1?'s':''} · ${pair.vias.length} ruta${pair.vias.length!==1?'s':''}</span>
         </div>
         <div class="pair-body ${collapsed ? 'collapsed' : ''}">
             ${pair.vias.map(v => renderVia(pair, v)).join('')}
             <div class="add-row">
-                <button class="btn-add" onclick='openAddVia(${pairJson})'>+ Agregar recorrido a ${escapeHtml(pair.pair_label)}</button>
+                <button class="btn-add" onclick='openAddVia(${pairJson})'>+ Agregar ruta a ${escapeHtml(pair.pair_label)}</button>
             </div>
         </div>
     </div>`;
@@ -389,22 +389,22 @@ function renderPair(pair) {
 function renderVia(pair, via) {
     const key = `v:${pair.pair_label}::${via.via_label}`;
     const collapsed = state.collapsed.has(key);
-    const recorrido = via.via_label === 'Directo'
-        ? 'Recorrido directo (sin paradas intermedias)'
-        : 'Recorrido ' + via.via_label;  // "vía X → Y"
+    const titulo = via.via_label === 'Directo'
+        ? 'Ruta directa (sin paradas intermedias)'
+        : 'Ruta ' + via.via_label;  // "vía X → Y"
     return `
     <div class="via-group">
         <div class="via-head" onclick="toggle('${escapeAttr(key)}')">
             <span class="chev">${collapsed ? '▸' : '▾'}</span>
-            <span class="tag">Recorrido</span>
-            <span class="title">${escapeHtml(recorrido)}</span>
+            <span class="tag">Ruta</span>
+            <span class="title">${escapeHtml(titulo)}</span>
             <span class="meta">${via.operadores.length} empresa${via.operadores.length!==1?'s':''}</span>
         </div>
         <div class="via-body ${collapsed ? 'collapsed' : ''}">
             ${renderRouteDiagram(pair, via)}
             ${via.operadores.map(op => renderOp(pair, via, op)).join('')}
             <div class="via-add">
-                <button class="btn-add" onclick='openAddOperator(${JSON.stringify({cityA: pair.cityA, cityB: pair.cityB, via: via.via, via_label: via.via_label}).replace(/'/g,"&#39;")})'>+ Agregar empresa a este recorrido</button>
+                <button class="btn-add" onclick='openAddOperator(${JSON.stringify({cityA: pair.cityA, cityB: pair.cityB, via: via.via, via_label: via.via_label}).replace(/'/g,"&#39;")})'>+ Agregar empresa a esta ruta</button>
             </div>
         </div>
     </div>`;
@@ -427,7 +427,7 @@ function renderRouteDiagram(pair, via) {
     }
     return `
     <div class="rd-wrap">
-        <div class="rd-caption">Recorrido · ${stops.length} paradas</div>
+        <div class="rd-caption">Ruta · ${stops.length} paradas</div>
         <div class="rd">${parts.join('')}</div>
     </div>`;
 }
@@ -443,9 +443,9 @@ function renderOp(pair, via, op) {
             <span class="op-tag">Empresa</span>
             <span class="op-name">${escapeHtml(op.operator_nombre)}</span>
             <span class="op-res">${resoluciones}</span>
-            <span class="op-dirs">
-                ${ida    ? `<a class="dir-btn ida"    href="/ruta.html?id=${ida.id}"><span class="arrow">→</span> Ida</a>` : ''}
-                ${vuelta ? `<a class="dir-btn vuelta" href="/ruta.html?id=${vuelta.id}"><span class="arrow">←</span> Vuelta</a>` : ''}
+            <span class="op-dirs" title="Cada trayecto (ida y vuelta) se publica como una relación independiente en OpenStreetMap">
+                ${ida    ? `<a class="dir-btn ida"    href="/ruta.html?id=${ida.id}"><span class="arrow">→</span> Trayecto ida</a>` : ''}
+                ${vuelta ? `<a class="dir-btn vuelta" href="/ruta.html?id=${vuelta.id}"><span class="arrow">←</span> Trayecto vuelta</a>` : ''}
             </span>
             <span class="op-acts">
                 <button class="btn btn-ghost btn-sm"
@@ -507,18 +507,18 @@ function resetModal() {
 
 function openCreate() {
     resetModal();
-    document.getElementById('modal-title').textContent = 'Nueva ruta';
+    document.getElementById('modal-title').textContent = 'Nuevo corredor';
     document.getElementById('f-hint').textContent =
-        'Define una ruta completa: origen, destino, recorrido y la empresa que la opera.';
+        'Define un corredor completo: origen, destino, ruta (vía) y la empresa que la opera.';
     openModal();
 }
 
-// Agregar recorrido a un par existente: ciudades bloqueadas, vía vacía, operador abierto.
+// Agregar ruta (variante) a un corredor existente: ciudades bloqueadas, vía vacía, empresa abierta.
 function openAddVia({cityA, cityB}) {
     resetModal();
-    document.getElementById('modal-title').textContent = `Nuevo recorrido en ${cityA} ↔ ${cityB}`;
+    document.getElementById('modal-title').textContent = `Nueva ruta en ${cityA} ↔ ${cityB}`;
     document.getElementById('f-hint').textContent =
-        'Agrega una variante del recorrido (por ejemplo "vía Tunja → Duitama"). Las ciudades origen y destino ya están fijas.';
+        'Agrega una variante del corredor (por ejemplo "vía Tunja → Duitama"). Las ciudades origen y destino están fijas.';
     document.getElementById('f-origen').value = cityA;
     document.getElementById('f-destino').value = cityB;
     document.getElementById('f-origen').disabled = true;
@@ -526,13 +526,13 @@ function openAddVia({cityA, cityB}) {
     openModal();
 }
 
-// Agregar empresa a un recorrido existente: ciudades y vía bloqueadas.
+// Agregar empresa a una ruta existente: ciudades y vía bloqueadas.
 function openAddOperator({cityA, cityB, via, via_label}) {
     resetModal();
     document.getElementById('modal-title').textContent =
         `Nueva empresa en ${cityA} ↔ ${cityB} (${via_label})`;
     document.getElementById('f-hint').textContent =
-        'Se creará la ruta con el mismo recorrido, asignada a la empresa que elijas.';
+        'La nueva ruta heredará la misma vía; la asignamos a la empresa que elijas.';
     document.getElementById('f-origen').value = cityA;
     document.getElementById('f-destino').value = cityB;
     document.getElementById('f-origen').disabled = true;
@@ -629,7 +629,7 @@ async function saveRoute() {
             .filter(r => r.numero),
     };
     if (!body.operator_id || !body.origen || !body.destino) {
-        alertMsg('Operador, origen y destino son obligatorios', 'error');
+        alertMsg('Empresa, origen y destino son obligatorios', 'error');
         return;
     }
     try {
@@ -656,7 +656,7 @@ async function saveRoute() {
 
 async function deleteRoute() {
     if (!state.editing) return;
-    if (!confirm('¿Eliminar esta ruta (ida y vuelta)? Se perderán waypoints y resoluciones.')) return;
+    if (!confirm('¿Eliminar esta ruta (ambos trayectos: ida y vuelta)? Se perderán las paradas intermedias y las resoluciones asociadas.')) return;
     try {
         const r = await fetch(`/api/routes?id=${state.editing.id_ida}`, { method: 'DELETE' }).then(r => r.json());
         if (r.error) throw new Error(r.error);
