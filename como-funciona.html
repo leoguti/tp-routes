@@ -211,6 +211,18 @@ strong { color: var(--navy); }
 }
 .osm-box h3 { margin-top: 0; }
 
+/* Caja de regla práctica */
+.rule-box {
+    background: white;
+    border-left: 4px solid var(--warm);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 24px 0 0;
+    box-shadow: 0 2px 6px rgba(15,17,41,.04);
+}
+.rule-box h3 { margin-top: 0; font-size: 1.05rem; color: #7a5d1a; }
+.rule-box p  { color: #2c2f55; }
+
 /* Caja "vibe coding" */
 .vibe-box {
     background: linear-gradient(135deg, rgba(74,158,255,.08), rgba(247,184,75,.08));
@@ -419,6 +431,15 @@ footer a { color: var(--accent); text-decoration: none; }
     <p style="margin-top:8px;">
         En el listado podés ver cómo va el progreso: cada ruta muestra <strong>"3 de 5 paradas geolocalizadas"</strong>. Las paradas verdes ya están en el mapa, las grises siguen siendo solo texto.
     </p>
+
+    <div class="rule-box">
+        <h3>💡 Regla importante: una parada = un punto</h3>
+        <p>Aunque físicamente haya <strong>dos paraderos a ambos lados</strong> de una avenida grande (uno por sentido), en TP Routes lo registramos como <strong>una sola parada</strong>. El punto va en la entrada del terminal, la esquina principal o un centroide razonable.</p>
+        <p>¿Por qué? Porque TP Routes es un <strong>directorio</strong>: nombres, jerarquía, empresas, resoluciones. La precisión cartográfica fina (paradero por sentido, geometría exacta) se hace después en OpenStreetMap, donde el estándar PTv2 ya soporta paradas direccionales.</p>
+        <p style="margin-bottom:0;font-size:0.92rem;color:var(--muted);">
+            <strong>Práctico para el equipo del Terminal:</strong> no se preocupen por ser exactos al metro. Un punto representativo del lugar basta.
+        </p>
+    </div>
   </div>
 </section>
 
