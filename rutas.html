@@ -128,8 +128,16 @@
         /* Modal */
         .modal-bg { display: none; position: fixed; inset: 0; background: rgba(26,26,62,.5); z-index: 100; align-items: flex-start; justify-content: center; overflow-y: auto; }
         .modal-bg.open { display: flex; }
-        .modal { background: white; border-radius: 10px; width: 100%; max-width: 620px; padding: 24px; margin: 40px 16px; max-height: 90vh; overflow-y: auto; }
-        .modal h2 { margin: 0 0 18px; font-size: 1rem; }
+        .modal { background: white; border-radius: 10px; width: 100%; max-width: 620px; padding: 24px; margin: 40px 16px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal h2 { margin: 0 0 18px; font-size: 1rem; padding-right: 36px; }
+        .modal-close {
+            position: absolute; top: 12px; right: 14px;
+            background: transparent; border: none; cursor: pointer;
+            font-size: 1.4rem; color: #888; line-height: 1;
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #f0f2f8; color: #1a1a3e; }
         .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
         .form-group { flex: 1; }
         .form-group label { display: block; font-size: 0.76rem; color: #666; margin-bottom: 4px; font-weight: 500; }
@@ -261,8 +269,9 @@
 </div>
 
 <!-- Modal crear/editar ruta -->
-<div id="modal-bg" class="modal-bg">
+<div id="modal-bg" class="modal-bg" onclick="onModalBgClick(event)">
   <div class="modal">
+    <button type="button" class="modal-close" onclick="closeModal()" aria-label="Cerrar">×</button>
     <h2 id="modal-title">Nuevo corredor</h2>
     <div class="form-row">
         <div class="form-group">
@@ -322,8 +331,9 @@
 </div>
 
 <!-- Modal: mapa para crear un nuevo lugar -->
-<div id="map-modal-bg" class="modal-bg">
+<div id="map-modal-bg" class="modal-bg" onclick="onMapModalBgClick(event)">
   <div class="modal modal-map">
+    <button type="button" class="modal-close" onclick="closeMapModal(null)" aria-label="Cerrar">×</button>
     <h2 id="map-title">Geolocalizar lugar</h2>
     <div class="form-row">
         <div class="form-group">
@@ -712,6 +722,19 @@ function openEdit({pair, via_label, op}) {
 function openModal() { document.getElementById('modal-bg').classList.add('open'); }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+function onModalBgClick(e)    { if (e.target.id === 'modal-bg')     closeModal(); }
+function onMapModalBgClick(e) { if (e.target.id === 'map-modal-bg') closeMapModal(null); }
+
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    // Cierra el modal de mapa primero (queda encima); si no, el de ruta.
+    if (document.getElementById('map-modal-bg').classList.contains('open')) {
+        closeMapModal(null);
+    } else if (document.getElementById('modal-bg').classList.contains('open')) {
+        closeModal();
+    }
+});
 
 // Enter en el input de "vía": busca match en el catálogo;
 // si no hay, ofrece geolocalizar en mapa o guardar como solo texto.
