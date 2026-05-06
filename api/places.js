@@ -66,6 +66,9 @@ async function handlePost(sql, req, res) {
         lon,
         municipio,
         notas,
+        aliases = [],   // nombres alternativos (típicamente: el nombre con typo
+                        // que el usuario corrigió en el modal). Se vinculan y se
+                        // reescriben con el nombre correcto.
     } = req.body || {};
 
     if (!nombre?.trim()) return res.status(400).json({ error: 'nombre es obligatorio' });
@@ -79,9 +82,17 @@ async function handlePost(sql, req, res) {
                     ${municipio?.trim() || null}, ${notas?.trim() || null})
             RETURNING id, nombre, lat, lon, municipio
         `;
-        // Auto-vincular: rutas/waypoints que estaban como sólo texto y coinciden
-        // por nombre normalizado pasan a apuntar a este nuevo place.
-        const linked = await autoLinkPlace(sql, row.id, row.nombre, region_id);
+        // Auto-vincular por el nombre principal y por cada alias (typos).
+        const allNames = [row.nombre, ...aliases.filter(a => a && a.trim() && a.trim() !== row.nombre)];
+        let linked = { waypoints: 0, origenes: 0, destinos: 0 };
+        for (const n of allNames) {
+            const r = await autoLinkPlace(sql, row.id, n, region_id);
+            linked.waypoints += r.waypoints;
+            linked.origenes  += r.origenes;
+            linked.destinos  += r.destinos;
+        }
+        // Reescribir el texto en rutas vinculadas para usar el nombre canónico.
+        await rewriteLinkedText(sql, row.id, row.nombre);
         return res.json({ ok: true, place: row, linked });
     } catch (e) {
         // Conflicto único = ya existe ese nombre normalizado en la región.
@@ -155,10 +166,35 @@ async function handlePut(sql, req, res) {
             RETURNING id, nombre, lat, lon, municipio
         `;
         if (!row) return res.status(404).json({ error: 'Lugar no encontrado' });
-        return res.json({ ok: true, place: row });
+        // Si cambió el nombre, propagar el texto a todas las rutas vinculadas.
+        const propagated = await rewriteLinkedText(sql, row.id, row.nombre);
+        return res.json({ ok: true, place: row, propagated });
     } catch (e) {
         return res.status(500).json({ error: e.message });
     }
+}
+
+// Reescribe el texto en rutas vinculadas con el nombre canónico del place.
+// Útil cuando se corrige una ortografía: las rutas que ya apuntan a este
+// place pasan a mostrar el nombre correcto.
+async function rewriteLinkedText(sql, placeId, nombre) {
+    const wp = await sql`
+        UPDATE route_waypoints SET nombre_text = ${nombre}
+        WHERE place_id = ${placeId} AND nombre_text <> ${nombre}
+    `;
+    const og = await sql`
+        UPDATE routes SET origen_text = ${nombre}
+        WHERE origen_place_id = ${placeId} AND origen_text <> ${nombre}
+    `;
+    const ds = await sql`
+        UPDATE routes SET destino_text = ${nombre}
+        WHERE destino_place_id = ${placeId} AND destino_text <> ${nombre}
+    `;
+    return {
+        waypoints: wp.count ?? wp.rowCount ?? 0,
+        origenes:  og.count ?? og.rowCount ?? 0,
+        destinos:  ds.count ?? ds.rowCount ?? 0,
+    };
 }
 
 async function handleDelete(sql, req, res) {

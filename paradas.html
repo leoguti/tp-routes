@@ -154,7 +154,7 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
         <div class="form-group">
             <label>Nombre *</label>
             <input id="m-nombre" type="text" placeholder="Ej. Paipa" />
-            <small>Se evita duplicar: "paipa" y "Paipa" son la misma parada.</small>
+            <small>Si el nombre tiene un error, corrígelo aquí — al guardar, todas las rutas que lo mencionan quedarán con el nombre correcto.</small>
         </div>
         <div class="form-group">
             <label>Municipio (opcional)</label>
@@ -189,6 +189,8 @@ const state = {
     pending: [],          // [{ nombre, count, fuentes: ['origen','destino','via'] }]
     search: '',
     editing: null,        // place actual en edición o null
+    pendingOriginal: null, // nombre original cuando se geolocaliza desde "pendientes"
+                           // (sirve para corregir typos: alias -> nombre correcto)
 };
 
 let mapModal = null, mapMarker = null;
@@ -248,11 +250,17 @@ async function load() {
     }
 }
 
+function pendingMatches(p) {
+    if (!state.search) return true;
+    return norm(p.nombre).includes(norm(state.search));
+}
+
 function renderPending() {
     const wrap = document.getElementById('pending-wrap');
-    if (!state.pending.length) { wrap.innerHTML = ''; return; }
+    const filtered = state.pending.filter(pendingMatches);
+    if (!state.pending.length || !filtered.length) { wrap.innerHTML = ''; return; }
 
-    const rows = state.pending.map(p => {
+    const rows = filtered.map(p => {
         const fuentesLbl = p.fuentes.map(f => ({origen:'origen', destino:'destino', via:'paso intermedio'}[f] || f)).join(', ');
         return `
         <div class="pending-row">
@@ -363,6 +371,7 @@ function clearMarker() {
 
 function openCreate() {
     state.editing = null;
+    state.pendingOriginal = null;
     document.getElementById('modal-title').textContent = 'Nueva parada';
     document.getElementById('m-nombre').value = '';
     document.getElementById('m-municipio').value = '';
@@ -376,6 +385,7 @@ function openCreate() {
 
 function openCreateFromPending(nombre) {
     openCreate();
+    state.pendingOriginal = nombre;
     document.getElementById('modal-title').textContent = `Geolocalizar: ${nombre}`;
     document.getElementById('m-nombre').value = nombre;
 }
@@ -406,6 +416,11 @@ async function savePlace() {
         municipio: document.getElementById('m-municipio').value.trim() || null,
         notas:     document.getElementById('m-notas').value.trim() || null,
     };
+    // Si vino de "pendientes" y el usuario corrigió ortografía, manda el alias
+    // para que el backend vincule las rutas con el nombre original.
+    if (!state.editing && state.pendingOriginal && state.pendingOriginal !== nombre) {
+        body.aliases = [state.pendingOriginal];
+    }
     try {
         let r;
         if (state.editing) {
@@ -463,6 +478,7 @@ async function deletePlace() {
 document.getElementById('search').addEventListener('input', e => {
     state.search = e.target.value;
     render();
+    renderPending();
 });
 
 // ----- Utils -----
