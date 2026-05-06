@@ -1,8 +1,9 @@
 // API: routes — esquema v3.0 (listado maestro jerárquico)
 //
-// Consume el esquema definido en scripts/migrate_v3.sql:
-//   - routes con origen_text/destino_text y direction.
-//   - route_waypoints como lista ordenada de ciudades intermedias.
+// Consume el esquema definido en scripts/migrate_v3.sql + scripts/migrate_v4_places.sql:
+//   - routes con origen_text/destino_text, direction y origen_place_id/destino_place_id.
+//   - route_waypoints como lista ordenada de ciudades intermedias, cada una con
+//     nombre_text + place_id opcional (link al catálogo `places`).
 //   - route_resolutions (apuntan a la ida; la vuelta las lee a través de route_parent_id).
 //
 // Endpoints:
@@ -43,8 +44,12 @@ async function handleGet(sql, req, res) {
         const route = rows[0];
 
         const waypoints = await sql`
-            SELECT id, orden, nombre_text, stop_id
-            FROM route_waypoints WHERE route_id = ${id} ORDER BY orden
+            SELECT w.id, w.orden, w.nombre_text, w.stop_id, w.place_id,
+                   p.nombre AS place_nombre, p.lat AS place_lat, p.lon AS place_lon,
+                   p.municipio AS place_municipio
+            FROM route_waypoints w
+            LEFT JOIN places p ON p.id = w.place_id
+            WHERE w.route_id = ${id} ORDER BY w.orden
         `;
 
         // Resoluciones viven en la ida (route_parent_id = NULL). La vuelta las
@@ -73,13 +78,26 @@ async function handleGet(sql, req, res) {
             r.id, r.region_id, r.operator_id,
             r.origen_text, r.destino_text,
             r.origen_stop_id, r.destino_stop_id,
+            r.origen_place_id, r.destino_place_id,
+            po.nombre AS origen_place_nombre, po.lat AS origen_place_lat, po.lon AS origen_place_lon,
+            pd.nombre AS destino_place_nombre, pd.lat AS destino_place_lat, pd.lon AS destino_place_lon,
             r.direction, r.route_parent_id,
             r.ref, r.notas, r.progreso_pct,
             r.osm_relation_id, r.creada_en, r.actualizada_en,
             o.nombre AS operator_nombre,
             COALESCE((
-                SELECT json_agg(json_build_object('orden', w.orden, 'nombre_text', w.nombre_text, 'stop_id', w.stop_id) ORDER BY w.orden)
-                FROM route_waypoints w WHERE w.route_id = r.id
+                SELECT json_agg(json_build_object(
+                    'orden', w.orden,
+                    'nombre_text', w.nombre_text,
+                    'stop_id', w.stop_id,
+                    'place_id', w.place_id,
+                    'place_nombre', p.nombre,
+                    'place_lat', p.lat,
+                    'place_lon', p.lon
+                ) ORDER BY w.orden)
+                FROM route_waypoints w
+                LEFT JOIN places p ON p.id = w.place_id
+                WHERE w.route_id = r.id
             ), '[]'::json) AS waypoints,
             COALESCE((
                 SELECT json_agg(json_build_object(
@@ -90,7 +108,9 @@ async function handleGet(sql, req, res) {
                 WHERE rr.route_id = COALESCE(r.route_parent_id, r.id)
             ), '[]'::json) AS resoluciones
         FROM routes r
-        LEFT JOIN operators o ON o.id = r.operator_id
+        LEFT JOIN operators o  ON o.id  = r.operator_id
+        LEFT JOIN places    po ON po.id = r.origen_place_id
+        LEFT JOIN places    pd ON pd.id = r.destino_place_id
         WHERE r.region_id = ${region}
         ORDER BY r.origen_text, r.destino_text, o.nombre, r.direction
     `;
@@ -124,27 +144,52 @@ async function handleGet(sql, req, res) {
 function groupRoutes(rows) {
     const norm = s => String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+    // Helper: extrae el place del lado A o B de una fila concreta.
+    // origen_place_* puede ser de A (si la ruta parte de A) o de B (si parte de B).
+    function placeOfSide(r, sideName) {
+        if (norm(r.origen_text) === norm(sideName) && r.origen_place_id) {
+            return { id: r.origen_place_id, nombre: r.origen_place_nombre, lat: r.origen_place_lat, lon: r.origen_place_lon };
+        }
+        if (norm(r.destino_text) === norm(sideName) && r.destino_place_id) {
+            return { id: r.destino_place_id, nombre: r.destino_place_nombre, lat: r.destino_place_lat, lon: r.destino_place_lon };
+        }
+        return null;
+    }
+
     // 1) Agrupar por par no-dirigido: orden alfabético de (origen, destino)
     //    para que Tunja→Sogamoso y Sogamoso→Tunja compartan grupo.
     const byPair = new Map();
     for (const r of rows) {
         const [a, b] = [r.origen_text, r.destino_text].sort((x, y) => norm(x).localeCompare(norm(y)));
         const pairKey = `${norm(a)}::${norm(b)}`;
-        if (!byPair.has(pairKey)) byPair.set(pairKey, { cityA: a, cityB: b, vias: new Map() });
+        if (!byPair.has(pairKey)) byPair.set(pairKey, {
+            cityA: a, cityB: b,
+            cityA_place: null, cityB_place: null,
+            vias: new Map(),
+        });
+
+        const pair = byPair.get(pairKey);
+        // Asignar place del lado si todavía no se ha encontrado en otra fila
+        if (!pair.cityA_place) pair.cityA_place = placeOfSide(r, a);
+        if (!pair.cityB_place) pair.cityB_place = placeOfSide(r, b);
 
         // Normalizar la vía "canónica" para este par: ordenar según la ida
         // (route_parent_id IS NULL). Para la vuelta, invertimos para que caiga
         // en el mismo grupo que la ida.
         // Canónico = orden cityA → cityB. Si la fila parte de cityB (sea ida o
         // vuelta), invertimos los waypoints para mantener coherencia en el diagrama.
-        const waypointNames = r.waypoints.map(w => w.nombre_text);
         const partFromA = norm(r.origen_text) === norm(a);
-        const canonicalVia = partFromA ? waypointNames : [...waypointNames].reverse();
-        const viaKey = canonicalVia.map(norm).join('>');
-        const viaLabel = canonicalVia.length ? 'vía ' + canonicalVia.join(' → ') : 'Directo';
+        const canonicalWaypoints = partFromA ? r.waypoints : [...r.waypoints].reverse();
+        const viaKey = canonicalWaypoints.map(w => norm(w.nombre_text)).join('>');
+        const viaLabel = canonicalWaypoints.length
+            ? 'vía ' + canonicalWaypoints.map(w => w.nombre_text).join(' → ')
+            : 'Directo';
 
-        const pair = byPair.get(pairKey);
-        if (!pair.vias.has(viaKey)) pair.vias.set(viaKey, { via_label: viaLabel, via: canonicalVia, operadores: new Map() });
+        if (!pair.vias.has(viaKey)) pair.vias.set(viaKey, {
+            via_label: viaLabel,
+            via: canonicalWaypoints,         // array de {nombre_text, place_id, place_nombre, place_lat, place_lon}
+            operadores: new Map(),
+        });
         const viaGroup = pair.vias.get(viaKey);
 
         const opKey = r.operator_id;
@@ -162,7 +207,7 @@ function groupRoutes(rows) {
 
     // Serializar Maps a arrays para JSON
     const groups = [];
-    for (const { cityA, cityB, vias } of byPair.values()) {
+    for (const { cityA, cityB, cityA_place, cityB_place, vias } of byPair.values()) {
         const viasOut = [];
         for (const { via_label, via, operadores } of vias.values()) {
             const opsOut = [...operadores.values()];
@@ -180,6 +225,7 @@ function groupRoutes(rows) {
         groups.push({
             pair_label: `${cityA} ↔ ${cityB}`,
             cityA, cityB,
+            cityA_place, cityB_place,
             vias: viasOut,
             total_rutas: viasOut.reduce((s, v) => s + v.rutas, 0),
             total_operadores: new Set(
@@ -191,6 +237,20 @@ function groupRoutes(rows) {
     return groups;
 }
 
+// Normaliza un item de `via`. Acepta:
+//   - string                          → {nombre, place_id: null}
+//   - { nombre, place_id }            → tal cual
+function viaItem(v) {
+    if (typeof v === 'string') return { nombre: v.trim(), place_id: null };
+    if (v && typeof v === 'object') {
+        return {
+            nombre: String(v.nombre ?? '').trim(),
+            place_id: v.place_id ? +v.place_id : null,
+        };
+    }
+    return { nombre: '', place_id: null };
+}
+
 // ---------------------------------------------------------------------------
 // POST — crea ruta conceptual (ida + vuelta automática)
 // ---------------------------------------------------------------------------
@@ -199,6 +259,8 @@ async function handlePost(sql, req, res) {
         region_id = 'boyaca',
         operator_id,
         origen, destino,
+        origen_place_id  = null,
+        destino_place_id = null,
         via = [],
         ref, notas,
         resoluciones = [],
@@ -208,21 +270,51 @@ async function handlePost(sql, req, res) {
         return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
     if (!Array.isArray(via)) return res.status(400).json({ error: 'via debe ser array' });
 
+    const viaNorm = via.map(viaItem).filter(v => v.nombre);
+
     try {
         const [ida] = await sql`
-            INSERT INTO routes (region_id, operator_id, origen_text, destino_text, direction, ref, notas)
-            VALUES (${region_id}, ${operator_id}, ${origen.trim()}, ${destino.trim()}, 'ida', ${ref || null}, ${notas || null})
+            INSERT INTO routes (
+                region_id, operator_id,
+                origen_text, destino_text,
+                origen_place_id, destino_place_id,
+                direction, ref, notas
+            )
+            VALUES (
+                ${region_id}, ${operator_id},
+                ${origen.trim()}, ${destino.trim()},
+                ${origen_place_id || null}, ${destino_place_id || null},
+                'ida', ${ref || null}, ${notas || null}
+            )
             RETURNING id
         `;
         const [vuelta] = await sql`
-            INSERT INTO routes (region_id, operator_id, origen_text, destino_text, direction, route_parent_id, ref, notas)
-            VALUES (${region_id}, ${operator_id}, ${destino.trim()}, ${origen.trim()}, 'vuelta', ${ida.id}, ${ref || null}, ${notas || null})
+            INSERT INTO routes (
+                region_id, operator_id,
+                origen_text, destino_text,
+                origen_place_id, destino_place_id,
+                direction, route_parent_id, ref, notas
+            )
+            VALUES (
+                ${region_id}, ${operator_id},
+                ${destino.trim()}, ${origen.trim()},
+                ${destino_place_id || null}, ${origen_place_id || null},
+                'vuelta', ${ida.id}, ${ref || null}, ${notas || null}
+            )
             RETURNING id
         `;
 
-        for (let i = 0; i < via.length; i++) {
-            await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${ida.id}, ${i + 1}, ${via[i]})`;
-            await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${vuelta.id}, ${i + 1}, ${via[via.length - 1 - i]})`;
+        for (let i = 0; i < viaNorm.length; i++) {
+            const f = viaNorm[i];
+            const r = viaNorm[viaNorm.length - 1 - i];
+            await sql`
+                INSERT INTO route_waypoints (route_id, orden, nombre_text, place_id)
+                VALUES (${ida.id}, ${i + 1}, ${f.nombre}, ${f.place_id})
+            `;
+            await sql`
+                INSERT INTO route_waypoints (route_id, orden, nombre_text, place_id)
+                VALUES (${vuelta.id}, ${i + 1}, ${r.nombre}, ${r.place_id})
+            `;
         }
         for (let i = 0; i < resoluciones.length; i++) {
             const r = resoluciones[i];
@@ -245,10 +337,17 @@ async function handlePost(sql, req, res) {
 async function handlePut(sql, req, res) {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'Falta id' });
-    const { operator_id, origen, destino, via = [], ref, notas, resoluciones } = req.body || {};
+    const {
+        operator_id, origen, destino,
+        origen_place_id  = null,
+        destino_place_id = null,
+        via = [], ref, notas, resoluciones,
+    } = req.body || {};
 
     if (!operator_id || !origen?.trim() || !destino?.trim())
         return res.status(400).json({ error: 'operator_id, origen y destino son obligatorios' });
+
+    const viaNorm = via.map(viaItem).filter(v => v.nombre);
 
     try {
         const [row] = await sql`SELECT id, route_parent_id FROM routes WHERE id = ${id}`;
@@ -260,6 +359,8 @@ async function handlePut(sql, req, res) {
             UPDATE routes SET
                 operator_id = ${operator_id},
                 origen_text = ${origen.trim()}, destino_text = ${destino.trim()},
+                origen_place_id  = ${origen_place_id  || null},
+                destino_place_id = ${destino_place_id || null},
                 ref = ${ref || null}, notas = ${notas || null},
                 actualizada_en = NOW()
             WHERE id = ${idaId}
@@ -269,6 +370,8 @@ async function handlePut(sql, req, res) {
                 UPDATE routes SET
                     operator_id = ${operator_id},
                     origen_text = ${destino.trim()}, destino_text = ${origen.trim()},
+                    origen_place_id  = ${destino_place_id || null},
+                    destino_place_id = ${origen_place_id  || null},
                     ref = ${ref || null}, notas = ${notas || null},
                     actualizada_en = NOW()
                 WHERE id = ${vuelta.id}
@@ -278,9 +381,17 @@ async function handlePut(sql, req, res) {
         // Reemplazar waypoints en ambas direcciones
         await sql`DELETE FROM route_waypoints WHERE route_id = ${idaId}`;
         if (vuelta) await sql`DELETE FROM route_waypoints WHERE route_id = ${vuelta.id}`;
-        for (let i = 0; i < via.length; i++) {
-            await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${idaId}, ${i + 1}, ${via[i]})`;
-            if (vuelta) await sql`INSERT INTO route_waypoints (route_id, orden, nombre_text) VALUES (${vuelta.id}, ${i + 1}, ${via[via.length - 1 - i]})`;
+        for (let i = 0; i < viaNorm.length; i++) {
+            const f = viaNorm[i];
+            const r = viaNorm[viaNorm.length - 1 - i];
+            await sql`
+                INSERT INTO route_waypoints (route_id, orden, nombre_text, place_id)
+                VALUES (${idaId}, ${i + 1}, ${f.nombre}, ${f.place_id})
+            `;
+            if (vuelta) await sql`
+                INSERT INTO route_waypoints (route_id, orden, nombre_text, place_id)
+                VALUES (${vuelta.id}, ${i + 1}, ${r.nombre}, ${r.place_id})
+            `;
         }
 
         // Reemplazar resoluciones si el cliente las envía. Si el campo no viene

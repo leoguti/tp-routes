@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TP Routes — Listado maestro</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; }
@@ -165,6 +167,51 @@
         .res-editor .empty-hint { color: #888; font-size: 0.75rem; font-style: italic; padding: 4px 0; }
         .res-editor .res-row input[type=date] { max-width: 140px; flex: 0 0 auto; }
         .res-editor .res-row input[placeholder="Número"] { max-width: 130px; flex: 0 0 auto; }
+
+        /* Diagrama: indicador de geolocalización */
+        .rd-stop.geo .rd-dot { background: #27ae60; border-color: #196f3d; }
+        .rd-stop.term.geo .rd-dot { background: #196f3d; border-color: #0c4a25; }
+        .rd-stop:not(.geo) .rd-dot { border-color: #b6bbc8; background: white; }
+        .rd-stop:not(.geo).term .rd-dot { background: #b6bbc8; }
+        .rd-stop:not(.geo) .rd-lbl { color: #888; }
+        .rd-stop .rd-pin { font-size: 0.62rem; margin-top: 2px; }
+        .rd-progress { font-size: 0.66rem; color: #2a3e7a; margin-left: 8px; font-weight: 700; }
+        .rd-progress.partial { color: #b8860b; }
+        .rd-progress.empty   { color: #c0392b; }
+
+        /* Vía chips con badge de place */
+        .form-group .via-chip.geo { background: #e0fae8; color: #196f3d; }
+        .form-group .via-chip .pin { font-size: 0.7rem; }
+
+        /* Autocomplete dropdown */
+        .ac-wrap { position: relative; }
+        .ac-list {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 30;
+            background: white; border: 1px solid #ccd; border-radius: 6px;
+            margin-top: 2px; max-height: 220px; overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+            display: none;
+        }
+        .ac-list.open { display: block; }
+        .ac-item { padding: 7px 10px; cursor: pointer; font-size: 0.83rem; display: flex; align-items: center; gap: 6px; }
+        .ac-item:hover, .ac-item.active { background: #eef3ff; }
+        .ac-item .pin { color: #196f3d; }
+        .ac-item.create { color: #b8860b; font-weight: 600; border-top: 1px dashed #ddd; }
+        .ac-item .municipio { color: #888; font-size: 0.75rem; margin-left: auto; }
+
+        /* Indicador de place vinculado en input de origen/destino */
+        .input-pin {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            font-size: 0.85rem; color: #196f3d; pointer-events: none;
+        }
+        .input-pin.missing { color: #c0392b; }
+
+        /* Mapa modal */
+        #map-modal-bg { z-index: 200; }   /* encima del modal de ruta */
+        #map-picker   { width: 100%; height: 360px; border-radius: 8px; border: 1px solid #ddd; }
+        .map-coords   { font-size: 0.78rem; color: #666; margin-top: 8px; }
+        .map-coords b { color: #1a1a3e; }
+        .modal-map    { max-width: 720px; }
     </style>
 </head>
 <body>
@@ -224,21 +271,26 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group">
-            <label>Origen *</label>
-            <input id="f-origen" type="text" placeholder="Ej. Bogotá" required />
+        <div class="form-group ac-wrap">
+            <label>Origen * <span id="f-origen-pin" class="input-pin"></span></label>
+            <input id="f-origen" type="text" placeholder="Ej. Bogotá" required autocomplete="off" />
+            <div id="ac-origen" class="ac-list"></div>
+            <small id="f-origen-hint" class="locked-hint"></small>
         </div>
-        <div class="form-group">
-            <label>Destino *</label>
-            <input id="f-destino" type="text" placeholder="Ej. Sogamoso" required />
+        <div class="form-group ac-wrap">
+            <label>Destino * <span id="f-destino-pin" class="input-pin"></span></label>
+            <input id="f-destino" type="text" placeholder="Ej. Sogamoso" required autocomplete="off" />
+            <div id="ac-destino" class="ac-list"></div>
+            <small id="f-destino-hint" class="locked-hint"></small>
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group">
-            <label>Vía (ciudades intermedias en orden)</label>
-            <input id="f-via-input" type="text" placeholder="Escribe y pulsa Enter (vacío = Directo)" />
+        <div class="form-group ac-wrap">
+            <label>Paradas intermedias (en orden)</label>
+            <input id="f-via-input" type="text" placeholder="Escribe el nombre y pulsa Enter (vacío = Directo)" autocomplete="off" />
+            <div id="ac-via" class="ac-list"></div>
             <div id="f-via-chips" class="vias-input"></div>
-            <small>La vuelta se genera automáticamente con la vía invertida.</small>
+            <small>📍 verde = ya geolocalizada · gris = solo texto. La vuelta se genera invertida.</small>
         </div>
     </div>
     <div class="form-row">
@@ -269,22 +321,65 @@
   </div>
 </div>
 
+<!-- Modal: mapa para crear un nuevo lugar -->
+<div id="map-modal-bg" class="modal-bg">
+  <div class="modal modal-map">
+    <h2 id="map-title">Geolocalizar lugar</h2>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Nombre del lugar *</label>
+            <input id="map-nombre" type="text" placeholder="Ej. Paipa" />
+            <small>Haz clic en el mapa para fijar la coordenada. Puedes arrastrar el marcador.</small>
+        </div>
+    </div>
+    <div id="map-picker"></div>
+    <div class="map-coords">
+        Coordenada: <b id="map-latlon">— · —</b>
+    </div>
+    <div class="form-row" style="margin-top:10px">
+        <div class="form-group">
+            <label>Municipio (opcional)</label>
+            <input id="map-municipio" type="text" placeholder="Por si hay varios lugares con el mismo nombre" />
+        </div>
+    </div>
+    <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeMapModal(null)">Cancelar</button>
+        <button id="map-save" class="btn btn-primary" onclick="saveMapPlace()">Guardar lugar</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/regions.js"></script>
 <script>
 const state = {
     region: (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca',
     data: null,              // respuesta cruda /api/routes?grouped=1
     operators: [],
+    places: [],              // catálogo humano de lugares (cache local)
     filterOp: '',
     search: '',
     collapsed: new Set(),    // keys colapsados
     editing: null,           // { id_ida } si se está editando
-    viasDraft: [],
+    viasDraft: [],           // [{ nombre, place_id|null }]
+    origenPlaceId: null,
+    destinoPlaceId: null,
     resolucionesDraft: [],   // [{ numero, fecha, texto_original }]
 };
 
 function norm(s) {
     return String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+// --- Catálogo de places: lookups locales ---
+function findPlaceByName(name) {
+    if (!name) return null;
+    const n = norm(name);
+    return state.places.find(p => norm(p.nombre) === n) || null;
+}
+function searchPlacesPrefix(prefix, limit = 8) {
+    if (!prefix) return state.places.slice(0, limit);
+    const n = norm(prefix);
+    return state.places.filter(p => norm(p.nombre).startsWith(n)).slice(0, limit);
 }
 
 function alertMsg(msg, type = 'success') {
@@ -296,12 +391,14 @@ function alertMsg(msg, type = 'success') {
 
 async function load() {
     try {
-        const [groupedRes, opsRes] = await Promise.all([
+        const [groupedRes, opsRes, placesRes] = await Promise.all([
             fetch(`/api/routes?region=${state.region}&grouped=1`).then(r => r.json()),
             fetch(`/api/operators?region=${state.region}`).then(r => r.json()),
+            fetch(`/api/places?region=${state.region}`).then(r => r.json()),
         ]);
         state.data = groupedRes;
         state.operators = opsRes.operators || [];
+        state.places = placesRes.places || [];
 
         // Llenar filtro y select del modal
         const filterSel = document.getElementById('filter-op');
@@ -411,23 +508,41 @@ function renderVia(pair, via) {
 }
 
 function renderRouteDiagram(pair, via) {
-    // Paradas en orden: cityA - waypoints - cityB
-    const stops = [pair.cityA, ...(via.via || []), pair.cityB];
+    // Paradas en orden: cityA - waypoints - cityB.
+    // Cada parada lleva su `place` (lat/lon) si está geolocalizada.
+    const stops = [
+        { nombre: pair.cityA, place: pair.cityA_place || null, term: true },
+        ...(via.via || []).map(w => ({
+            nombre: w.nombre_text,
+            place: w.place_id ? { id: w.place_id, lat: w.place_lat, lon: w.place_lon } : null,
+            term: false,
+        })),
+        { nombre: pair.cityB, place: pair.cityB_place || null, term: true },
+    ];
     const n = stops.length;
+    const geoCount = stops.filter(s => s.place).length;
     const parts = [];
     for (let i = 0; i < n; i++) {
-        const isTerm = i === 0 || i === n - 1;
+        const s = stops[i];
+        const isGeo = !!s.place;
+        const tip = isGeo
+            ? `Geolocalizada: ${(+s.place.lat).toFixed(4)}, ${(+s.place.lon).toFixed(4)}`
+            : 'Solo texto, pendiente de geolocalizar';
         parts.push(`
-            <div class="rd-stop ${isTerm ? 'term' : ''}">
+            <div class="rd-stop ${s.term ? 'term' : ''} ${isGeo ? 'geo' : ''}" title="${escapeAttr(tip)}">
                 <div class="rd-dot"></div>
-                <div class="rd-lbl">${escapeHtml(stops[i])}</div>
+                <div class="rd-lbl">${escapeHtml(s.nombre)}</div>
             </div>
         `);
         if (i < n - 1) parts.push(`<div class="rd-line"></div>`);
     }
+    const progClass = geoCount === 0 ? 'empty' : (geoCount === n ? '' : 'partial');
     return `
     <div class="rd-wrap">
-        <div class="rd-caption">Ruta · ${stops.length} paradas</div>
+        <div class="rd-caption">
+            Ruta · ${stops.length} paradas
+            <span class="rd-progress ${progClass}">${geoCount}/${n} geolocalizadas</span>
+        </div>
         <div class="rd">${parts.join('')}</div>
     </div>`;
 }
@@ -487,6 +602,8 @@ function expandAll(expand) {
 function resetModal() {
     state.editing = null;
     state.viasDraft = [];
+    state.origenPlaceId = null;
+    state.destinoPlaceId = null;
     state.resolucionesDraft = [];
     state.lockFields = {};
     document.getElementById('f-origen').value = '';
@@ -501,6 +618,8 @@ function resetModal() {
     document.getElementById('f-delete').style.display = 'none';
     document.getElementById('f-operator').innerHTML =
         state.operators.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+    updateOrigenPin();
+    updateDestinoPin();
     renderViasDraft();
     renderResList();
 }
@@ -521,8 +640,14 @@ function openAddVia({cityA, cityB}) {
         'Agrega una variante del corredor (por ejemplo "vía Tunja → Duitama"). Las ciudades origen y destino están fijas.';
     document.getElementById('f-origen').value = cityA;
     document.getElementById('f-destino').value = cityB;
+    const pa = findPlaceByName(cityA);
+    const pb = findPlaceByName(cityB);
+    state.origenPlaceId  = pa ? pa.id : null;
+    state.destinoPlaceId = pb ? pb.id : null;
     document.getElementById('f-origen').disabled = true;
     document.getElementById('f-destino').disabled = true;
+    updateOrigenPin();
+    updateDestinoPin();
     openModal();
 }
 
@@ -535,10 +660,21 @@ function openAddOperator({cityA, cityB, via, via_label}) {
         'La nueva ruta heredará la misma vía; la asignamos a la empresa que elijas.';
     document.getElementById('f-origen').value = cityA;
     document.getElementById('f-destino').value = cityB;
+    const pa = findPlaceByName(cityA);
+    const pb = findPlaceByName(cityB);
+    state.origenPlaceId  = pa ? pa.id : null;
+    state.destinoPlaceId = pb ? pb.id : null;
+    // `via` viene de groupRoutes como array de objetos waypoint (o strings, por compatibilidad)
+    state.viasDraft = (via || []).map(w =>
+        typeof w === 'string'
+            ? { nombre: w, place_id: null }
+            : { nombre: w.nombre_text || w.nombre || '', place_id: w.place_id || null }
+    );
+    document.getElementById('f-via-input').disabled = true;
     document.getElementById('f-origen').disabled = true;
     document.getElementById('f-destino').disabled = true;
-    state.viasDraft = [...(via || [])];
-    document.getElementById('f-via-input').disabled = true;
+    updateOrigenPin();
+    updateDestinoPin();
     renderViasDraft();
     openModal();
 }
@@ -547,7 +683,12 @@ function openEdit({pair, via_label, op}) {
     resetModal();
     state.editing = { id_ida: op.ida?.id || op.vuelta?.id };
     const r = op.ida || op.vuelta;
-    state.viasDraft = (r.waypoints || []).map(w => w.nombre_text);
+    state.viasDraft = (r.waypoints || []).map(w => ({
+        nombre: w.nombre_text,
+        place_id: w.place_id || null,
+    }));
+    state.origenPlaceId  = (op.ida?.origen_place_id  ?? op.vuelta?.destino_place_id) || null;
+    state.destinoPlaceId = (op.ida?.destino_place_id ?? op.vuelta?.origen_place_id)  || null;
     state.resolucionesDraft = (op.resoluciones || []).map(r => ({
         numero: r.numero || '',
         fecha: (r.fecha || '').slice(0, 10),
@@ -561,6 +702,8 @@ function openEdit({pair, via_label, op}) {
     document.getElementById('f-ref').value = op.ref || '';
     document.getElementById('f-notas').value = op.notas || '';
     document.getElementById('f-delete').style.display = '';
+    updateOrigenPin();
+    updateDestinoPin();
     renderViasDraft();
     renderResList();
     openModal();
@@ -570,21 +713,174 @@ function openModal() { document.getElementById('modal-bg').classList.add('open')
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 
-document.getElementById('f-via-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        const val = e.target.value.trim();
-        if (val) { state.viasDraft.push(val); e.target.value = ''; renderViasDraft(); }
-    }
+// Enter en el input de "vía": busca match en el catálogo;
+// si no hay, ofrece geolocalizar en mapa o guardar como solo texto.
+document.getElementById('f-via-input').addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const val = e.target.value.trim();
+    if (!val) return;
+    await addViaFromText(val);
+    e.target.value = '';
 });
+
+async function addViaFromText(val) {
+    const place = findPlaceByName(val);
+    if (place) {
+        state.viasDraft.push({ nombre: place.nombre, place_id: place.id });
+        renderViasDraft();
+        return;
+    }
+    const ok = confirm(`"${val}" no está en el catálogo de lugares.\n\nAceptar = abrir mapa para fijar coordenada\nCancelar = guardarlo solo como texto (queda pendiente)`);
+    if (ok) {
+        const created = await openMapModal({ nombre: val });
+        if (created) {
+            state.viasDraft.push({ nombre: created.nombre, place_id: created.id });
+            renderViasDraft();
+        }
+    } else {
+        state.viasDraft.push({ nombre: val, place_id: null });
+        renderViasDraft();
+    }
+}
 
 function renderViasDraft() {
     const c = document.getElementById('f-via-chips');
-    c.innerHTML = state.viasDraft.map((v, i) =>
-        `<span class="via-chip">${escapeHtml(v)} <button onclick="removeVia(${i})" title="Quitar">×</button></span>`
-    ).join('');
+    c.innerHTML = state.viasDraft.map((v, i) => {
+        const geo = v.place_id != null;
+        return `<span class="via-chip ${geo ? 'geo' : ''}" title="${geo ? 'Geolocalizada' : 'Solo texto, pendiente de geolocalizar'}">
+            ${geo ? '<span class="pin">📍</span>' : ''}
+            ${escapeHtml(v.nombre)}
+            <button onclick="removeVia(${i})" title="Quitar">×</button>
+        </span>`;
+    }).join('');
 }
 function removeVia(i) { state.viasDraft.splice(i, 1); renderViasDraft(); }
+
+// --- Pins de origen / destino ---
+function updateOrigenPin()  { _updatePin('f-origen-pin',  state.origenPlaceId);  }
+function updateDestinoPin() { _updatePin('f-destino-pin', state.destinoPlaceId); }
+function _updatePin(elId, placeId) {
+    const el = document.getElementById(elId);
+    if (placeId) { el.textContent = '📍'; el.className = 'input-pin'; }
+    else         { el.textContent = '';  el.className = 'input-pin missing'; }
+}
+
+// --- Autocomplete reutilizable ---
+function attachAutocomplete(input, listEl, opts) {
+    function close() { listEl.classList.remove('open'); }
+    function open()  { listEl.classList.add('open'); }
+    function refresh() {
+        if (input.disabled) { close(); return; }
+        const q = input.value.trim();
+        const results = searchPlacesPrefix(q, 8);
+        const items = results.map(p =>
+            `<div class="ac-item" data-id="${p.id}">
+                <span class="pin">📍</span>
+                <span>${escapeHtml(p.nombre)}</span>
+                ${p.municipio ? `<span class="municipio">${escapeHtml(p.municipio)}</span>` : ''}
+            </div>`
+        ).join('');
+        const exact = q && findPlaceByName(q);
+        const create = q && !exact
+            ? `<div class="ac-item create" data-create="1">+ Crear "${escapeHtml(q)}" en el mapa</div>`
+            : '';
+        listEl.innerHTML = items + create;
+        if (items || create) open(); else close();
+    }
+    listEl.addEventListener('mousedown', (e) => {
+        const item = e.target.closest('.ac-item');
+        if (!item) return;
+        e.preventDefault();
+        if (item.dataset.create) {
+            opts.onCreate(input.value.trim());
+        } else {
+            const id = +item.dataset.id;
+            const p = state.places.find(pp => pp.id === id);
+            if (p) opts.onSelect(p);
+        }
+        close();
+    });
+    input.addEventListener('focus', refresh);
+    input.addEventListener('input', refresh);
+    input.addEventListener('blur', () => setTimeout(close, 120));
+    return { refresh, close };
+}
+
+// --- Modal mapita Leaflet ---
+let mapPicker = null;
+let mapMarker = null;
+let mapResolver = null;
+
+function openMapModal({ nombre = '', defaultLat = null, defaultLon = null } = {}) {
+    document.getElementById('map-nombre').value = nombre;
+    document.getElementById('map-municipio').value = '';
+    document.getElementById('map-latlon').textContent = '— · —';
+    document.getElementById('map-modal-bg').classList.add('open');
+
+    if (!mapPicker) {
+        mapPicker = L.map('map-picker').setView([5.54, -73.36], 8); // centro de Boyacá
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '© OpenStreetMap'
+        }).addTo(mapPicker);
+        mapPicker.on('click', (e) => setMarker(e.latlng.lat, e.latlng.lng));
+    }
+    if (mapMarker) { mapPicker.removeLayer(mapMarker); mapMarker = null; }
+    setTimeout(() => mapPicker.invalidateSize(), 80);
+
+    if (defaultLat != null && defaultLon != null) {
+        setMarker(defaultLat, defaultLon);
+        mapPicker.setView([defaultLat, defaultLon], 13);
+    }
+
+    return new Promise((resolve) => { mapResolver = resolve; });
+}
+
+function setMarker(lat, lon) {
+    if (mapMarker) mapPicker.removeLayer(mapMarker);
+    mapMarker = L.marker([lat, lon], { draggable: true }).addTo(mapPicker);
+    mapMarker.on('dragend', (e) => {
+        const ll = e.target.getLatLng();
+        document.getElementById('map-latlon').textContent =
+            `${ll.lat.toFixed(6)} · ${ll.lng.toFixed(6)}`;
+    });
+    document.getElementById('map-latlon').textContent =
+        `${lat.toFixed(6)} · ${lon.toFixed(6)}`;
+}
+
+function closeMapModal(result) {
+    document.getElementById('map-modal-bg').classList.remove('open');
+    if (mapResolver) { mapResolver(result || null); mapResolver = null; }
+}
+
+async function saveMapPlace() {
+    const nombre = document.getElementById('map-nombre').value.trim();
+    if (!nombre)    { alertMsg('Pon un nombre al lugar', 'error'); return; }
+    if (!mapMarker) { alertMsg('Haz clic en el mapa para fijar la coordenada', 'error'); return; }
+    const ll = mapMarker.getLatLng();
+    const municipio = document.getElementById('map-municipio').value.trim() || null;
+    try {
+        const r = await fetch('/api/places', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ region_id: state.region, nombre, lat: ll.lat, lon: ll.lng, municipio }),
+        }).then(r => r.json());
+        if (r.error) {
+            if (r.existing && confirm(`Ya existe "${r.existing.nombre}" en el catálogo. ¿Vincular con ese?`)) {
+                if (!state.places.find(p => p.id === r.existing.id)) state.places.push(r.existing);
+                state.places.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                closeMapModal(r.existing);
+                return;
+            }
+            alertMsg(r.error, 'error');
+            return;
+        }
+        state.places.push(r.place);
+        state.places.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        closeMapModal(r.place);
+    } catch (e) {
+        alertMsg(`Error: ${e.message}`, 'error');
+    }
+}
 
 function renderResList() {
     const c = document.getElementById('f-res-list');
@@ -617,7 +913,9 @@ async function saveRoute() {
         operator_id: +document.getElementById('f-operator').value,
         origen:   document.getElementById('f-origen').value.trim(),
         destino:  document.getElementById('f-destino').value.trim(),
-        via:      [...state.viasDraft],
+        origen_place_id:  state.origenPlaceId  || null,
+        destino_place_id: state.destinoPlaceId || null,
+        via: state.viasDraft.map(v => ({ nombre: v.nombre, place_id: v.place_id || null })),
         ref:      document.getElementById('f-ref').value.trim() || null,
         notas:    document.getElementById('f-notas').value.trim() || null,
         resoluciones: state.resolucionesDraft
@@ -677,6 +975,84 @@ document.getElementById('filter-op').addEventListener('change', e => {
     state.filterOp = e.target.value;
     render();
 });
+
+// ---- Autocompletes de origen / destino / vía ----
+attachAutocomplete(
+    document.getElementById('f-origen'),
+    document.getElementById('ac-origen'),
+    {
+        onSelect(place) {
+            document.getElementById('f-origen').value = place.nombre;
+            state.origenPlaceId = place.id;
+            updateOrigenPin();
+        },
+        async onCreate(text) {
+            if (!text) return;
+            const created = await openMapModal({ nombre: text });
+            if (created) {
+                document.getElementById('f-origen').value = created.nombre;
+                state.origenPlaceId = created.id;
+                updateOrigenPin();
+            }
+        }
+    }
+);
+attachAutocomplete(
+    document.getElementById('f-destino'),
+    document.getElementById('ac-destino'),
+    {
+        onSelect(place) {
+            document.getElementById('f-destino').value = place.nombre;
+            state.destinoPlaceId = place.id;
+            updateDestinoPin();
+        },
+        async onCreate(text) {
+            if (!text) return;
+            const created = await openMapModal({ nombre: text });
+            if (created) {
+                document.getElementById('f-destino').value = created.nombre;
+                state.destinoPlaceId = created.id;
+                updateDestinoPin();
+            }
+        }
+    }
+);
+attachAutocomplete(
+    document.getElementById('f-via-input'),
+    document.getElementById('ac-via'),
+    {
+        onSelect(place) {
+            state.viasDraft.push({ nombre: place.nombre, place_id: place.id });
+            document.getElementById('f-via-input').value = '';
+            renderViasDraft();
+        },
+        async onCreate(text) {
+            if (!text) return;
+            const created = await openMapModal({ nombre: text });
+            if (created) {
+                state.viasDraft.push({ nombre: created.nombre, place_id: created.id });
+                document.getElementById('f-via-input').value = '';
+                renderViasDraft();
+            }
+        }
+    }
+);
+
+// Si el usuario edita el texto manualmente y deja de coincidir con el lugar
+// vinculado, soltamos el place_id. Así evitamos vínculos "fantasma".
+function _watchPlaceLink(inputId, getPlaceId, setPlaceId, updatePin) {
+    document.getElementById(inputId).addEventListener('input', (e) => {
+        const pid = getPlaceId();
+        if (!pid) return;
+        const place = state.places.find(p => p.id === pid);
+        if (!place || norm(place.nombre) !== norm(e.target.value)) {
+            setPlaceId(null);
+            updatePin();
+        }
+    });
+}
+_watchPlaceLink('f-origen',  () => state.origenPlaceId,  v => state.origenPlaceId  = v, updateOrigenPin);
+_watchPlaceLink('f-destino', () => state.destinoPlaceId, v => state.destinoPlaceId = v, updateDestinoPin);
 
 // ---- Utils -----
 function escapeHtml(s) {
