@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cómo trabajamos — Busboy / TP Routes</title>
+<meta name="description" content="Guía simple de cómo construimos el mapa abierto del transporte público de Boyacá. Para el equipo del Terminal de Tunja y los estudiantes." />
+
+<style>
+:root {
+    --navy: #0f1129;
+    --navy-2: #1a1d45;
+    --ink: #16183a;
+    --accent: #4a9eff;
+    --accent-2: #2a5ec8;
+    --warm: #f7b84b;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --muted: #6872aa;
+    --paper: #f7f9fd;
+    --paper-2: #eef2f9;
+    --line: #dde3ee;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Nav */
+.top-nav {
+    position: sticky; top: 0; z-index: 50;
+    padding: 12px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(15,17,41,.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.logo { color: white; font-weight: 800; font-size: 1.05rem; letter-spacing: -.4px; }
+.logo span { color: var(--accent); }
+.top-nav a { color: rgba(255,255,255,.85); text-decoration: none; font-size: 0.85rem; margin-left: 18px; }
+.top-nav a:hover { color: white; }
+
+/* Hero */
+.hero {
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: white;
+    padding: 80px 24px 100px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.hero::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: -1px; height: 60px;
+    background: linear-gradient(180deg, transparent, var(--paper));
+}
+.hero .badge {
+    display: inline-block; padding: 6px 14px; border-radius: 20px;
+    background: rgba(74,158,255,.18); border: 1px solid rgba(74,158,255,.4);
+    color: var(--accent); font-size: 0.78rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    margin-bottom: 18px;
+}
+.hero h1 {
+    font-size: clamp(1.9rem, 5vw, 3rem);
+    font-weight: 800; line-height: 1.15; margin-bottom: 18px;
+    letter-spacing: -.5px;
+}
+.hero h1 .accent { color: var(--accent); }
+.hero p.lead {
+    max-width: 620px; margin: 0 auto;
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    color: rgba(255,255,255,.78);
+    line-height: 1.65;
+}
+
+/* Secciones */
+section {
+    max-width: 880px; margin: 0 auto;
+    padding: 60px 24px;
+}
+section.alt { background: var(--paper-2); margin: 0; max-width: none; }
+section.alt > .inner { max-width: 880px; margin: 0 auto; }
+
+h2 {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 800; color: var(--navy);
+    margin-bottom: 14px;
+    letter-spacing: -.3px;
+}
+h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); color: white;
+    font-size: 1rem; font-weight: 800;
+    margin-right: 12px;
+    vertical-align: middle;
+}
+h3 {
+    font-size: 1.15rem; font-weight: 700; color: var(--navy);
+    margin-top: 24px; margin-bottom: 8px;
+}
+
+p { margin-bottom: 14px; color: #2c2f55; }
+.lead-p { font-size: 1.05rem; color: var(--muted); margin-bottom: 28px; }
+
+ul { margin: 12px 0 18px 22px; }
+li { margin-bottom: 8px; }
+
+strong { color: var(--navy); }
+
+/* Tarjetas de jerarquía */
+.hierarchy {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 28px 0;
+}
+.hier-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 6px rgba(15,17,41,.04);
+    position: relative;
+}
+.hier-card .level {
+    display: inline-block;
+    background: var(--accent); color: white;
+    width: 28px; height: 28px; border-radius: 50%;
+    text-align: center; line-height: 28px;
+    font-size: 0.8rem; font-weight: 800;
+    margin-bottom: 10px;
+}
+.hier-card .name { font-size: 1.1rem; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+.hier-card .desc { font-size: 0.88rem; color: var(--muted); margin-bottom: 8px; }
+.hier-card .ex {
+    font-size: 0.82rem; background: var(--paper-2); padding: 8px 10px; border-radius: 6px;
+    color: #45487a;
+}
+.hier-card .ex b { color: var(--accent-2); }
+
+/* Diagrama de paradas (3 pasos) */
+.steps-stop {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin: 30px 0;
+}
+.step-card {
+    background: white;
+    border-radius: 12px;
+    padding: 22px 18px;
+    border: 1px solid var(--line);
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(15,17,41,.04);
+}
+.step-card .step-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 1.6rem;
+}
+.step-card.s1 .step-icon { background: #fff4e0; }
+.step-card.s2 .step-icon { background: #e0f0ff; }
+.step-card.s3 .step-icon { background: #e0fae8; }
+.step-card .step-num {
+    font-size: 0.72rem; font-weight: 700; color: var(--accent);
+    letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px;
+}
+.step-card h4 { font-size: 1.05rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+.step-card p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+
+/* Tarjetas equipo */
+.teams {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+    margin-top: 24px;
+}
+.team-card {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 6px rgba(15,17,41,.05);
+}
+.team-card.terminal { border-top: 4px solid var(--accent); }
+.team-card.estudiantes { border-top: 4px solid var(--warm); }
+.team-card .team-icon { font-size: 1.8rem; margin-bottom: 10px; }
+.team-card h3 { margin-top: 0; font-size: 1.2rem; }
+.team-card p.role { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; font-style: italic; }
+.team-card ul { margin: 0 0 0 18px; }
+.team-card li { font-size: 0.92rem; }
+
+/* Caja explicativa OSM */
+.osm-box {
+    background: white;
+    border-left: 4px solid var(--green);
+    border-radius: 8px;
+    padding: 22px;
+    margin: 24px 0;
+    box-shadow: 0 2px 6px rgba(15,17,41,.04);
+}
+.osm-box h3 { margin-top: 0; }
+
+/* Caja "vibe coding" */
+.vibe-box {
+    background: linear-gradient(135deg, rgba(74,158,255,.08), rgba(247,184,75,.08));
+    border: 1px solid rgba(74,158,255,.25);
+    border-radius: 14px;
+    padding: 28px;
+    margin: 30px 0;
+    text-align: center;
+}
+.vibe-box h3 { margin-top: 0; font-size: 1.25rem; }
+.vibe-box p { color: #2c2f55; max-width: 600px; margin: 0 auto 8px; }
+.vibe-box p:last-child { margin-bottom: 0; }
+
+/* Flecha entre piezas */
+.arrow-down {
+    text-align: center; font-size: 1.6rem; color: var(--accent);
+    margin: -4px 0 4px;
+}
+
+/* Línea de proceso (parada) */
+.process {
+    display: flex; align-items: center; justify-content: center;
+    gap: 18px; flex-wrap: wrap; margin: 26px 0;
+}
+.process .pill {
+    background: white; padding: 10px 18px; border-radius: 30px;
+    border: 1px solid var(--line);
+    font-size: 0.92rem; font-weight: 600;
+    box-shadow: 0 2px 6px rgba(15,17,41,.04);
+}
+.process .pill.s1 { color: #b8860b; border-color: #f5d68d; }
+.process .pill.s2 { color: var(--accent-2); border-color: #b4ccf0; }
+.process .pill.s3 { color: var(--green); border-color: #a3e0ba; }
+.process .arr { color: var(--muted); font-size: 1.2rem; }
+
+/* CTA final */
+.cta {
+    background: linear-gradient(180deg, var(--navy-2) 0%, var(--navy) 100%);
+    color: white;
+    padding: 70px 24px 80px;
+    text-align: center;
+}
+.cta h2 { color: white; }
+.cta p { color: rgba(255,255,255,.78); max-width: 520px; margin: 0 auto 26px; }
+.cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn {
+    display: inline-block; padding: 12px 24px; border-radius: 8px;
+    text-decoration: none; font-weight: 600; font-size: 0.95rem;
+    transition: transform .1s, background .15s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-2); }
+.btn-ghost { background: transparent; color: white; border: 1px solid rgba(255,255,255,.3); }
+.btn-ghost:hover { background: rgba(255,255,255,.08); }
+
+/* Footer */
+footer {
+    text-align: center; padding: 30px 24px;
+    color: var(--muted); font-size: 0.85rem;
+    background: var(--navy);
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* Móvil: ajustes */
+@media (max-width: 640px) {
+    .hero { padding: 60px 20px 80px; }
+    section { padding: 50px 20px; }
+    h2 .num { width: 30px; height: 30px; font-size: 0.88rem; }
+    .process .arr { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="logo">Bus<span>boy</span></div>
+    <div>
+        <a href="/home.html">Inicio</a>
+        <a href="/rutas.html">Listado</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+    <div class="badge">Guía para el equipo</div>
+    <h1>Cómo construimos el <span class="accent">mapa abierto</span> del transporte de Boyacá</h1>
+    <p class="lead">Una guía simple para el equipo del Terminal de Tunja y los estudiantes que están empezando con nosotros. Sin tecnicismos.</p>
+</header>
+
+<!-- 1. ¿De qué se trata? -->
+<section>
+    <h2><span class="num">1</span>¿De qué se trata?</h2>
+    <p class="lead-p">Estamos haciendo un <strong>directorio público y abierto</strong> de todas las rutas del transporte intermunicipal de Boyacá.</p>
+
+    <p>Hoy esa información está repartida en papeles, hojas de Excel, resoluciones, y en la cabeza de la gente que trabaja en el Terminal. <strong>Nadie tiene la foto completa.</strong> Si alguien quiere saber cómo ir de Tunja a Soatá, no hay un solo lugar donde mirarlo.</p>
+
+    <p>Lo que estamos construyendo:</p>
+    <ul>
+        <li>Una <strong>página web</strong> donde se ve el listado completo de rutas, ordenado y buscable.</li>
+        <li>Cada ruta con sus <strong>paradas, empresas, resoluciones y tarifas</strong>.</li>
+        <li>Las paradas con <strong>posición real en el mapa</strong> (no solo el nombre).</li>
+        <li>Y al final, todo eso publicado en <strong>OpenStreetMap</strong> — el mapa libre del mundo — para que cualquier app de transporte pueda usarlo.</li>
+    </ul>
+</section>
+
+<!-- 2. Las 4 piezas -->
+<section class="alt">
+  <div class="inner">
+    <h2><span class="num">2</span>Las 4 piezas que componen una ruta</h2>
+    <p class="lead-p">La información se organiza en cuatro niveles, de lo general a lo específico. Es importante manejar bien estas palabras porque las usamos todo el tiempo.</p>
+
+    <div class="hierarchy">
+        <div class="hier-card">
+            <div class="level">1</div>
+            <div class="name">Corredor</div>
+            <div class="desc">Un par de ciudades. La idea más general: "ir de aquí para allá".</div>
+            <div class="ex">Ejemplo: <b>Tunja ↔ Sogamoso</b></div>
+        </div>
+        <div class="hier-card">
+            <div class="level">2</div>
+            <div class="name">Ruta</div>
+            <div class="desc">El camino concreto. Entre las mismas dos ciudades puede haber varias.</div>
+            <div class="ex">Ejemplo: <b>Tunja → Sogamoso</b> directo, o pasando por <b>Paipa → Duitama</b></div>
+        </div>
+        <div class="hier-card">
+            <div class="level">3</div>
+            <div class="name">Empresa</div>
+            <div class="desc">El operador que corre esa ruta. Una misma ruta puede tener varias empresas.</div>
+            <div class="ex">Ejemplo: <b>Libertadores</b>, <b>Cootradatil</b>, <b>Concorde</b></div>
+        </div>
+        <div class="hier-card">
+            <div class="level">4</div>
+            <div class="name">Trayecto</div>
+            <div class="desc">Un sentido específico: ida o vuelta. Es lo que finalmente se publica en el mapa.</div>
+            <div class="ex">Ejemplo: <b>Libertadores · Tunja → Sogamoso (ida)</b></div>
+        </div>
+    </div>
+
+    <p style="font-size:0.92rem;color:var(--muted);margin-top:12px;">
+        <strong>¿Por qué importa esta jerarquía?</strong> Porque cuando uno carga datos en la plataforma, primero define el corredor, después la ruta, después le asigna la empresa, y al final cada trayecto se vuelve un objeto navegable en el mapa. Sin esa estructura, todo se mezcla.
+    </p>
+  </div>
+</section>
+
+<!-- 3. La información que ponemos -->
+<section>
+    <h2><span class="num">3</span>¿Qué información hay que poner?</h2>
+    <p class="lead-p">Para cada ruta necesitamos esto. Sin esta información no se puede publicar.</p>
+
+    <h3>📍 Lo básico</h3>
+    <ul>
+        <li><strong>Origen</strong> y <strong>destino</strong> — las dos ciudades extremas.</li>
+        <li><strong>Empresa</strong> que la opera.</li>
+        <li><strong>Paradas intermedias en orden</strong> — por dónde pasa el bus.</li>
+    </ul>
+
+    <h3>📜 Lo legal</h3>
+    <ul>
+        <li><strong>Resoluciones</strong> que autorizan la ruta — número, fecha y, si se puede, el PDF.</li>
+        <li><strong>Código de referencia</strong> interno de la empresa (opcional).</li>
+    </ul>
+
+    <h3>💰 Lo económico (próxima fase)</h3>
+    <ul>
+        <li><strong>Tarifas</strong> — cuánto cuesta de un punto a otro.</li>
+        <li><strong>Frecuencias / horarios</strong> — cada cuánto sale.</li>
+    </ul>
+</section>
+
+<!-- 4. Las paradas — la pieza clave -->
+<section class="alt">
+  <div class="inner">
+    <h2><span class="num">4</span>Cómo nace una parada</h2>
+    <p class="lead-p">Las paradas son el corazón del sistema. Pero <strong>no aparecen completas de un día para otro</strong>: nacen como un nombre y van creciendo. Tres pasos.</p>
+
+    <div class="process">
+        <span class="pill s1">📝 Solo nombre</span>
+        <span class="arr">→</span>
+        <span class="pill s2">📍 Con coordenada</span>
+        <span class="arr">→</span>
+        <span class="pill s3">🛣️ La ruta pasa por ahí</span>
+    </div>
+
+    <div class="steps-stop">
+        <div class="step-card s1">
+            <div class="step-icon">📝</div>
+            <div class="step-num">Paso 1</div>
+            <h4>Solo el nombre</h4>
+            <p>Cuando alguien del Terminal carga una ruta nueva, escribe los nombres de las paradas: "Paipa", "Duitama". En este punto solo es texto. La plataforma la marca como <em>pendiente de geolocalizar</em>.</p>
+        </div>
+        <div class="step-card s2">
+            <div class="step-icon">📍</div>
+            <div class="step-num">Paso 2</div>
+            <h4>Le ponemos coordenada</h4>
+            <p>Alguien abre el mapita, hace <strong>un clic</strong> donde está esa parada en la realidad, y queda guardada con sus coordenadas (latitud y longitud). <strong>Una sola vez por lugar</strong>: si "Paipa" aparece en 20 rutas, se carga una vez y se reusa.</p>
+        </div>
+        <div class="step-card s3">
+            <div class="step-icon">🛣️</div>
+            <div class="step-num">Paso 3</div>
+            <h4>La ruta se dibuja</h4>
+            <p>Ya con todas las paradas geolocalizadas, los estudiantes <strong>dibujan el camino real</strong> que sigue el bus por las carreteras conectando esas paradas. Eso es la geometría de la ruta.</p>
+        </div>
+    </div>
+
+    <p style="margin-top:8px;">
+        En el listado podés ver cómo va el progreso: cada ruta muestra <strong>"3 de 5 paradas geolocalizadas"</strong>. Las paradas verdes ya están en el mapa, las grises siguen siendo solo texto.
+    </p>
+  </div>
+</section>
+
+<!-- 5. Quién hace qué -->
+<section>
+    <h2><span class="num">5</span>¿Quién hace qué?</h2>
+    <p class="lead-p">Trabajamos en dos equipos sobre la misma plataforma, sin pisarnos.</p>
+
+    <div class="teams">
+        <div class="team-card terminal">
+            <div class="team-icon">🏢</div>
+            <h3>Equipo del Terminal de Tunja</h3>
+            <p class="role">Mantienen los datos al día. Son la fuente.</p>
+            <ul>
+                <li>Cargar corredores, rutas y empresas.</li>
+                <li>Adjuntar resoluciones (número, fecha, PDF).</li>
+                <li>Geolocalizar las paradas con el mapita.</li>
+                <li>Mantener tarifas (cuando esté el módulo).</li>
+                <li>Avisar cuando una ruta cambia o sale una nueva.</li>
+            </ul>
+        </div>
+        <div class="team-card estudiantes">
+            <div class="team-icon">🎓</div>
+            <h3>Estudiantes</h3>
+            <p class="role">Convierten las rutas en geometría real sobre OpenStreetMap.</p>
+            <ul>
+                <li>Revisar que la información del Terminal esté completa.</li>
+                <li>Dibujar el trazado de cada ruta sobre las carreteras.</li>
+                <li>Crear las relaciones PTv2 (estándar de transporte público en OSM).</li>
+                <li>Validar que la estructura cumpla el estándar.</li>
+                <li>Reportar dudas y bugs en GitHub.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- 6. ¿Qué es OpenStreetMap? -->
+<section class="alt">
+  <div class="inner">
+    <h2><span class="num">6</span>¿Y qué es OpenStreetMap?</h2>
+
+    <div class="osm-box">
+        <h3>Es como Wikipedia, pero de mapas.</h3>
+        <p>Wikipedia tiene artículos que cualquiera puede escribir y mejorar, y eso se vuelve la enciclopedia más grande del mundo, gratis para todos. <strong>OpenStreetMap (OSM) es lo mismo, pero con mapas:</strong> calles, paraderos, hospitales, ríos, todo lo que ves en un mapa, lo edita la gente.</p>
+
+        <p>Cuando nosotros publicamos las rutas de Boyacá en OSM, esas rutas pasan a ser <strong>parte del mapa global del mundo</strong>. Apps como Trufi, OsmAnd, Maps.me y muchas más pueden tomar esos datos y usarlos para guiar a la gente. Y nadie tiene que pedirnos permiso ni pagar nada — son datos abiertos.</p>
+    </div>
+
+    <h3>¿Por qué hay un "estándar" PTv2?</h3>
+    <p>Porque para que una app pueda <strong>entender</strong> que un montón de líneas en el mapa son "una ruta de bus que sale de Tunja, para en Paipa, y termina en Sogamoso", esos datos tienen que estar guardados de cierta manera. PTv2 es el "formato común" que todas las apps de transporte saben leer. Si lo respetamos, nuestras rutas funcionan en cualquier lado.</p>
+
+    <p style="font-size:0.92rem;color:var(--muted);">No se preocupen si esto no se entiende del todo: <strong>los estudiantes son los que se encargan de esa parte técnica</strong>. El Terminal solo necesita saber que existe y para qué sirve.</p>
+  </div>
+</section>
+
+<!-- 7. Lo construimos juntos -->
+<section>
+    <h2><span class="num">7</span>Importante: lo estamos construyendo entre todos</h2>
+
+    <div class="vibe-box">
+        <h3>🛠️ Esta plataforma <em>no existía</em> antes.</h3>
+        <p>No es un sistema viejo que les estamos pidiendo que llenen. <strong>La estamos haciendo ahora, mientras la usan ustedes.</strong></p>
+        <p>Eso quiere decir dos cosas:</p>
+        <p style="text-align:left;display:inline-block;margin-top:8px;">
+            ✅ <strong>Su feedback la cambia.</strong> Si algo no se entiende, lo arreglamos. Si falta una columna, la agregamos. Si el flujo es confuso, lo rediseñamos.<br>
+            ⚠️ <strong>Va a haber cosas que fallen.</strong> Es normal. Cuando algo se rompa o no se entienda, avisen — eso es parte del proceso, no un problema.
+        </p>
+    </div>
+
+    <p>Trabajamos en lo que se llama <strong>"vibe coding"</strong>: vamos construyendo, probando, ajustando, todo en conjunto. La plataforma de hoy no es la de la semana que viene, y la de la semana que viene tampoco es la final. Mejora cada vez que la usamos.</p>
+
+    <p>Por eso pedimos paciencia, pero también <strong>exigimos opinión</strong>: ustedes son los que la van a usar todos los días. Lo que ustedes digan vale más que cualquier diseño que hagamos en abstracto.</p>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>¿Listos para empezar?</h2>
+    <p>Entren al listado, exploren, jueguen. Si algo no se entiende, anótenlo — lo discutimos juntos.</p>
+    <div class="cta-btns">
+        <a class="btn btn-primary" href="/rutas.html">Ir al listado de rutas</a>
+        <a class="btn btn-ghost" href="https://github.com/leoguti/tp-routes/issues" target="_blank">Reportar algo en GitHub</a>
+    </div>
+</section>
+
+<footer>
+    Busboy / TP Routes · Hecho en Duitama, para Boyacá ·
+    <a href="/home.html">Inicio</a>
+</footer>
+
+</body>
+</html>
