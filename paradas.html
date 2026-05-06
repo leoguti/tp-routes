@@ -26,7 +26,11 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
 .intro a { color: #2a5ec8; }
 
 .stats-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-.stat-box { background: white; border-radius: 8px; padding: 12px 18px; min-width: 130px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-align: center; }
+.stat-box { background: white; border-radius: 8px; padding: 12px 18px; min-width: 130px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-align: center; cursor: pointer; transition: transform .08s, box-shadow .15s, border .15s; border: 2px solid transparent; user-select: none; }
+.stat-box:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); transform: translateY(-1px); }
+.stat-box.active { border-color: #1a1a3e; box-shadow: 0 4px 10px rgba(26,26,62,.15); }
+.stat-box.good.active { border-color: #27ae60; }
+.stat-box.warn.active { border-color: #e67e22; }
 .stat-box .num { font-size: 1.5rem; font-weight: 800; color: #1a1a3e; }
 .stat-box .lbl { font-size: 0.72rem; color: #888; margin-top: 2px; }
 .stat-box.good .num { color: #27ae60; }
@@ -158,9 +162,9 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
     <div id="alert" class="alert"></div>
 
     <div class="stats-row">
-        <div class="stat-box"><div class="num" id="s-total">—</div><div class="lbl">Paradas</div></div>
-        <div class="stat-box good"><div class="num" id="s-usadas">—</div><div class="lbl">En uso</div></div>
-        <div class="stat-box warn"><div class="num" id="s-huerf">—</div><div class="lbl">Sin usar</div></div>
+        <div class="stat-box"      id="sb-all"    onclick="setUsageFilter('all')"   title="Mostrar todas"><div class="num" id="s-total">—</div><div class="lbl">Paradas</div></div>
+        <div class="stat-box good" id="sb-used"   onclick="setUsageFilter('used')"  title="Solo las que están en uso"><div class="num" id="s-usadas">—</div><div class="lbl">En uso</div></div>
+        <div class="stat-box warn" id="sb-unused" onclick="setUsageFilter('unused')" title="Solo las que no se usan en ninguna ruta"><div class="num" id="s-huerf">—</div><div class="lbl">Sin usar</div></div>
     </div>
 
     <div class="toolbar">
@@ -221,6 +225,7 @@ const state = {
     usage: new Map(),     // place_id -> count of references
     pending: [],          // [{ nombre, count, fuentes: ['origen','destino','via'] }]
     search: '',
+    usageFilter: 'all',   // 'all' | 'used' | 'unused'
     editing: null,        // place actual en edición o null
     pendingOriginal: null, // nombre original cuando se geolocaliza desde "pendientes"
                            // (sirve para corregir typos: alias -> nombre correcto)
@@ -322,9 +327,24 @@ function updateStats() {
     document.getElementById('s-total').textContent = total;
     document.getElementById('s-usadas').textContent = usadas;
     document.getElementById('s-huerf').textContent = total - usadas;
+    // Marcar el stat-box activo
+    document.getElementById('sb-all').classList.toggle('active',    state.usageFilter === 'all');
+    document.getElementById('sb-used').classList.toggle('active',   state.usageFilter === 'used');
+    document.getElementById('sb-unused').classList.toggle('active', state.usageFilter === 'unused');
+}
+
+function setUsageFilter(f) {
+    state.usageFilter = f;
+    updateStats();
+    render();
 }
 
 function matches(p) {
+    // Filtro por uso (clickeable en los stats)
+    const uses = state.usage.get(p.id) || 0;
+    if (state.usageFilter === 'used'   && uses === 0) return false;
+    if (state.usageFilter === 'unused' && uses > 0)   return false;
+    // Filtro por texto
     if (!state.search) return true;
     const q = norm(state.search);
     return norm(p.nombre).includes(q) || norm(p.municipio || '').includes(q);
