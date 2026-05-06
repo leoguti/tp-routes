@@ -101,6 +101,20 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
 .map-coords { font-size: 0.78rem; color: #666; margin-top: 8px; }
 .map-coords b { color: #1a1a3e; }
 
+/* Sugerencias OSM (Photon) */
+.geo-search-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+.geo-search-row .btn-sm { white-space: nowrap; }
+.geo-results { margin-top: 6px; border: 1px solid #e2e7f1; border-radius: 8px; background: #fafbff; max-height: 180px; overflow-y: auto; }
+.geo-results:empty { display: none; }
+.geo-result { padding: 8px 12px; border-bottom: 1px solid #eef2f9; cursor: pointer; font-size: 0.84rem; }
+.geo-result:last-child { border-bottom: none; }
+.geo-result:hover { background: #eef3ff; }
+.geo-result .gname { font-weight: 600; color: #1a1a3e; }
+.geo-result .gloc  { color: #777; font-size: 0.78rem; margin-top: 2px; }
+.geo-result .gcoords { color: #aaa; font-size: 0.72rem; font-family: ui-monospace, monospace; margin-top: 2px; }
+.geo-loading { padding: 12px; text-align: center; color: #888; font-size: 0.84rem; }
+.geo-empty { padding: 12px; text-align: center; color: #c0392b; font-size: 0.84rem; }
+
 @media (max-width: 720px) {
     .place-row { grid-template-columns: 1fr; gap: 6px; }
     .place-row .acts { justify-content: flex-end; }
@@ -163,7 +177,12 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
     </div>
     <div class="form-group">
         <label>Posición en el mapa *</label>
-        <div id="m-map"></div>
+        <div class="geo-search-row">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="suggestLocation()">🔍 Sugerir ubicación desde OSM</button>
+            <small style="color:#888">Busca el nombre actual en OpenStreetMap y te muestra opciones.</small>
+        </div>
+        <div id="geo-results" class="geo-results"></div>
+        <div id="m-map" style="margin-top:8px"></div>
         <div class="map-coords">Coordenada: <b id="m-latlon">— · —</b> · Haz clic en el mapa o arrastra el marcador.</div>
     </div>
     <div class="form-row" style="margin-top:10px">
@@ -369,6 +388,51 @@ function clearMarker() {
     document.getElementById('m-latlon').textContent = '— · —';
 }
 
+// --- Sugerencias de ubicación desde OpenStreetMap (Photon) ---
+async function suggestLocation() {
+    const q = document.getElementById('m-nombre').value.trim();
+    const box = document.getElementById('geo-results');
+    if (!q) {
+        box.innerHTML = `<div class="geo-empty">Escribí primero el nombre de la parada.</div>`;
+        return;
+    }
+    box.innerHTML = `<div class="geo-loading">Buscando "${escapeHtml(q)}" en OpenStreetMap…</div>`;
+    try {
+        // Bias: centro de Boyacá. limit=6 resultados.
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q + ', Colombia')}&limit=6&lat=5.54&lon=-73.36`;
+        const res = await fetch(url).then(r => r.json());
+        const feats = res.features || [];
+        if (!feats.length) {
+            box.innerHTML = `<div class="geo-empty">Sin resultados. Intentá con otra ortografía o ubicá a mano en el mapa.</div>`;
+            return;
+        }
+        box.innerHTML = feats.map((f, i) => {
+            const p = f.properties || {};
+            const [lon, lat] = f.geometry.coordinates;
+            const name = p.name || q;
+            const adminParts = [p.city, p.county, p.state, p.country].filter(Boolean);
+            const loc = adminParts.join(', ');
+            return `<div class="geo-result" onclick='useGeoResult(${JSON.stringify({ name, lat, lon, city: p.city || p.county || '' }).replace(/'/g, "&#39;")})'>
+                <div class="gname">${escapeHtml(name)}</div>
+                ${loc ? `<div class="gloc">${escapeHtml(loc)}</div>` : ''}
+                <div class="gcoords">${(+lat).toFixed(5)}, ${(+lon).toFixed(5)}</div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        box.innerHTML = `<div class="geo-empty">Error al consultar OSM: ${escapeHtml(e.message)}</div>`;
+    }
+}
+
+function useGeoResult(r) {
+    setMarker(+r.lat, +r.lon);
+    mapModal.setView([+r.lat, +r.lon], 14);
+    // Si el municipio está vacío, lo prellenamos con el de la sugerencia.
+    const muniInput = document.getElementById('m-municipio');
+    if (!muniInput.value.trim() && r.city) muniInput.value = r.city;
+    // Limpiar resultados para mantener el modal liviano.
+    document.getElementById('geo-results').innerHTML = '';
+}
+
 function openCreate() {
     state.editing = null;
     state.pendingOriginal = null;
@@ -377,6 +441,7 @@ function openCreate() {
     document.getElementById('m-municipio').value = '';
     document.getElementById('m-notas').value = '';
     document.getElementById('m-delete').style.display = 'none';
+    document.getElementById('geo-results').innerHTML = '';
     ensureMap();
     clearMarker();
     mapModal.setView([5.54, -73.36], 8);
@@ -397,6 +462,7 @@ function openEdit(place) {
     document.getElementById('m-municipio').value = place.municipio || '';
     document.getElementById('m-notas').value = place.notas || '';
     document.getElementById('m-delete').style.display = '';
+    document.getElementById('geo-results').innerHTML = '';
     ensureMap();
     setMarker(+place.lat, +place.lon);
     mapModal.setView([+place.lat, +place.lon], 13);
