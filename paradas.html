@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TP Routes — Paradas</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; }
+
+#header { background: #1a1a3e; color: white; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+#header h1 { font-size: 1.05rem; margin: 0; }
+#header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
+#header nav a.active, #header nav a:hover { color: white; }
+
+.page { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+
+.intro {
+    background: #fffbe8; border: 1px solid #fce9a4; color: #7a5d1a;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;
+    font-size: 0.88rem; line-height: 1.55;
+}
+.intro b { color: #5a4410; }
+.intro a { color: #2a5ec8; }
+
+.stats-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.stat-box { background: white; border-radius: 8px; padding: 12px 18px; min-width: 130px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-align: center; }
+.stat-box .num { font-size: 1.5rem; font-weight: 800; color: #1a1a3e; }
+.stat-box .lbl { font-size: 0.72rem; color: #888; margin-top: 2px; }
+.stat-box.good .num { color: #27ae60; }
+.stat-box.warn .num { color: #e67e22; }
+.stat-box.danger .num { color: #c0392b; }
+
+.toolbar { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.toolbar input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; flex: 1; min-width: 200px; }
+.btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 0.83rem; cursor: pointer; font-weight: 500; }
+.btn-primary { background: #1a1a3e; color: white; }
+.btn-primary:hover { background: #2a2a5e; }
+.btn-ghost { background: transparent; color: #1a1a3e; border: 1px solid #ddd; }
+.btn-ghost:hover { background: #f5f5f5; }
+.btn-sm { padding: 4px 9px; font-size: 0.76rem; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-danger:hover { background: #c0392b; }
+
+/* Tabla de paradas */
+.places-list { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(26,26,62,.07); overflow: hidden; border: 1px solid #e6ecf5; }
+.place-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.8fr auto; gap: 12px; padding: 12px 16px; align-items: center; border-bottom: 1px solid #eef2f9; }
+.place-row:last-child { border-bottom: none; }
+.place-row:hover { background: #fafbff; }
+.place-row .name { font-weight: 700; color: #1a1a3e; display: flex; align-items: center; gap: 8px; }
+.place-row .name .pin { color: #196f3d; }
+.place-row .muni { font-size: 0.86rem; color: #555; }
+.place-row .muni:empty::before { content: '—'; color: #bbb; }
+.place-row .coords { font-size: 0.78rem; color: #888; font-family: ui-monospace, monospace; }
+.place-row .usage  { font-size: 0.82rem; color: #2a3e7a; }
+.place-row .usage.zero { color: #c0392b; font-style: italic; }
+.place-row .acts { display: flex; gap: 6px; }
+
+.places-list .head { background: #f4f7fc; font-weight: 700; font-size: 0.78rem; color: #555; text-transform: uppercase; letter-spacing: .4px; }
+.places-list .head:hover { background: #f4f7fc; }
+
+.empty { text-align: center; padding: 56px 20px; color: #aab; font-size: 0.9rem; background: white; border-radius: 12px; }
+.loader { text-align: center; padding: 40px; color: #aab; font-size: 0.9rem; }
+
+/* Alert */
+.alert { padding: 10px 14px; border-radius: 7px; margin-bottom: 14px; font-size: 0.83rem; display: none; }
+.alert.show { display: block; }
+.alert-success { background: #e0fae8; color: #1a6b3a; }
+.alert-error   { background: #fde4e0; color: #922; }
+
+/* Modal */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(26,26,62,.5); z-index: 100; align-items: flex-start; justify-content: center; overflow-y: auto; }
+.modal-bg.open { display: flex; }
+.modal { background: white; border-radius: 10px; width: 100%; max-width: 720px; padding: 24px; margin: 40px 16px; max-height: 90vh; overflow-y: auto; }
+.modal h2 { margin: 0 0 18px; font-size: 1rem; }
+.form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.form-group { flex: 1; }
+.form-group label { display: block; font-size: 0.76rem; color: #666; margin-bottom: 4px; font-weight: 500; }
+.form-group input, .form-group textarea {
+    width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; font-family: inherit;
+}
+.form-group small { color: #888; font-size: 0.72rem; display: block; margin-top: 2px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+#m-map { width: 100%; height: 360px; border-radius: 8px; border: 1px solid #ddd; }
+.map-coords { font-size: 0.78rem; color: #666; margin-top: 8px; }
+.map-coords b { color: #1a1a3e; }
+
+@media (max-width: 720px) {
+    .place-row { grid-template-columns: 1fr; gap: 6px; }
+    .place-row .acts { justify-content: flex-end; }
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+    <h1>TP Routes</h1>
+    <nav>
+        <a href="/home.html">Inicio</a>
+        <a href="/rutas.html">Rutas</a>
+        <a href="/paradas.html" class="active">Paradas</a>
+        <a href="/como-funciona.html">Cómo funciona</a>
+    </nav>
+</div>
+
+<div class="page">
+
+    <div class="intro">
+        <b>Catálogo de paradas geolocalizadas.</b>
+        Aquí viven las ciudades y sitios donde paran las rutas, con su posición real en el mapa.
+        Cuando en <a href="/rutas.html">/rutas</a> alguien escribe "Paipa" en una ruta y elige geolocalizar, queda guardado acá.
+        Después se reusa en cualquier otra ruta que pase por Paipa.
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <div class="stats-row">
+        <div class="stat-box"><div class="num" id="s-total">—</div><div class="lbl">Paradas</div></div>
+        <div class="stat-box good"><div class="num" id="s-usadas">—</div><div class="lbl">En uso</div></div>
+        <div class="stat-box warn"><div class="num" id="s-huerf">—</div><div class="lbl">Sin usar</div></div>
+    </div>
+
+    <div class="toolbar">
+        <input id="search" type="text" placeholder="Buscar por nombre o municipio…" />
+        <button class="btn btn-primary" onclick="openCreate()">+ Nueva parada</button>
+    </div>
+
+    <div id="list-wrap"><div class="loader">Cargando…</div></div>
+</div>
+
+<!-- Modal crear/editar parada -->
+<div id="modal-bg" class="modal-bg">
+  <div class="modal">
+    <h2 id="modal-title">Nueva parada</h2>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Nombre *</label>
+            <input id="m-nombre" type="text" placeholder="Ej. Paipa" />
+            <small>Se evita duplicar: "paipa" y "Paipa" son la misma parada.</small>
+        </div>
+        <div class="form-group">
+            <label>Municipio (opcional)</label>
+            <input id="m-municipio" type="text" placeholder="Por si hay varios con el mismo nombre" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Posición en el mapa *</label>
+        <div id="m-map"></div>
+        <div class="map-coords">Coordenada: <b id="m-latlon">— · —</b> · Haz clic en el mapa o arrastra el marcador.</div>
+    </div>
+    <div class="form-row" style="margin-top:10px">
+        <div class="form-group">
+            <label>Notas (opcional)</label>
+            <textarea id="m-notas" rows="2" placeholder="Cualquier detalle útil"></textarea>
+        </div>
+    </div>
+    <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button id="m-delete" class="btn btn-danger" style="display:none" onclick="deletePlace()">Eliminar</button>
+        <button class="btn btn-primary" onclick="savePlace()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/regions.js"></script>
+<script>
+const state = {
+    region: (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca',
+    places: [],
+    usage: new Map(),     // place_id -> count of references
+    search: '',
+    editing: null,        // place actual en edición o null
+};
+
+let mapModal = null, mapMarker = null;
+
+function norm(s) { return String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+function alertMsg(msg, type = 'success') {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert show alert-${type}`;
+    setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+async function load() {
+    try {
+        const [placesRes, routesRes] = await Promise.all([
+            fetch(`/api/places?region=${state.region}`).then(r => r.json()),
+            fetch(`/api/routes?region=${state.region}`).then(r => r.json()),
+        ]);
+        state.places = placesRes.places || [];
+
+        // Calcular cuántas veces cada place se usa (origen, destino, waypoints)
+        const usage = new Map();
+        const bump = (id) => { if (id != null) usage.set(id, (usage.get(id) || 0) + 1); };
+        for (const r of routesRes.routes || []) {
+            bump(r.origen_place_id);
+            bump(r.destino_place_id);
+            for (const w of r.waypoints || []) bump(w.place_id);
+        }
+        state.usage = usage;
+
+        updateStats();
+        render();
+    } catch (e) {
+        document.getElementById('list-wrap').innerHTML = `<div class="empty">Error al cargar: ${e.message}</div>`;
+    }
+}
+
+function updateStats() {
+    const total = state.places.length;
+    const usadas = state.places.filter(p => (state.usage.get(p.id) || 0) > 0).length;
+    document.getElementById('s-total').textContent = total;
+    document.getElementById('s-usadas').textContent = usadas;
+    document.getElementById('s-huerf').textContent = total - usadas;
+}
+
+function matches(p) {
+    if (!state.search) return true;
+    const q = norm(state.search);
+    return norm(p.nombre).includes(q) || norm(p.municipio || '').includes(q);
+}
+
+function render() {
+    const wrap = document.getElementById('list-wrap');
+    const filtered = state.places.filter(matches);
+    if (!filtered.length) {
+        wrap.innerHTML = state.places.length
+            ? `<div class="empty">Sin coincidencias para "${escapeHtml(state.search)}".</div>`
+            : `<div class="empty">No hay paradas todavía. Crea una con "+ Nueva parada", o ve a <a href="/rutas.html">/rutas</a> y geolocaliza una al cargar una ruta.</div>`;
+        return;
+    }
+    wrap.innerHTML = `
+        <div class="places-list">
+            <div class="place-row head">
+                <div>Nombre</div>
+                <div>Municipio</div>
+                <div>Coordenadas</div>
+                <div>Uso</div>
+                <div></div>
+            </div>
+            ${filtered.map(renderRow).join('')}
+        </div>`;
+}
+
+function renderRow(p) {
+    const uses = state.usage.get(p.id) || 0;
+    const useText = uses === 0 ? 'sin usar' : `${uses} ruta${uses !== 1 ? 's' : ''}`;
+    return `
+    <div class="place-row">
+        <div class="name"><span class="pin">📍</span> ${escapeHtml(p.nombre)}</div>
+        <div class="muni">${escapeHtml(p.municipio || '')}</div>
+        <div class="coords">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</div>
+        <div class="usage ${uses === 0 ? 'zero' : ''}">${useText}</div>
+        <div class="acts">
+            <button class="btn btn-ghost btn-sm" onclick='openEdit(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+        </div>
+    </div>`;
+}
+
+// ----- Modal -----
+function openModal() {
+    document.getElementById('modal-bg').classList.add('open');
+    setTimeout(() => mapModal && mapModal.invalidateSize(), 80);
+}
+function closeModal() {
+    document.getElementById('modal-bg').classList.remove('open');
+}
+
+function ensureMap() {
+    if (mapModal) return;
+    mapModal = L.map('m-map').setView([5.54, -73.36], 8); // centro Boyacá
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '© OpenStreetMap'
+    }).addTo(mapModal);
+    mapModal.on('click', (e) => setMarker(e.latlng.lat, e.latlng.lng));
+}
+
+function setMarker(lat, lon) {
+    if (mapMarker) mapModal.removeLayer(mapMarker);
+    mapMarker = L.marker([lat, lon], { draggable: true }).addTo(mapModal);
+    mapMarker.on('dragend', (e) => {
+        const ll = e.target.getLatLng();
+        document.getElementById('m-latlon').textContent =
+            `${ll.lat.toFixed(6)} · ${ll.lng.toFixed(6)}`;
+    });
+    document.getElementById('m-latlon').textContent =
+        `${lat.toFixed(6)} · ${lon.toFixed(6)}`;
+}
+
+function clearMarker() {
+    if (mapMarker) { mapModal.removeLayer(mapMarker); mapMarker = null; }
+    document.getElementById('m-latlon').textContent = '— · —';
+}
+
+function openCreate() {
+    state.editing = null;
+    document.getElementById('modal-title').textContent = 'Nueva parada';
+    document.getElementById('m-nombre').value = '';
+    document.getElementById('m-municipio').value = '';
+    document.getElementById('m-notas').value = '';
+    document.getElementById('m-delete').style.display = 'none';
+    ensureMap();
+    clearMarker();
+    mapModal.setView([5.54, -73.36], 8);
+    openModal();
+}
+
+function openEdit(place) {
+    state.editing = place;
+    document.getElementById('modal-title').textContent = `Editar: ${place.nombre}`;
+    document.getElementById('m-nombre').value = place.nombre;
+    document.getElementById('m-municipio').value = place.municipio || '';
+    document.getElementById('m-notas').value = place.notas || '';
+    document.getElementById('m-delete').style.display = '';
+    ensureMap();
+    setMarker(+place.lat, +place.lon);
+    mapModal.setView([+place.lat, +place.lon], 13);
+    openModal();
+}
+
+async function savePlace() {
+    const nombre = document.getElementById('m-nombre').value.trim();
+    if (!nombre)    { alertMsg('Pon un nombre', 'error'); return; }
+    if (!mapMarker) { alertMsg('Marca la posición en el mapa', 'error'); return; }
+    const ll = mapMarker.getLatLng();
+    const body = {
+        region_id: state.region,
+        nombre,
+        lat: ll.lat,
+        lon: ll.lng,
+        municipio: document.getElementById('m-municipio').value.trim() || null,
+        notas:     document.getElementById('m-notas').value.trim() || null,
+    };
+    try {
+        let r;
+        if (state.editing) {
+            r = await fetch(`/api/places?id=${state.editing.id}`, {
+                method: 'PUT',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(body),
+            }).then(r => r.json());
+        } else {
+            r = await fetch(`/api/places`, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(body),
+            }).then(r => r.json());
+        }
+        if (r.error) {
+            if (r.existing) {
+                alertMsg(`Ya existe "${r.existing.nombre}" en el catálogo. Usa esa parada o cambia el nombre.`, 'error');
+                return;
+            }
+            throw new Error(r.error);
+        }
+        alertMsg(state.editing ? 'Parada actualizada' : 'Parada creada');
+        closeModal();
+        await load();
+    } catch (e) {
+        alertMsg(`Error: ${e.message}`, 'error');
+    }
+}
+
+async function deletePlace() {
+    if (!state.editing) return;
+    const uses = state.usage.get(state.editing.id) || 0;
+    const msg = uses > 0
+        ? `Esta parada está en uso por ${uses} ruta${uses !== 1 ? 's' : ''}. Si la borras, esas rutas quedarán con el nombre como solo texto (sin geolocalizar). ¿Continuar?`
+        : `¿Eliminar la parada "${state.editing.nombre}"?`;
+    if (!confirm(msg)) return;
+    try {
+        const r = await fetch(`/api/places?id=${state.editing.id}`, { method: 'DELETE' }).then(r => r.json());
+        if (r.error) throw new Error(r.error);
+        alertMsg('Parada eliminada');
+        closeModal();
+        await load();
+    } catch (e) {
+        alertMsg(`Error: ${e.message}`, 'error');
+    }
+}
+
+// ----- Filtros -----
+document.getElementById('search').addEventListener('input', e => {
+    state.search = e.target.value;
+    render();
+});
+
+// ----- Utils -----
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+load();
+</script>
+
+</body>
+</html>
