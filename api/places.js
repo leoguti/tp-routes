@@ -79,7 +79,10 @@ async function handlePost(sql, req, res) {
                     ${municipio?.trim() || null}, ${notas?.trim() || null})
             RETURNING id, nombre, lat, lon, municipio
         `;
-        return res.json({ ok: true, place: row });
+        // Auto-vincular: rutas/waypoints que estaban como sólo texto y coinciden
+        // por nombre normalizado pasan a apuntar a este nuevo place.
+        const linked = await autoLinkPlace(sql, row.id, row.nombre, region_id);
+        return res.json({ ok: true, place: row, linked });
     } catch (e) {
         // Conflicto único = ya existe ese nombre normalizado en la región.
         if (/duplicate key|unique/i.test(e.message)) {
@@ -96,6 +99,39 @@ async function handlePost(sql, req, res) {
         }
         return res.status(500).json({ error: e.message });
     }
+}
+
+// Vincula todas las rutas/waypoints que tenían `nombre_text` igual al nombre
+// del place y aún no tenían place_id. Devuelve cuántas filas se enlazaron.
+async function autoLinkPlace(sql, placeId, nombre, regionId) {
+    const wp = await sql`
+        UPDATE route_waypoints w
+        SET place_id = ${placeId}
+        FROM routes r
+        WHERE w.route_id = r.id
+          AND w.place_id IS NULL
+          AND r.region_id = ${regionId}
+          AND norm_text(w.nombre_text) = norm_text(${nombre})
+    `;
+    const og = await sql`
+        UPDATE routes
+        SET origen_place_id = ${placeId}
+        WHERE origen_place_id IS NULL
+          AND region_id = ${regionId}
+          AND norm_text(origen_text) = norm_text(${nombre})
+    `;
+    const ds = await sql`
+        UPDATE routes
+        SET destino_place_id = ${placeId}
+        WHERE destino_place_id IS NULL
+          AND region_id = ${regionId}
+          AND norm_text(destino_text) = norm_text(${nombre})
+    `;
+    return {
+        waypoints: wp.count ?? wp.rowCount ?? 0,
+        origenes:  og.count ?? og.rowCount ?? 0,
+        destinos:  ds.count ?? ds.rowCount ?? 0,
+    };
 }
 
 async function handlePut(sql, req, res) {

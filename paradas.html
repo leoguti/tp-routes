@@ -45,6 +45,19 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
 .btn-danger:hover { background: #c0392b; }
 
 /* Tabla de paradas */
+/* Sección "pendientes" */
+.pending-wrap { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(26,26,62,.07); overflow: hidden; border: 1px solid #f5d68d; margin-bottom: 18px; }
+.pending-head { background: linear-gradient(90deg, #fff3d6 0%, #fff9e8 100%); padding: 14px 18px; border-bottom: 1px solid #f5e2a1; }
+.pending-head h2 { font-size: 1rem; color: #7a5d1a; margin: 0 0 4px; }
+.pending-head p  { font-size: 0.82rem; color: #95772b; margin: 0; }
+.pending-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 12px; padding: 11px 18px; align-items: center; border-bottom: 1px solid #faecc4; font-size: 0.88rem; }
+.pending-row:last-child { border-bottom: none; }
+.pending-row:hover { background: #fffbeb; }
+.pending-row .pname { font-weight: 700; color: #5a4410; }
+.pending-row .puses { color: #95772b; font-size: 0.82rem; }
+.pending-row .ploc  { color: #b8860b; font-size: 0.78rem; font-style: italic; }
+.pending-row .ploc:empty::before { content: '—'; }
+
 .places-list { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(26,26,62,.07); overflow: hidden; border: 1px solid #e6ecf5; }
 .place-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.8fr auto; gap: 12px; padding: 12px 16px; align-items: center; border-bottom: 1px solid #eef2f9; }
 .place-row:last-child { border-bottom: none; }
@@ -128,6 +141,8 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
         <button class="btn btn-primary" onclick="openCreate()">+ Nueva parada</button>
     </div>
 
+    <div id="pending-wrap"></div>
+
     <div id="list-wrap"><div class="loader">Cargando…</div></div>
 </div>
 
@@ -171,6 +186,7 @@ const state = {
     region: (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca',
     places: [],
     usage: new Map(),     // place_id -> count of references
+    pending: [],          // [{ nombre, count, fuentes: ['origen','destino','via'] }]
     search: '',
     editing: null,        // place actual en edición o null
 };
@@ -194,21 +210,69 @@ async function load() {
         ]);
         state.places = placesRes.places || [];
 
-        // Calcular cuántas veces cada place se usa (origen, destino, waypoints)
+        // Calcular cuántas veces cada place se usa Y agrupar nombres pendientes
         const usage = new Map();
         const bump = (id) => { if (id != null) usage.set(id, (usage.get(id) || 0) + 1); };
+        const pending = new Map(); // normName -> { nombre, count, fuentes:Set }
+
+        function addPending(nombreText, fuente) {
+            if (!nombreText) return;
+            const key = norm(nombreText);
+            if (!key) return;
+            if (!pending.has(key)) pending.set(key, { nombre: nombreText.trim(), count: 0, fuentes: new Set() });
+            const e = pending.get(key);
+            e.count++;
+            e.fuentes.add(fuente);
+        }
+
         for (const r of routesRes.routes || []) {
             bump(r.origen_place_id);
             bump(r.destino_place_id);
-            for (const w of r.waypoints || []) bump(w.place_id);
+            if (!r.origen_place_id)  addPending(r.origen_text,  'origen');
+            if (!r.destino_place_id) addPending(r.destino_text, 'destino');
+            for (const w of r.waypoints || []) {
+                bump(w.place_id);
+                if (!w.place_id) addPending(w.nombre_text, 'via');
+            }
         }
         state.usage = usage;
+        state.pending = [...pending.values()]
+            .map(e => ({ ...e, fuentes: [...e.fuentes] }))
+            .sort((a, b) => b.count - a.count);
 
         updateStats();
         render();
+        renderPending();
     } catch (e) {
         document.getElementById('list-wrap').innerHTML = `<div class="empty">Error al cargar: ${e.message}</div>`;
     }
+}
+
+function renderPending() {
+    const wrap = document.getElementById('pending-wrap');
+    if (!state.pending.length) { wrap.innerHTML = ''; return; }
+
+    const rows = state.pending.map(p => {
+        const fuentesLbl = p.fuentes.map(f => ({origen:'origen', destino:'destino', via:'paso intermedio'}[f] || f)).join(', ');
+        return `
+        <div class="pending-row">
+            <div class="pname">${escapeHtml(p.nombre)}</div>
+            <div class="puses">${p.count} mención${p.count !== 1 ? 'es' : ''} en rutas</div>
+            <div class="ploc">${escapeHtml(fuentesLbl)}</div>
+            <div>
+                <button class="btn btn-primary btn-sm" onclick='openCreateFromPending(${JSON.stringify(p.nombre).replace(/'/g, "&#39;")})'>📍 Geolocalizar</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = `
+    <div class="pending-wrap">
+        <div class="pending-head">
+            <h2>⚠️ Pendientes de geolocalizar (${state.pending.length})</h2>
+            <p>Estos nombres están escritos en rutas pero todavía no tienen coordenada. Al geolocalizar uno, se vincula automáticamente con todas las rutas que lo mencionan.</p>
+        </div>
+        ${rows}
+    </div>`;
 }
 
 function updateStats() {
@@ -310,6 +374,12 @@ function openCreate() {
     openModal();
 }
 
+function openCreateFromPending(nombre) {
+    openCreate();
+    document.getElementById('modal-title').textContent = `Geolocalizar: ${nombre}`;
+    document.getElementById('m-nombre').value = nombre;
+}
+
 function openEdit(place) {
     state.editing = place;
     document.getElementById('modal-title').textContent = `Editar: ${place.nombre}`;
@@ -358,7 +428,12 @@ async function savePlace() {
             }
             throw new Error(r.error);
         }
-        alertMsg(state.editing ? 'Parada actualizada' : 'Parada creada');
+        let msg = state.editing ? 'Parada actualizada' : 'Parada creada';
+        if (r.linked) {
+            const total = (r.linked.waypoints || 0) + (r.linked.origenes || 0) + (r.linked.destinos || 0);
+            if (total > 0) msg += ` · vinculada con ${total} mención${total !== 1 ? 'es' : ''} en rutas`;
+        }
+        alertMsg(msg);
         closeModal();
         await load();
     } catch (e) {
