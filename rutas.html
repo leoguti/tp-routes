@@ -235,6 +235,24 @@
         .map-coords   { font-size: 0.78rem; color: #666; margin-top: 8px; }
         .map-coords b { color: #1a1a3e; }
         .modal-map    { max-width: 720px; }
+
+        /* Sugerencias OSM (Photon) en el modal de mapa */
+        .geo-tools-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+        .geo-results { margin-top: 6px; border: 1px solid #e2e7f1; border-radius: 8px; background: #fafbff; max-height: 180px; overflow-y: auto; }
+        .geo-results:empty { display: none; }
+        .geo-result { padding: 8px 12px; border-bottom: 1px solid #eef2f9; cursor: pointer; font-size: 0.84rem; }
+        .geo-result:last-child { border-bottom: none; }
+        .geo-result:hover { background: #eef3ff; }
+        .geo-result.terminal { background: #f0faf0; border-left: 3px solid #27ae60; }
+        .geo-result.terminal:hover { background: #e1f4e6; }
+        .geo-result .gname { font-weight: 600; color: #1a1a3e; }
+        .geo-result.terminal .gname { color: #196f3d; }
+        .geo-result .gloc { color: #777; font-size: 0.78rem; margin-top: 2px; }
+        .geo-result .gtag { display: inline-block; background: #27ae60; color: white; font-size: 0.66rem; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+        .geo-result .gcoords { color: #aaa; font-size: 0.72rem; font-family: ui-monospace, monospace; margin-top: 2px; }
+        .geo-section { background: #f4f7fc; padding: 6px 12px; font-size: 0.72rem; color: #555; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+        .geo-loading { padding: 12px; text-align: center; color: #888; font-size: 0.84rem; }
+        .geo-empty   { padding: 12px; text-align: center; color: #c0392b; font-size: 0.84rem; }
     </style>
 </head>
 <body>
@@ -358,12 +376,22 @@
         <div class="form-group">
             <label>Nombre del lugar *</label>
             <input id="map-nombre" type="text" placeholder="Ej. Paipa" />
-            <small>Haz clic en el mapa para fijar la coordenada. Puedes arrastrar el marcador.</small>
+            <small>Si tiene un error, corrígelo aquí — se aplica a todas las rutas que lo mencionan.</small>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Buscar en OpenStreetMap</label>
+            <div class="geo-tools-row">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="suggestMapLocation()">🔍 Sugerir ubicación</button>
+                <small style="color:#888">Prioriza terminales de transporte.</small>
+            </div>
+            <div id="map-geo-results" class="geo-results"></div>
         </div>
     </div>
     <div id="map-picker"></div>
     <div class="map-coords">
-        Coordenada: <b id="map-latlon">— · —</b>
+        Coordenada: <b id="map-latlon">— · —</b> · Click en el mapa o arrastrá el marcador.
     </div>
     <div class="form-row" style="margin-top:10px">
         <div class="form-group">
@@ -896,6 +924,7 @@ function openMapModal({ nombre = '', defaultLat = null, defaultLon = null } = {}
     document.getElementById('map-nombre').value = nombre;
     document.getElementById('map-municipio').value = '';
     document.getElementById('map-latlon').textContent = '— · —';
+    document.getElementById('map-geo-results').innerHTML = '';
     document.getElementById('map-modal-bg').classList.add('open');
 
     if (!mapPicker) {
@@ -914,6 +943,77 @@ function openMapModal({ nombre = '', defaultLat = null, defaultLon = null } = {}
     }
 
     return new Promise((resolve) => { mapResolver = resolve; });
+}
+
+// Sugerencias OSM para el modal de mapa (replicado de /paradas).
+// Prioriza terminales de transporte (amenity=bus_station).
+async function suggestMapLocation() {
+    const q = document.getElementById('map-nombre').value.trim();
+    const box = document.getElementById('map-geo-results');
+    if (!q) { box.innerHTML = `<div class="geo-empty">Escribí primero el nombre.</div>`; return; }
+    box.innerHTML = `<div class="geo-loading">Buscando "${escapeHtml(q)}"…</div>`;
+    try {
+        const baseUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(q + ', Colombia')}&limit=6&lat=5.54&lon=-73.36`;
+        const [terms, gens] = await Promise.all([
+            fetch(`${baseUrl}&osm_tag=amenity:bus_station`).then(r => r.json()).catch(() => ({ features: [] })),
+            fetch(baseUrl).then(r => r.json()).catch(() => ({ features: [] })),
+        ]);
+        const seen = new Set();
+        const items = [];
+        const idOf = f => `${f.properties?.osm_type || ''}:${f.properties?.osm_id || ''}`;
+        for (const f of (terms.features || [])) {
+            if (seen.has(idOf(f))) continue;
+            seen.add(idOf(f));
+            items.push({ feat: f, isTerminal: true });
+        }
+        for (const f of (gens.features || [])) {
+            if (seen.has(idOf(f))) continue;
+            seen.add(idOf(f));
+            items.push({ feat: f, isTerminal: false });
+        }
+        if (!items.length) { box.innerHTML = `<div class="geo-empty">Sin resultados.</div>`; return; }
+        const html = [];
+        if (items.some(i => i.isTerminal))  html.push(`<div class="geo-section">🚌 Terminales</div>`);
+        for (const it of items.filter(i => i.isTerminal))  html.push(renderMapGeoResult(it, q));
+        if (items.some(i => !i.isTerminal)) html.push(`<div class="geo-section">📍 Otras ubicaciones</div>`);
+        for (const it of items.filter(i => !i.isTerminal)) html.push(renderMapGeoResult(it, q));
+        box.innerHTML = html.join('');
+    } catch (e) {
+        box.innerHTML = `<div class="geo-empty">Error: ${escapeHtml(e.message)}</div>`;
+    }
+}
+
+function renderMapGeoResult({ feat, isTerminal }, queryOriginal) {
+    const p = feat.properties || {};
+    const [lon, lat] = feat.geometry.coordinates;
+    const osmName = p.name || '';
+    const city = p.city || p.county || '';
+    const adminParts = [p.city, p.county, p.state, p.country].filter(Boolean);
+    const loc = adminParts.join(', ');
+    let suggestedName;
+    if (isTerminal && osmName) {
+        const queryIsCity = city && norm(queryOriginal) === norm(city);
+        const sameAsCity  = norm(osmName) === norm(city);
+        suggestedName = (queryIsCity && !sameAsCity) ? `${city} — ${osmName}` : osmName;
+    } else {
+        suggestedName = osmName || queryOriginal;
+    }
+    const payload = JSON.stringify({ name: suggestedName, lat, lon, city }).replace(/'/g, "&#39;");
+    return `<div class="geo-result ${isTerminal ? 'terminal' : ''}" onclick='useMapGeoResult(${payload})'>
+        <div class="gname">${escapeHtml(suggestedName)}${isTerminal ? '<span class="gtag">Terminal</span>' : ''}</div>
+        ${loc ? `<div class="gloc">${escapeHtml(loc)}</div>` : ''}
+        <div class="gcoords">${(+lat).toFixed(5)}, ${(+lon).toFixed(5)}</div>
+    </div>`;
+}
+
+function useMapGeoResult(r) {
+    setMarker(+r.lat, +r.lon);
+    mapPicker.setView([+r.lat, +r.lon], 14);
+    const nameInput = document.getElementById('map-nombre');
+    if (r.name && r.name !== nameInput.value) nameInput.value = r.name;
+    const muni = document.getElementById('map-municipio');
+    if (!muni.value.trim() && r.city) muni.value = r.city;
+    document.getElementById('map-geo-results').innerHTML = '';
 }
 
 function setMarker(lat, lon) {
