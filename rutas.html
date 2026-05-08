@@ -203,6 +203,8 @@
             display: inline-flex; align-items: center; gap: 6px;
         }
         .rd-cta:hover { background: #2a5ec8; }
+        .rd-cta.has-shape { background: #27ae60; }
+        .rd-cta.has-shape:hover { background: #1e8a4d; }
 
         /* Vía chips con badge de place */
         .form-group .via-chip.geo { background: #e0fae8; color: #196f3d; }
@@ -415,6 +417,10 @@
             <input type="checkbox" id="filter-complete" />
             Solo rutas completas
         </label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;color:#1a1a3e;cursor:pointer">
+            <input type="checkbox" id="filter-untraced" />
+            Solo sin trazar
+        </label>
         <button class="btn btn-ghost btn-sm" onclick="expandAll(true)">Expandir todo</button>
         <button class="btn btn-ghost btn-sm" onclick="expandAll(false)">Colapsar todo</button>
         <button class="btn btn-primary" onclick="openCreate()">+ Nuevo corredor</button>
@@ -574,6 +580,7 @@ const state = {
     places: [],              // catálogo humano de lugares (cache local)
     filterOp: '',
     onlyComplete: false,     // toggle: solo rutas con todas sus paradas geolocalizadas
+    onlyUntraced: false,     // toggle: solo rutas que aún NO tienen trazado guardado
     search: '',
     collapsed: new Set(),    // keys colapsados
     editing: null,           // { id_ida } si se está editando
@@ -661,6 +668,13 @@ function matches(pair) {
         const anyComplete = pair.vias.some(v => viaIsComplete(pair, v));
         if (!anyComplete) return false;
     }
+    // Filtro "solo sin trazar": al menos una vía sin shape guardado y geolocalizable.
+    if (state.onlyUntraced) {
+        const anyUntraced = pair.vias.some(v =>
+            viaIsComplete(pair, v) && !v.operadores?.[0]?.ida?.has_shape
+        );
+        if (!anyUntraced) return false;
+    }
     if (state.search) {
         const q = norm(state.search);
         const hay = norm(pair.pair_label + ' ' +
@@ -695,10 +709,12 @@ function renderPair(pair) {
     const key = `p:${pair.pair_label}`;
     const collapsed = state.collapsed.has(key);
     const pairJson = JSON.stringify({cityA: pair.cityA, cityB: pair.cityB}).replace(/'/g,"&#39;");
-    // Si el filtro "solo completas" está activo, mostrar sólo las vías completas
-    const visibleVias = state.onlyComplete
-        ? pair.vias.filter(v => viaIsComplete(pair, v))
-        : pair.vias;
+    // Filtros sobre las vías visibles dentro del corredor
+    let visibleVias = pair.vias;
+    if (state.onlyComplete) visibleVias = visibleVias.filter(v => viaIsComplete(pair, v));
+    if (state.onlyUntraced) visibleVias = visibleVias.filter(v =>
+        viaIsComplete(pair, v) && !v.operadores?.[0]?.ida?.has_shape
+    );
     return `
     <div class="pair-group">
         <div class="pair-head" onclick="toggle('${escapeAttr(key)}')">
@@ -778,7 +794,8 @@ function renderRouteDiagram(pair, via) {
     // y existe al menos una ida (para asociar el shape a un route_id).
     let cta = '';
     if (allGeo) {
-        const routeId = via.operadores?.[0]?.ida?.id ?? null;
+        const ida = via.operadores?.[0]?.ida;
+        const routeId = ida?.id ?? null;
         if (routeId) {
             const arg = JSON.stringify({
                 pair_label: pair.pair_label,
@@ -788,7 +805,10 @@ function renderRouteDiagram(pair, via) {
                     lat: +s.place.lat, lon: +s.place.lon, nombre: s.nombre,
                 })),
             }).replace(/'/g, "&#39;");
-            cta = `<button class="rd-cta" onclick='openTraceModal(${arg})'>🗺️ Trazar ruta en el mapa</button>`;
+            const hasShape = !!ida.has_shape;
+            const label = hasShape ? '✅ Editar trazado' : '🗺️ Trazar ruta en el mapa';
+            const cls   = hasShape ? 'rd-cta has-shape' : 'rd-cta';
+            cta = `<button class="${cls}" onclick='openTraceModal(${arg})'>${label}</button>`;
         }
     }
     return `
@@ -1584,6 +1604,10 @@ document.getElementById('filter-op').addEventListener('change', e => {
 });
 document.getElementById('filter-complete').addEventListener('change', e => {
     state.onlyComplete = e.target.checked;
+    render();
+});
+document.getElementById('filter-untraced').addEventListener('change', e => {
+    state.onlyUntraced = e.target.checked;
     render();
 });
 

@@ -106,7 +106,8 @@ async function handleGet(sql, req, res) {
                 ) ORDER BY rr.orden)
                 FROM route_resolutions rr
                 WHERE rr.route_id = COALESCE(r.route_parent_id, r.id)
-            ), '[]'::json) AS resoluciones
+            ), '[]'::json) AS resoluciones,
+            EXISTS (SELECT 1 FROM route_shapes rs WHERE rs.route_id = r.id) AS has_shape
         FROM routes r
         LEFT JOIN operators o  ON o.id  = r.operator_id
         LEFT JOIN places    po ON po.id = r.origen_place_id
