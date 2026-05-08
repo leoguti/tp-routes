@@ -22,8 +22,25 @@ module.exports = async function handler(req, res) {
 };
 
 async function handleGet(sql, req, res) {
-    const { route_id } = req.query;
-    if (!route_id) return res.status(400).json({ error: 'Falta route_id' });
+    const { route_id, region } = req.query;
+
+    // Listado por región: trae el shape vigente de cada ruta de esa región.
+    // Usa DISTINCT ON para quedarse con la fila más reciente por route_id.
+    if (region && !route_id) {
+        const rows = await sql`
+            SELECT DISTINCT ON (rs.route_id)
+                rs.id, rs.route_id, rs.geojson, rs.distancia_km, rs.generado_con,
+                rs.valhalla_waypoints, rs.creada_en
+            FROM route_shapes rs
+            JOIN routes r ON r.id = rs.route_id
+            WHERE r.region_id = ${region}
+            ORDER BY rs.route_id, rs.creada_en DESC
+        `;
+        return res.json({ shapes: rows, total: rows.length });
+    }
+
+    if (!route_id) return res.status(400).json({ error: 'Falta route_id o region' });
+
     const rows = await sql`
         SELECT id, route_id, geojson, distancia_km, generado_con,
                valhalla_waypoints, creada_en

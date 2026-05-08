@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TP Routes — Red de transporte</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/regions.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #0f1129; color: #1a1a3e; }
+
+#header { background: #1a1a3e; color: white; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+#header h1 { font-size: 1.05rem; margin: 0; }
+#header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
+#header nav a.active, #header nav a:hover { color: white; }
+
+#layout { display: flex; height: calc(100vh - 48px); position: relative; }
+#map { flex: 1; background: #eef2f9; }
+
+/* Sidebar */
+#side {
+    width: 360px; min-width: 320px;
+    background: white; border-left: 1px solid #e0e6f0;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+}
+.side-section { padding: 14px 16px; border-bottom: 1px solid #eee; }
+.side-section h3 {
+    font-size: 0.72rem; color: #555; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px;
+}
+.side-section h2 { font-size: 1rem; color: #1a1a3e; margin-bottom: 4px; font-weight: 700; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stat { background: #f4f6fa; padding: 8px 10px; border-radius: 6px; text-align: center; }
+.stat .num { font-size: 1.15rem; font-weight: 800; color: #1a1a3e; }
+.stat .lbl { font-size: 0.68rem; color: #888; margin-top: 1px; }
+.stat.good .num { color: #27ae60; }
+.stat.warn .num { color: #e67e22; }
+
+.toggles { display: flex; flex-direction: column; gap: 6px; }
+.toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.84rem; color: #1a1a3e; cursor: pointer;
+    padding: 4px 0;
+}
+.toggle .swatch {
+    width: 16px; height: 4px; border-radius: 2px;
+}
+
+.hint {
+    background: #fffbe8; border: 1px solid #fce9a4; color: #7a5d1a;
+    padding: 8px 12px; border-radius: 6px;
+    font-size: 0.78rem; line-height: 1.45;
+}
+
+.list-routes .lr-item {
+    padding: 8px 10px; border-radius: 6px;
+    background: #f8faff; margin-bottom: 5px;
+    font-size: 0.82rem; cursor: pointer;
+    border: 1px solid transparent;
+}
+.list-routes .lr-item:hover { background: #eef3ff; border-color: #cfdaf2; }
+.list-routes .lr-item.active { background: #e0f0ff; border-color: #4a9eff; }
+.list-routes .lr-item .lr-pair { font-weight: 700; color: #1a1a3e; }
+.list-routes .lr-item .lr-meta { font-size: 0.74rem; color: #888; margin-top: 2px; }
+
+.btn {
+    background: #1a1a3e; color: white; border: none; border-radius: 6px;
+    padding: 7px 12px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+.btn-ghost { background: transparent; color: #1a1a3e; border: 1px solid #ddd; }
+.btn-ghost:hover { background: #f5f5f5; }
+.btn-link {
+    background: transparent; color: #2a5ec8; border: none;
+    font-size: 0.84rem; cursor: pointer; padding: 0;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-link:hover { text-decoration: underline; }
+
+.detail-row { display: flex; gap: 8px; font-size: 0.84rem; padding: 4px 0; }
+.detail-row .lbl { color: #888; min-width: 90px; }
+.detail-row .val { color: #1a1a3e; flex: 1; }
+
+.legend-line { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #666; padding: 3px 0; }
+.legend-line .swatch {
+    width: 28px; height: 4px; border-radius: 2px;
+    background: #999; flex-shrink: 0;
+}
+.legend-line .swatch.dashed {
+    background: linear-gradient(to right, #888 50%, transparent 50%);
+    background-size: 8px 4px;
+}
+.legend-line .swatch.traced { background: #2a5ec8; }
+.legend-line .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #2a5ec8; border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3); flex-shrink: 0;
+}
+.legend-line .dot.huerf { background: #e67e22; }
+
+@media (max-width: 720px) {
+    #layout { flex-direction: column; }
+    #side { width: 100%; height: 50vh; border-left: none; border-top: 1px solid #e0e6f0; }
+    #map { height: 50vh; }
+}
+
+/* Loading */
+.loader { padding: 16px; color: #888; font-size: 0.84rem; text-align: center; }
+
+/* Map markers */
+.r-stop {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #b6bbc8; border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.r-stop.huerf { background: #e67e22; }
+.r-stop.in-route { background: #2a5ec8; }
+.r-stop.highlighted {
+    background: #27ae60; width: 20px; height: 20px;
+    box-shadow: 0 0 0 4px rgba(39,174,96,.25), 0 2px 8px rgba(0,0,0,.4);
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+    <h1>TP Routes</h1>
+    <nav>
+        <a href="/home.html">Inicio</a>
+        <a href="/rutas.html">Rutas</a>
+        <a href="/paradas.html">Paradas</a>
+        <a href="/red.html" class="active">Red</a>
+        <a href="/como-funciona.html">Cómo funciona</a>
+    </nav>
+</div>
+
+<div id="layout">
+    <div id="map"></div>
+    <div id="side">
+        <div class="side-section">
+            <h2 id="side-title">Red de transporte</h2>
+            <div id="side-subtitle" style="font-size:0.84rem;color:#888">Cargando…</div>
+        </div>
+
+        <div class="side-section" id="default-panel">
+            <div class="stats" id="stats"></div>
+
+            <div style="margin-top:12px">
+                <h3>Capas</h3>
+                <div class="toggles">
+                    <label class="toggle">
+                        <input type="checkbox" id="t-traced" checked />
+                        <span class="swatch" style="background:#2a5ec8"></span>
+                        Rutas trazadas <span id="c-traced" style="color:#888;margin-left:auto;font-size:0.78rem">(—)</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="t-pending" checked />
+                        <span class="swatch" style="background:linear-gradient(to right,#888 50%,transparent 50%);background-size:8px 4px"></span>
+                        Rutas pendientes <span id="c-pending" style="color:#888;margin-left:auto;font-size:0.78rem">(—)</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="t-stops" checked />
+                        <span class="swatch" style="height:8px;width:8px;border-radius:50%;background:#2a5ec8"></span>
+                        Paradas en uso <span id="c-stops" style="color:#888;margin-left:auto;font-size:0.78rem">(—)</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="t-huerf" checked />
+                        <span class="swatch" style="height:8px;width:8px;border-radius:50%;background:#e67e22"></span>
+                        Paradas sin uso <span id="c-huerf" style="color:#888;margin-left:auto;font-size:0.78rem">(—)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:12px">
+                <h3>Cómo usarlo</h3>
+                <div class="hint">
+                    👉 <b>Click en una parada</b> resalta las rutas que pasan por ahí.<br>
+                    👉 <b>Click en una línea</b> abre el detalle de esa ruta.<br>
+                    👉 <b>Click en zona vacía</b> limpia la selección.
+                </div>
+            </div>
+
+            <div style="margin-top:12px">
+                <h3>Leyenda</h3>
+                <div class="legend-line"><span class="swatch traced"></span> Ruta con trazado guardado</div>
+                <div class="legend-line"><span class="swatch dashed"></span> Ruta pendiente (línea recta entre paradas)</div>
+                <div class="legend-line"><span class="dot"></span> Parada en uso</div>
+                <div class="legend-line"><span class="dot huerf"></span> Parada sin uso (huérfana)</div>
+            </div>
+        </div>
+
+        <div class="side-section" id="selection-panel" style="display:none">
+            <button class="btn-link" onclick="clearSelection()">← Limpiar selección</button>
+            <div id="selection-content" style="margin-top:8px"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const activeRegionKey = (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca';
+const activeRegion = (typeof REGIONS !== 'undefined') ? REGIONS[activeRegionKey] : { center: [5.5, -73.4], zoom: 8 };
+
+const COLORS = {
+    base:        '#999',
+    baseDim:     '#bbb',
+    selected:    '#2a5ec8',
+    pending:     '#888',
+    pendingDim:  '#ccc',
+};
+
+// --- State ---
+const state = {
+    routes: [],          // todas las rutas (incluye waypoints, place_ids)
+    places: [],          // todas las paradas (catálogo places)
+    shapes: new Map(),   // route_id -> geojson feature
+    placeRoutes: new Map(), // place_id -> [route_id...]
+    routeStops: new Map(),  // route_id -> [place_id...] en orden
+    selection: null,     // { type: 'place'|'route', id }
+    layers: { traced: true, pending: true, stops: true, huerf: true },
+};
+
+// --- Mapa ---
+const map = L.map('map').setView(activeRegion.center, activeRegion.zoom);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+}).addTo(map);
+
+const layers = {
+    pending: L.layerGroup().addTo(map),
+    traced:  L.layerGroup().addTo(map),
+    stops:   L.layerGroup().addTo(map),
+};
+const polylines = new Map();   // route_id -> L.polyline
+const stopMarkers = new Map(); // place_id -> L.marker
+
+// Click en zona vacía limpia selección
+map.on('click', () => clearSelection());
+
+// --- Helpers ---
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getRoute(id)  { return state.routes.find(r => r.id === id); }
+function getPlace(id)  { return state.places.find(p => p.id === id); }
+function getRouteStopIds(r) {
+    const ids = [];
+    if (r.origen_place_id)  ids.push(r.origen_place_id);
+    for (const w of r.waypoints || []) if (w.place_id) ids.push(w.place_id);
+    if (r.destino_place_id) ids.push(r.destino_place_id);
+    return ids;
+}
+function isRouteFullyGeo(r) {
+    if (!r.origen_place_id || !r.destino_place_id) return false;
+    return (r.waypoints || []).every(w => w.place_id != null);
+}
+function hasShape(routeId) { return state.shapes.has(routeId); }
+
+// --- Carga ---
+async function load() {
+    try {
+        const [routesRes, placesRes, shapesRes] = await Promise.all([
+            fetch(`/api/routes?region=${activeRegionKey}`).then(r => r.json()),
+            fetch(`/api/places?region=${activeRegionKey}`).then(r => r.json()),
+            fetch(`/api/route-shapes?region=${activeRegionKey}`).then(r => r.json()),
+        ]);
+        state.routes = (routesRes.routes || []).filter(r => r.direction === 'ida');
+        state.places = placesRes.places || [];
+        state.shapes = new Map();
+        for (const s of (shapesRes.shapes || [])) {
+            if (s.geojson) state.shapes.set(s.route_id, s.geojson);
+        }
+
+        // Indexar: place_id -> rutas que pasan, route_id -> stops
+        const placeRoutes = new Map();
+        const routeStops  = new Map();
+        for (const r of state.routes) {
+            const stopIds = getRouteStopIds(r);
+            routeStops.set(r.id, stopIds);
+            for (const pid of stopIds) {
+                if (!placeRoutes.has(pid)) placeRoutes.set(pid, []);
+                placeRoutes.get(pid).push(r.id);
+            }
+        }
+        state.placeRoutes = placeRoutes;
+        state.routeStops  = routeStops;
+
+        document.getElementById('side-subtitle').textContent =
+            `${state.routes.length} corredor(es) — ${activeRegion.name || activeRegionKey}`;
+
+        renderStats();
+        renderAll();
+        // Encuadrar el mapa en los datos
+        const allLatLngs = state.places
+            .filter(p => Number.isFinite(+p.lat) && Number.isFinite(+p.lon))
+            .map(p => [+p.lat, +p.lon]);
+        if (allLatLngs.length > 1) map.fitBounds(allLatLngs, { padding: [40, 40] });
+    } catch (e) {
+        document.getElementById('side-subtitle').textContent = `Error: ${e.message}`;
+    }
+}
+
+function renderStats() {
+    const tracedRoutes = state.routes.filter(r => hasShape(r.id)).length;
+    const pendingRoutes = state.routes.filter(r => isRouteFullyGeo(r) && !hasShape(r.id)).length;
+    const inUse = [...state.placeRoutes.keys()].length;
+    const huerf = state.places.length - inUse;
+
+    document.getElementById('stats').innerHTML = `
+        <div class="stat"><div class="num">${state.routes.length}</div><div class="lbl">Rutas</div></div>
+        <div class="stat good"><div class="num">${tracedRoutes}</div><div class="lbl">Trazadas</div></div>
+        <div class="stat warn"><div class="num">${pendingRoutes}</div><div class="lbl">Pendientes</div></div>
+        <div class="stat"><div class="num">${state.places.length}</div><div class="lbl">Paradas</div></div>
+    `;
+    document.getElementById('c-traced').textContent  = `(${tracedRoutes})`;
+    document.getElementById('c-pending').textContent = `(${pendingRoutes})`;
+    document.getElementById('c-stops').textContent   = `(${inUse})`;
+    document.getElementById('c-huerf').textContent   = `(${huerf})`;
+}
+
+// --- Renderizado en mapa ---
+function renderAll() {
+    // Limpiar
+    layers.pending.clearLayers();
+    layers.traced.clearLayers();
+    layers.stops.clearLayers();
+    polylines.clear();
+    stopMarkers.clear();
+
+    // Polylines: trazadas (con shape) y pendientes (línea recta)
+    for (const r of state.routes) {
+        if (hasShape(r.id)) {
+            if (!state.layers.traced) continue;
+            renderTracedRoute(r);
+        } else if (isRouteFullyGeo(r)) {
+            if (!state.layers.pending) continue;
+            renderPendingRoute(r);
+        }
+    }
+
+    // Markers
+    for (const p of state.places) {
+        const inUse = state.placeRoutes.has(p.id);
+        if (inUse  && !state.layers.stops) continue;
+        if (!inUse && !state.layers.huerf) continue;
+        renderStopMarker(p, inUse);
+    }
+
+    applySelectionStyles();
+}
+
+function renderTracedRoute(r) {
+    const geom = state.shapes.get(r.id);
+    let coords = [];
+    if (geom?.geometry?.type === 'LineString') {
+        // GeoJSON usa [lon, lat], Leaflet [lat, lon]
+        coords = geom.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+    } else if (Array.isArray(geom?.coordinates)) {
+        coords = geom.coordinates.map(([lon, lat]) => [lat, lon]);
+    }
+    if (!coords.length) return;
+    const pl = L.polyline(coords, {
+        color: COLORS.base, weight: 3, opacity: 0.4,
+        className: 'rt rt-traced'
+    });
+    pl.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectRoute(r.id);
+    });
+    pl.bindTooltip(routeLabel(r), { sticky: true, direction: 'top' });
+    pl.addTo(layers.traced);
+    polylines.set(r.id, pl);
+}
+
+function renderPendingRoute(r) {
+    const stopIds = state.routeStops.get(r.id) || [];
+    const coords = stopIds.map(id => {
+        const p = getPlace(id);
+        return p ? [+p.lat, +p.lon] : null;
+    }).filter(Boolean);
+    if (coords.length < 2) return;
+    const pl = L.polyline(coords, {
+        color: COLORS.pending, weight: 2, opacity: 0.5,
+        dashArray: '6,6',
+        className: 'rt rt-pending'
+    });
+    pl.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectRoute(r.id);
+    });
+    pl.bindTooltip(routeLabel(r) + ' (sin trazado)', { sticky: true, direction: 'top' });
+    pl.addTo(layers.pending);
+    polylines.set(r.id, pl);
+}
+
+function routeLabel(r) {
+    const v = (r.waypoints || []).map(w => w.nombre_text).filter(Boolean);
+    const via = v.length ? ` vía ${v.join(' → ')}` : '';
+    return `${r.origen_text} → ${r.destino_text}${via} · ${r.operator_nombre || ''}`;
+}
+
+function renderStopMarker(p, inUse) {
+    const cls = inUse ? 'r-stop in-route' : 'r-stop huerf';
+    const icon = L.divIcon({
+        className: '',
+        html: `<div class="${cls}"></div>`,
+        iconSize: [14, 14], iconAnchor: [7, 7],
+    });
+    const m = L.marker([+p.lat, +p.lon], { icon });
+    m.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectPlace(p.id);
+    });
+    m.bindTooltip(p.nombre, { sticky: false, direction: 'top' });
+    m.addTo(layers.stops);
+    stopMarkers.set(p.id, m);
+}
+
+// --- Estados de selección ---
+function selectPlace(placeId) {
+    state.selection = { type: 'place', id: placeId };
+    applySelectionStyles();
+    renderSelectionPanel();
+}
+function selectRoute(routeId) {
+    state.selection = { type: 'route', id: routeId };
+    applySelectionStyles();
+    renderSelectionPanel();
+}
+function clearSelection() {
+    state.selection = null;
+    applySelectionStyles();
+    document.getElementById('selection-panel').style.display = 'none';
+    document.getElementById('default-panel').style.display = '';
+}
+
+function applySelectionStyles() {
+    const sel = state.selection;
+
+    // Reset all polylines a su estilo base
+    polylines.forEach((pl, rid) => {
+        const el = pl.getElement();
+        const isPending = pl.options.className?.includes('rt-pending');
+        if (!sel) {
+            pl.setStyle(isPending
+                ? { color: COLORS.pending, weight: 2, opacity: 0.5 }
+                : { color: COLORS.base,    weight: 3, opacity: 0.4 });
+        } else {
+            // Hay selección: lo que está afectado se resalta, lo demás se atenúa.
+            const highlighted = isInSelection(rid, 'route');
+            if (highlighted) {
+                pl.setStyle(isPending
+                    ? { color: COLORS.selected, weight: 4, opacity: 1.0, dashArray: '6,6' }
+                    : { color: COLORS.selected, weight: 5, opacity: 1.0 });
+                pl.bringToFront();
+            } else {
+                pl.setStyle(isPending
+                    ? { color: COLORS.pendingDim, weight: 2, opacity: 0.10 }
+                    : { color: COLORS.baseDim,   weight: 2, opacity: 0.10 });
+            }
+        }
+    });
+
+    // Reset stops
+    stopMarkers.forEach((m, pid) => {
+        const inUse = state.placeRoutes.has(pid);
+        const baseCls = inUse ? 'r-stop in-route' : 'r-stop huerf';
+        const el = m.getElement();
+        if (!el) return;
+        const dot = el.querySelector('div');
+        if (!dot) return;
+        if (!sel) {
+            dot.className = baseCls;
+            el.style.opacity = '1';
+            el.style.zIndex = '';
+        } else {
+            const highlighted = isInSelection(pid, 'place');
+            if (highlighted) {
+                dot.className = 'r-stop highlighted';
+                el.style.opacity = '1';
+                el.style.zIndex = '600';
+            } else {
+                dot.className = baseCls;
+                el.style.opacity = '0.18';
+            }
+        }
+    });
+}
+
+function isInSelection(targetId, targetType) {
+    const sel = state.selection;
+    if (!sel) return false;
+    if (sel.type === 'place' && targetType === 'place') return targetId === sel.id;
+    if (sel.type === 'place' && targetType === 'route') {
+        return (state.placeRoutes.get(sel.id) || []).includes(targetId);
+    }
+    if (sel.type === 'route' && targetType === 'route') return targetId === sel.id;
+    if (sel.type === 'route' && targetType === 'place') {
+        return (state.routeStops.get(sel.id) || []).includes(targetId);
+    }
+    return false;
+}
+
+function renderSelectionPanel() {
+    const sel = state.selection;
+    const panel = document.getElementById('selection-panel');
+    const def   = document.getElementById('default-panel');
+    if (!sel) { panel.style.display = 'none'; def.style.display = ''; return; }
+    panel.style.display = '';
+    def.style.display   = 'none';
+
+    const cnt = document.getElementById('selection-content');
+    if (sel.type === 'place') {
+        const p = getPlace(sel.id);
+        if (!p) { cnt.innerHTML = ''; return; }
+        const routeIds = state.placeRoutes.get(sel.id) || [];
+        const inUse = routeIds.length;
+        cnt.innerHTML = `
+            <h2>📍 ${escapeHtml(p.nombre)}</h2>
+            <div class="detail-row"><span class="lbl">Municipio</span><span class="val">${escapeHtml(p.municipio || '—')}</span></div>
+            <div class="detail-row"><span class="lbl">Coordenada</span><span class="val">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</span></div>
+            <div class="detail-row"><span class="lbl">Rutas</span><span class="val">${inUse} ruta${inUse !== 1 ? 's' : ''}</span></div>
+            <div style="margin-top:12px">
+                <h3>Rutas que pasan por aquí</h3>
+                <div class="list-routes">
+                    ${routeIds.length
+                        ? routeIds.map(rid => {
+                            const r = getRoute(rid); if (!r) return '';
+                            return `<div class="lr-item" onclick="selectRoute(${rid})">
+                                <div class="lr-pair">${escapeHtml(r.origen_text)} → ${escapeHtml(r.destino_text)}</div>
+                                <div class="lr-meta">${escapeHtml(r.operator_nombre || '')} ${hasShape(rid) ? '· ✅ trazada' : '· pendiente'}</div>
+                            </div>`;
+                          }).join('')
+                        : '<div style="font-size:0.84rem;color:#888;font-style:italic">Esta parada no se usa en ninguna ruta.</div>'
+                    }
+                </div>
+            </div>`;
+    } else {
+        const r = getRoute(sel.id);
+        if (!r) { cnt.innerHTML = ''; return; }
+        const stopIds = state.routeStops.get(sel.id) || [];
+        const stopList = stopIds.map((id, i) => {
+            const p = getPlace(id);
+            const role = i === 0 ? 'Origen' : (i === stopIds.length - 1 ? 'Destino' : 'Paso');
+            return `<div class="detail-row">
+                <span class="lbl">${role}</span>
+                <span class="val" style="cursor:pointer;color:#2a5ec8" onclick="selectPlace(${id})">${escapeHtml(p?.nombre || '?')}</span>
+            </div>`;
+        }).join('');
+        cnt.innerHTML = `
+            <h2>${escapeHtml(r.origen_text)} → ${escapeHtml(r.destino_text)}</h2>
+            <div class="detail-row"><span class="lbl">Empresa</span><span class="val">${escapeHtml(r.operator_nombre || '—')}</span></div>
+            <div class="detail-row"><span class="lbl">Estado</span><span class="val">${hasShape(sel.id) ? '✅ Trazada con Valhalla' : '⏳ Pendiente de trazar'}</span></div>
+            ${r.ref ? `<div class="detail-row"><span class="lbl">Ref</span><span class="val">${escapeHtml(r.ref)}</span></div>` : ''}
+            <div style="margin-top:12px">
+                <h3>Recorrido (${stopIds.length} paradas)</h3>
+                ${stopList}
+            </div>
+            <div style="margin-top:12px">
+                <a href="/rutas.html" class="btn-link">← Abrir en el listado maestro</a>
+            </div>`;
+    }
+}
+
+// --- Toggles ---
+['traced', 'pending', 'stops', 'huerf'].forEach(key => {
+    document.getElementById(`t-${key}`).addEventListener('change', (e) => {
+        state.layers[key] = e.target.checked;
+        renderAll();
+    });
+});
+
+// ESC limpia selección
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') clearSelection(); });
+
+load();
+</script>
+</body>
+</html>
