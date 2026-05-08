@@ -6,6 +6,8 @@
     <title>TP Routes — Listado maestro</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/regions.js"></script>
+    <script src="/js/valhalla.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; }
@@ -236,6 +238,131 @@
         .map-coords b { color: #1a1a3e; }
         .modal-map    { max-width: 720px; }
 
+        /* ============== Modal de TRAZADO de ruta (Valhalla) ============== */
+        #trace-modal-bg {
+            display: none; position: fixed; inset: 0;
+            background: rgba(26,26,62,.6); z-index: 300;
+            align-items: center; justify-content: center;
+        }
+        #trace-modal-bg.open { display: flex; }
+        .trace-modal {
+            background: white; border-radius: 12px;
+            width: 96vw; height: 92vh; max-width: 1500px;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,.4);
+        }
+        .trace-head {
+            padding: 12px 18px;
+            background: #1a1a3e; color: white;
+            display: flex; align-items: center; gap: 12px;
+            flex-shrink: 0;
+        }
+        .trace-head h2 { font-size: 1rem; flex: 1; margin: 0; font-weight: 700; }
+        .trace-head .stats {
+            font-size: 0.82rem; opacity: .85;
+            background: rgba(255,255,255,.12); padding: 4px 10px; border-radius: 20px;
+        }
+        .trace-head .btn-trace {
+            background: #2a5ec8; color: white; border: none; border-radius: 6px;
+            padding: 7px 14px; font-size: 0.84rem; font-weight: 600; cursor: pointer;
+        }
+        .trace-head .btn-trace:hover { background: #1f4894; }
+        .trace-head .btn-trace:disabled { background: #555; cursor: not-allowed; }
+        .trace-head .btn-trace.save { background: #27ae60; }
+        .trace-head .btn-trace.save:hover { background: #1e8a4d; }
+        .trace-head .btn-trace.ghost { background: transparent; border: 1px solid rgba(255,255,255,.4); }
+        .trace-head .btn-trace.ghost:hover { background: rgba(255,255,255,.1); }
+
+        .trace-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+        #trace-map { flex: 1; min-height: 0; }
+        #trace-map.picking { cursor: crosshair; }
+
+        .trace-side {
+            width: 320px; background: #f4f6fa;
+            border-left: 1px solid #e0e6f0;
+            display: flex; flex-direction: column;
+            overflow-y: auto; flex-shrink: 0;
+        }
+        .trace-section { padding: 12px 14px; border-bottom: 1px solid #e0e6f0; }
+        .trace-section h3 {
+            font-size: 0.72rem; color: #555;
+            text-transform: uppercase; letter-spacing: .5px;
+            font-weight: 700; margin: 0 0 8px;
+        }
+        .ts-item, .twp-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 0; font-size: 0.84rem;
+        }
+        .ts-num {
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 800; color: white; flex-shrink: 0;
+            background: #2a5ec8;
+        }
+        .ts-num.start { background: #27ae60; }
+        .ts-num.end   { background: #8e44ad; }
+        .ts-name { color: #1a1a3e; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .twp-tag {
+            background: #e67e22; color: white;
+            padding: 2px 7px; border-radius: 8px;
+            font-size: 0.66rem; font-weight: 800; flex-shrink: 0;
+            min-width: 28px; text-align: center;
+        }
+        .twp-coord { color: #888; font-size: 0.74rem; font-family: ui-monospace, monospace; flex: 1; }
+        .twp-rm {
+            background: transparent; border: none; cursor: pointer;
+            color: #c0392b; font-weight: 800; font-size: 1rem;
+            padding: 0 4px;
+        }
+
+        .trace-side .btn-add-wp {
+            width: 100%; background: #e67e22; color: white;
+            border: none; border-radius: 6px; padding: 8px 12px;
+            font-size: 0.84rem; font-weight: 600; cursor: pointer;
+            margin-top: 6px;
+        }
+        .trace-side .btn-add-wp:hover { background: #d35400; }
+        .trace-side .empty-wp { color: #888; font-size: 0.78rem; font-style: italic; }
+        .trace-side .help { color: #777; font-size: 0.76rem; line-height: 1.45; }
+
+        .trace-banner {
+            display: none;
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+            background: #1a1a3e; color: white;
+            padding: 9px 18px; border-radius: 22px;
+            font-size: 0.84rem; z-index: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,.25);
+        }
+        .trace-banner.show { display: block; }
+        .trace-banner button {
+            margin-left: 12px; background: rgba(255,255,255,.18); color: white;
+            border: 1px solid rgba(255,255,255,.4); padding: 2px 9px; border-radius: 12px;
+            font-size: 0.72rem; cursor: pointer;
+        }
+
+        /* Markers en el mapa de trazado */
+        .stop-marker {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 3px solid white;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 800; font-size: 0.78rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,.4);
+        }
+        .waypoint-marker {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #e67e22; border: 2px solid white;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 800; font-size: 0.62rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,.4);
+        }
+
+        @media (max-width: 720px) {
+            .trace-modal { width: 100vw; height: 100vh; border-radius: 0; }
+            .trace-body { flex-direction: column; }
+            .trace-side { width: 100%; height: 40%; border-left: none; border-top: 1px solid #e0e6f0; }
+        }
+
         /* Sugerencias OSM (Photon) en el modal de mapa */
         .geo-tools-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
         .geo-results { margin-top: 6px; border: 1px solid #e2e7f1; border-radius: 8px; background: #fafbff; max-height: 180px; overflow-y: auto; }
@@ -406,7 +533,39 @@
   </div>
 </div>
 
-<script src="/js/regions.js"></script>
+<!-- Modal: trazar ruta con Valhalla -->
+<div id="trace-modal-bg" onclick="if(event.target.id==='trace-modal-bg')closeTraceModal()">
+  <div class="trace-modal">
+    <div class="trace-head">
+        <h2 id="trace-route-label">Trazar ruta</h2>
+        <span id="trace-stats" class="stats">—</span>
+        <button class="btn-trace ghost" onclick="closeTraceModal()">Cancelar</button>
+        <button class="btn-trace" id="trace-recalc-btn" onclick="recomputeTraceRoute()">↻ Recalcular</button>
+        <button class="btn-trace save" id="trace-save-btn" onclick="saveTraceShape()">💾 Guardar</button>
+    </div>
+    <div class="trace-body">
+        <div id="trace-banner" class="trace-banner">
+            🎯 Haz clic en el mapa para agregar un waypoint de corrección
+            <button onclick="stopTraceWaypointPicking()">Cancelar</button>
+        </div>
+        <div id="trace-map"></div>
+        <div class="trace-side">
+            <div class="trace-section">
+                <h3>📍 Paradas (de la ruta)</h3>
+                <div id="trace-stops-list"></div>
+                <p class="help" style="margin-top:6px">Estos puntos vienen del listado maestro y no se pueden editar acá.</p>
+            </div>
+            <div class="trace-section">
+                <h3>🎯 Waypoints de corrección</h3>
+                <div id="trace-wps-list"></div>
+                <button class="btn-add-wp" onclick="startTraceWaypointPicking()">+ Agregar waypoint en el mapa</button>
+                <p class="help" style="margin-top:8px">Los waypoints corrigen el trazado por dónde NO hay parada (atajos, calles específicas). Arrastrá para mover, × para borrar.</p>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const state = {
     region: (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca',
@@ -614,9 +773,24 @@ function renderRouteDiagram(pair, via) {
     }
     const allGeo = geoCount === n;
     const progClass = geoCount === 0 ? 'empty' : (allGeo ? 'complete' : 'partial');
-    const cta = allGeo
-        ? `<button class="rd-cta" onclick='traceRoutePlaceholder(${JSON.stringify(pair.pair_label).replace(/'/g, "&#39;")})'>🗺️ Trazar ruta en el mapa</button>`
-        : '';
+
+    // Botón "Trazar ruta": solo si todas las paradas están geolocalizadas
+    // y existe al menos una ida (para asociar el shape a un route_id).
+    let cta = '';
+    if (allGeo) {
+        const routeId = via.operadores?.[0]?.ida?.id ?? null;
+        if (routeId) {
+            const arg = JSON.stringify({
+                pair_label: pair.pair_label,
+                via_label: via.via_label,
+                route_id: routeId,
+                stops: stops.map(s => ({
+                    lat: +s.place.lat, lon: +s.place.lon, nombre: s.nombre,
+                })),
+            }).replace(/'/g, "&#39;");
+            cta = `<button class="rd-cta" onclick='openTraceModal(${arg})'>🗺️ Trazar ruta en el mapa</button>`;
+        }
+    }
     return `
     <div class="rd-wrap">
         <div class="rd-caption">
@@ -628,11 +802,264 @@ function renderRouteDiagram(pair, via) {
     </div>`;
 }
 
-// Botón dummy por ahora: cuando esté integrado Valhalla, llamará al
-// servicio de ruteo y dibujará el trazado real en /editor.html.
-function traceRoutePlaceholder(label) {
-    alert(`Próximamente: trazar la ruta ${label} con Valhalla y publicar en OpenStreetMap.\n\nPor ahora todas sus paradas ya están geolocalizadas, lista para ese paso.`);
+// ============================================================================
+// Trazar ruta con Valhalla — modal independiente
+// ============================================================================
+let traceMap = null;
+let traceLayers = { stops: null, wps: null, line: null };
+const traceState = {
+    routeId: null, label: '',
+    stops: [],         // [{lat, lon, nombre}]  (vienen del listado, NO editables)
+    waypoints: [],     // [{lat, lon}]          (puntos de corrección, editables)
+    pickingMode: false,
+    polyline: null,    // [[lat, lon], ...]     última geometría devuelta por Valhalla
+    distance: 0,       // km
+    time: 0,           // segundos
+};
+
+async function openTraceModal({ pair_label, via_label, route_id, stops }) {
+    if (typeof getRouteFromValhalla !== 'function') {
+        alert('Valhalla no se cargó correctamente. Recargá la página.');
+        return;
+    }
+    traceState.routeId = route_id;
+    traceState.label   = via_label === 'Directo' ? pair_label : `${pair_label} (${via_label})`;
+    traceState.stops   = stops;
+    traceState.waypoints = [];
+    traceState.polyline = null;
+
+    document.getElementById('trace-route-label').textContent = `🗺️ ${traceState.label}`;
+    document.getElementById('trace-stats').textContent = '—';
+    document.getElementById('trace-modal-bg').classList.add('open');
+
+    if (!traceMap) {
+        traceMap = L.map('trace-map').setView([5.54, -73.36], 9);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '© OpenStreetMap'
+        }).addTo(traceMap);
+        traceMap.on('click', onTraceMapClick);
+    }
+    setTimeout(() => traceMap.invalidateSize(), 100);
+
+    // Cargar shape existente (si lo hay) para precargar waypoints de corrección
+    try {
+        const r = await fetch(`/api/route-shapes?route_id=${route_id}`);
+        if (r.ok) {
+            const existing = await r.json();
+            if (existing.valhalla_waypoints && Array.isArray(existing.valhalla_waypoints)) {
+                traceState.waypoints = existing.valhalla_waypoints;
+            }
+        }
+    } catch (_) {}
+
+    renderTraceMap();
+    await recomputeTraceRoute();
 }
+
+function closeTraceModal() {
+    if (traceState.pickingMode) stopTraceWaypointPicking();
+    document.getElementById('trace-modal-bg').classList.remove('open');
+}
+
+function renderTraceMap() {
+    // Limpiar capas
+    for (const k of Object.keys(traceLayers)) {
+        if (traceLayers[k]) { traceMap.removeLayer(traceLayers[k]); traceLayers[k] = null; }
+    }
+    traceLayers.stops = L.layerGroup().addTo(traceMap);
+    traceLayers.wps   = L.layerGroup().addTo(traceMap);
+
+    // Markers de paradas (origen verde / destino púrpura / intermedias azules, todos numerados)
+    const allLatLngs = [];
+    const n = traceState.stops.length;
+    traceState.stops.forEach((s, i) => {
+        const role = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'mid');
+        const color = role === 'start' ? '#27ae60' : role === 'end' ? '#8e44ad' : '#2a5ec8';
+        const icon = L.divIcon({
+            className: '',
+            html: `<div class="stop-marker" style="background:${color}">${i + 1}</div>`,
+            iconSize: [28, 28], iconAnchor: [14, 14],
+        });
+        L.marker([s.lat, s.lon], { icon })
+            .bindPopup(`<strong>${escapeHtml(s.nombre)}</strong>`)
+            .addTo(traceLayers.stops);
+        allLatLngs.push([s.lat, s.lon]);
+    });
+
+    // Waypoints de corrección (W1, W2, ...) draggables
+    traceState.waypoints.forEach((w, i) => {
+        const icon = L.divIcon({
+            className: '',
+            html: `<div class="waypoint-marker">W${i + 1}</div>`,
+            iconSize: [22, 22], iconAnchor: [11, 11],
+        });
+        const m = L.marker([w.lat, w.lon], { icon, draggable: true })
+            .bindPopup(`Waypoint W${i + 1}<br><small>arrastrá para mover</small>`)
+            .addTo(traceLayers.wps);
+        m.on('dragend', (e) => {
+            const ll = e.target.getLatLng();
+            traceState.waypoints[i] = { lat: ll.lat, lon: ll.lng };
+            renderTraceSidebar();
+            recomputeTraceRoute();
+        });
+        allLatLngs.push([w.lat, w.lon]);
+    });
+
+    // Encuadrar la primera vez
+    if (allLatLngs.length > 1 && !traceState.polyline) {
+        traceMap.fitBounds(allLatLngs, { padding: [50, 50] });
+    }
+    renderTraceSidebar();
+}
+
+function renderTraceSidebar() {
+    const stopsHtml = traceState.stops.map((s, i) => {
+        const role = i === 0 ? 'start' : (i === traceState.stops.length - 1 ? 'end' : 'mid');
+        const cls = role === 'start' ? 'start' : role === 'end' ? 'end' : '';
+        return `<div class="ts-item">
+            <span class="ts-num ${cls}">${i + 1}</span>
+            <span class="ts-name">${escapeHtml(s.nombre)}</span>
+        </div>`;
+    }).join('');
+    document.getElementById('trace-stops-list').innerHTML = stopsHtml;
+
+    const wpsHtml = traceState.waypoints.length
+        ? traceState.waypoints.map((w, i) =>
+            `<div class="twp-item">
+                <span class="twp-tag">W${i + 1}</span>
+                <span class="twp-coord">${(+w.lat).toFixed(4)}, ${(+w.lon).toFixed(4)}</span>
+                <button class="twp-rm" onclick="removeTraceWaypoint(${i})" title="Quitar">×</button>
+            </div>`
+        ).join('')
+        : `<div class="empty-wp">Sin waypoints todavía. Si Valhalla escoge un camino raro, agregá uno para forzar el trazado.</div>`;
+    document.getElementById('trace-wps-list').innerHTML = wpsHtml;
+}
+
+function startTraceWaypointPicking() {
+    traceState.pickingMode = true;
+    document.getElementById('trace-map').classList.add('picking');
+    document.getElementById('trace-banner').classList.add('show');
+}
+function stopTraceWaypointPicking() {
+    traceState.pickingMode = false;
+    document.getElementById('trace-map').classList.remove('picking');
+    document.getElementById('trace-banner').classList.remove('show');
+}
+function onTraceMapClick(e) {
+    if (!traceState.pickingMode) return;
+    traceState.waypoints.push({ lat: e.latlng.lat, lon: e.latlng.lng });
+    stopTraceWaypointPicking();
+    renderTraceMap();
+    recomputeTraceRoute();
+}
+function removeTraceWaypoint(i) {
+    traceState.waypoints.splice(i, 1);
+    renderTraceMap();
+    recomputeTraceRoute();
+}
+
+// Distancia haversine en km — para encontrar el segmento donde insertar un waypoint
+function haversine(a, b) {
+    const R = 6371;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLon = (b.lon - a.lon) * Math.PI / 180;
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const x = Math.sin(dLat/2)**2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+// Inserta waypoints de corrección entre las paradas, usando "menor desvío"
+function buildOrderedPoints() {
+    const points = traceState.stops.slice();
+    for (const wp of traceState.waypoints) {
+        let bestIdx = 1, bestDelta = Infinity;
+        for (let i = 0; i < points.length - 1; i++) {
+            const a = points[i], b = points[i + 1];
+            const direct = haversine(a, b);
+            const detour = haversine(a, wp) + haversine(wp, b);
+            const delta  = detour - direct;
+            if (delta < bestDelta) { bestDelta = delta; bestIdx = i + 1; }
+        }
+        points.splice(bestIdx, 0, wp);
+    }
+    return points;
+}
+
+async function recomputeTraceRoute() {
+    const recalcBtn = document.getElementById('trace-recalc-btn');
+    const saveBtn   = document.getElementById('trace-save-btn');
+    recalcBtn.disabled = true;
+    saveBtn.disabled = true;
+    document.getElementById('trace-stats').textContent = 'Calculando…';
+
+    const points = buildOrderedPoints();
+    const result = await getRouteFromValhalla(points);
+
+    recalcBtn.disabled = false;
+    saveBtn.disabled = false;
+
+    if (result.error) {
+        document.getElementById('trace-stats').textContent = `Error: ${result.error}`;
+        return;
+    }
+
+    if (traceLayers.line) traceMap.removeLayer(traceLayers.line);
+    traceLayers.line = L.polyline(result.shape, {
+        color: '#e74c3c', weight: 5, opacity: 0.85
+    }).addTo(traceMap);
+
+    traceState.polyline = result.shape;
+    traceState.distance = result.distance || 0;
+    traceState.time     = result.time || 0;
+
+    document.getElementById('trace-stats').textContent =
+        `${(traceState.distance).toFixed(1)} km · ${Math.round(traceState.time / 60)} min`;
+}
+
+async function saveTraceShape() {
+    if (!traceState.polyline) {
+        alertMsg('Calculá la ruta antes de guardar', 'error'); return;
+    }
+    const geojson = {
+        type: 'Feature',
+        geometry: {
+            type: 'LineString',
+            // GeoJSON usa [lon, lat]
+            coordinates: traceState.polyline.map(([lat, lon]) => [lon, lat]),
+        },
+        properties: {
+            distance_km: traceState.distance,
+            time_s: traceState.time,
+            label: traceState.label,
+        },
+    };
+    try {
+        const r = await fetch('/api/route-shapes', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                route_id: traceState.routeId,
+                geojson,
+                distancia_km: traceState.distance,
+                valhalla_waypoints: traceState.waypoints,
+            }),
+        }).then(r => r.json());
+        if (r.error) throw new Error(r.error);
+        alertMsg('Trazado guardado');
+        closeTraceModal();
+        await load();
+    } catch (e) {
+        alertMsg(`Error al guardar: ${e.message}`, 'error');
+    }
+}
+
+// ESC cierra el modal de trazado
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (traceState.pickingMode) { stopTraceWaypointPicking(); return; }
+    if (document.getElementById('trace-modal-bg').classList.contains('open')) closeTraceModal();
+});
 
 function renderOp(pair, via, op) {
     const ida    = op.ida;

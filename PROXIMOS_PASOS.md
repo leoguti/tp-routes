@@ -6,10 +6,16 @@ Lista viva de cosas que faltan o que conviene refinar después de la reunión in
 
 ## 🚀 Funcionalidad pendiente
 
-### Auto-ruteo entre paradas
-Integrar un servicio de ruteo (OSRM, Valhalla, GraphHopper o similar) en `editor.html`. Con dos paradas ya geolocalizadas, el servicio devuelve el trazado por las carreteras reales. Los estudiantes lo refinan en vez de dibujar nodo por nodo.
+### Auto-ruteo entre paradas — ✅ Implementado (v1)
+Integrado **Valhalla** desde el listado maestro: cuando una ruta tiene todas
+sus paradas geolocalizadas, aparece el botón "🗺️ Trazar ruta en el mapa".
+Abre un modal con mapa Leaflet, paradas como markers numerados, polyline
+del trazado calculado por Valhalla, y permite agregar/borrar/arrastrar
+waypoints de corrección. El resultado se guarda como GeoJSON en `route_shapes`.
 
-**Estado:** no empezado. **Bloqueante para:** productividad de los estudiantes al cartografiar.
+**Pendiente fase 2:**
+- Publicar el GeoJSON como relación PTv2 en OpenStreetMap.
+- Visualizar el trazado guardado al volver a abrir el listado.
 
 ### Módulo de tarifas
 Estructura de `route_fares` ya existe en DB. Falta UI para que el equipo del Terminal cargue precios por tramo / origen-destino.
