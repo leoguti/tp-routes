@@ -15,132 +15,158 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
 #header nav a { color: #aab; text-decoration: none; font-size: 0.85rem; margin-right: 12px; }
 #header nav a.active, #header nav a:hover { color: white; }
 
-.page { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+#layout { display: flex; height: calc(100vh - 48px); }
 
+/* Sidebar */
+#sidebar {
+    width: 380px; min-width: 320px;
+    background: white; border-right: 1px solid #e0e6f0;
+    display: flex; flex-direction: column;
+}
+.sidebar-top { padding: 12px 14px; border-bottom: 1px solid #eee; }
+.sidebar-top h2 { font-size: 0.95rem; color: #1a1a3e; margin-bottom: 8px; }
 .intro {
     background: #fffbe8; border: 1px solid #fce9a4; color: #7a5d1a;
-    padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;
-    font-size: 0.88rem; line-height: 1.55;
+    padding: 8px 10px; border-radius: 6px; margin-bottom: 10px;
+    font-size: 0.78rem; line-height: 1.45;
 }
 .intro b { color: #5a4410; }
-.intro a { color: #2a5ec8; }
 
-.stats-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-.stat-box { background: white; border-radius: 8px; padding: 12px 18px; min-width: 130px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-align: center; cursor: pointer; transition: transform .08s, box-shadow .15s, border .15s; border: 2px solid transparent; user-select: none; }
-.stat-box:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); transform: translateY(-1px); }
-.stat-box.active { border-color: #1a1a3e; box-shadow: 0 4px 10px rgba(26,26,62,.15); }
-.stat-box.good.active   { border-color: #27ae60; }
-.stat-box.warn.active   { border-color: #e67e22; }
-.stat-box.danger.active { border-color: #c0392b; }
-.stat-box .num { font-size: 1.5rem; font-weight: 800; color: #1a1a3e; }
-.stat-box .lbl { font-size: 0.72rem; color: #888; margin-top: 2px; }
-.stat-box.good .num   { color: #27ae60; }
-.stat-box.warn .num   { color: #e67e22; }
-.stat-box.danger .num { color: #c0392b; }
-.stat-box.danger {
-    background: linear-gradient(180deg, #ffffff 0%, #fff5f4 100%);
-    border-color: #fadbd8;
+.search-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.search-row input {
+    flex: 1; border: 1px solid #ddd; border-radius: 6px;
+    padding: 7px 10px; font-size: 0.83rem;
 }
-.stat-box.danger.active { background: white; }
 
-.toolbar { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-.toolbar input { border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; flex: 1; min-width: 200px; }
-.btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 0.83rem; cursor: pointer; font-weight: 500; }
+.btn { padding: 7px 12px; border: none; border-radius: 6px; font-size: 0.82rem; cursor: pointer; font-weight: 500; }
 .btn-primary { background: #1a1a3e; color: white; }
 .btn-primary:hover { background: #2a2a5e; }
-.btn-ghost { background: transparent; color: #1a1a3e; border: 1px solid #ddd; }
+.btn-ghost { background: white; border: 1px solid #ddd; color: #333; }
 .btn-ghost:hover { background: #f5f5f5; }
-.btn-sm { padding: 4px 9px; font-size: 0.76rem; }
 .btn-danger { background: #e74c3c; color: white; }
 .btn-danger:hover { background: #c0392b; }
+.btn-sm { padding: 4px 10px; font-size: 0.74rem; }
 
-/* Tabla de paradas */
-/* Sección "pendientes" */
-.pending-wrap { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(26,26,62,.07); overflow: hidden; border: 1px solid #f5d68d; margin-bottom: 18px; }
-.pending-head { background: linear-gradient(90deg, #fff3d6 0%, #fff9e8 100%); padding: 14px 18px; border-bottom: 1px solid #f5e2a1; }
-.pending-head h2 { font-size: 1rem; color: #7a5d1a; margin: 0 0 4px; }
-.pending-head p  { font-size: 0.82rem; color: #95772b; margin: 0; }
-.pending-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 12px; padding: 11px 18px; align-items: center; border-bottom: 1px solid #faecc4; font-size: 0.88rem; }
-.pending-row:last-child { border-bottom: none; }
-.pending-row:hover { background: #fffbeb; }
-.pending-row .pname { font-weight: 700; color: #5a4410; }
-.pending-row .puses { color: #95772b; font-size: 0.82rem; }
-.pending-row .ploc  { color: #b8860b; font-size: 0.78rem; font-style: italic; }
-.pending-row .ploc:empty::before { content: '—'; }
+/* Tabs (filtros) */
+.view-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.view-tab {
+    background: #f7f9fc; border: 1px solid #e2e7f1; color: #555;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer;
+    font-size: 0.74rem; font-weight: 600; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.view-tab:hover { background: #eef2fa; }
+.view-tab.active { background: #1a1a3e; color: white; border-color: #1a1a3e; }
+.view-tab.danger.active  { background: #c0392b; border-color: #c0392b; }
+.view-tab.good.active    { background: #27ae60; border-color: #27ae60; }
+.view-tab.warn.active    { background: #e67e22; border-color: #e67e22; }
+.view-tab .num { font-weight: 800; }
 
-.places-list { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(26,26,62,.07); overflow: hidden; border: 1px solid #e6ecf5; }
-.place-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.8fr auto; gap: 12px; padding: 12px 16px; align-items: center; border-bottom: 1px solid #eef2f9; }
-.place-row:last-child { border-bottom: none; }
-.place-row:hover { background: #fafbff; }
-.place-row .name { font-weight: 700; color: #1a1a3e; display: flex; align-items: center; gap: 8px; }
-.place-row .name .pin { color: #196f3d; }
-.place-row .muni { font-size: 0.86rem; color: #555; }
-.place-row .muni:empty::before { content: '—'; color: #bbb; }
-.place-row .coords { font-size: 0.78rem; color: #888; font-family: ui-monospace, monospace; }
-.place-row .usage  { font-size: 0.82rem; color: #2a3e7a; }
-.place-row .usage.zero { color: #c0392b; font-style: italic; }
-.place-row .acts { display: flex; gap: 6px; }
+/* Lista */
+#list { flex: 1; overflow-y: auto; }
+.item {
+    padding: 10px 14px; border-bottom: 1px solid #f0f0f0;
+    cursor: pointer; transition: background .1s;
+}
+.item:hover { background: #f8faff; }
+.item.active { background: #eef2ff; border-left: 3px solid #1a1a3e; padding-left: 11px; }
+.item .name { font-weight: 600; font-size: 0.88rem; color: #1a1a3e; display: flex; align-items: center; gap: 6px; }
+.item .meta { font-size: 0.74rem; color: #888; margin-top: 2px; }
+.item .coords { font-size: 0.7rem; color: #aaa; font-family: ui-monospace, monospace; margin-top: 2px; }
+.item.pending { background: #fffbf2; }
+.item.pending .name { color: #7a5d1a; }
+.item.pending .name::before { content: '⚠'; color: #c0392b; font-weight: 800; }
+.item.pending .meta { color: #95772b; }
+.item .row-actions { margin-top: 4px; }
 
-.places-list .head { background: #f4f7fc; font-weight: 700; font-size: 0.78rem; color: #555; text-transform: uppercase; letter-spacing: .4px; }
-.places-list .head:hover { background: #f4f7fc; }
+.empty { padding: 36px 16px; text-align: center; color: #aab; font-size: 0.85rem; }
+.loader { padding: 32px; text-align: center; color: #aab; font-size: 0.85rem; }
 
-.empty { text-align: center; padding: 56px 20px; color: #aab; font-size: 0.9rem; background: white; border-radius: 12px; }
-.loader { text-align: center; padding: 40px; color: #aab; font-size: 0.9rem; }
+/* Mapa permanente */
+.map-area { position: relative; flex: 1; display: flex; flex-direction: column; }
+#map { flex: 1; }
+#map.picking { cursor: crosshair; }
+.pick-banner {
+    display: none; position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    background: #1a1a3e; color: white; padding: 9px 18px; border-radius: 22px;
+    font-size: 0.84rem; z-index: 500; white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25);
+}
+.pick-banner.show { display: block; }
+.pick-banner .btn-cancel {
+    margin-left: 12px; background: rgba(255,255,255,.15); color: white;
+    border: 1px solid rgba(255,255,255,.4); padding: 2px 8px; border-radius: 12px;
+    font-size: 0.74rem; cursor: pointer;
+}
+
+/* Marcadores en mapa */
+.lf-marker {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #27ae60; border: 3px solid white;
+    box-shadow: 0 1px 6px rgba(0,0,0,.4);
+}
+.lf-marker.huerf { background: #e67e22; }
 
 /* Alert */
-.alert { padding: 10px 14px; border-radius: 7px; margin-bottom: 14px; font-size: 0.83rem; display: none; }
+.alert { padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 0.8rem; display: none; }
 .alert.show { display: block; }
 .alert-success { background: #e0fae8; color: #1a6b3a; }
 .alert-error   { background: #fde4e0; color: #922; }
 
 /* Modal */
-.modal-bg { display: none; position: fixed; inset: 0; background: rgba(26,26,62,.5); z-index: 100; align-items: flex-start; justify-content: center; overflow-y: auto; }
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(26,26,62,.5); z-index: 1000; align-items: flex-start; justify-content: center; overflow-y: auto; }
 .modal-bg.open { display: flex; }
-.modal { background: white; border-radius: 10px; width: 100%; max-width: 720px; padding: 24px; margin: 40px 16px; max-height: 90vh; overflow-y: auto; position: relative; }
-.modal h2 { margin: 0 0 18px; font-size: 1rem; padding-right: 36px; }
+.modal { background: white; border-radius: 10px; width: 100%; max-width: 540px; padding: 22px 22px 18px; margin: 30px 16px; max-height: 92vh; overflow-y: auto; position: relative; }
+.modal h2 { margin: 0 0 14px; font-size: 1rem; padding-right: 36px; color: #1a1a3e; }
 .modal-close {
-    position: absolute; top: 12px; right: 14px;
+    position: absolute; top: 10px; right: 12px;
     background: transparent; border: none; cursor: pointer;
     font-size: 1.4rem; color: #888; line-height: 1;
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 30px; height: 30px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
 }
 .modal-close:hover { background: #f0f2f8; color: #1a1a3e; }
-.form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.form-row { display: flex; gap: 10px; margin-bottom: 10px; }
 .form-group { flex: 1; }
-.form-group label { display: block; font-size: 0.76rem; color: #666; margin-bottom: 4px; font-weight: 500; }
+.form-group label { display: block; font-size: 0.74rem; color: #666; margin-bottom: 3px; font-weight: 500; }
 .form-group input, .form-group textarea {
-    width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; font-family: inherit;
+    width: 100%; border: 1px solid #ddd; border-radius: 6px;
+    padding: 7px 10px; font-size: 0.85rem; font-family: inherit;
 }
 .form-group small { color: #888; font-size: 0.72rem; display: block; margin-top: 2px; }
-.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 12px; }
 
-#m-map { width: 100%; height: 360px; border-radius: 8px; border: 1px solid #ddd; }
-.map-coords { font-size: 0.78rem; color: #666; margin-top: 8px; }
-.map-coords b { color: #1a1a3e; }
+.coords-row { display: flex; gap: 6px; align-items: end; }
+.coords-row .form-group { flex: 1; }
+.coords-row .btn-pick {
+    background: #2a5ec8; color: white; border: none; border-radius: 6px;
+    padding: 8px 12px; font-size: 0.78rem; cursor: pointer;
+    white-space: nowrap; font-weight: 600;
+}
+.coords-row .btn-pick:hover { background: #1f4894; }
 
 /* Sugerencias OSM (Photon) */
-.geo-search-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-.geo-search-row .btn-sm { white-space: nowrap; }
-.geo-results { margin-top: 6px; border: 1px solid #e2e7f1; border-radius: 8px; background: #fafbff; max-height: 180px; overflow-y: auto; }
+.geo-tools { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.geo-results { margin-top: 6px; border: 1px solid #e2e7f1; border-radius: 6px; background: #fafbff; max-height: 180px; overflow-y: auto; }
 .geo-results:empty { display: none; }
-.geo-result { padding: 8px 12px; border-bottom: 1px solid #eef2f9; cursor: pointer; font-size: 0.84rem; }
+.geo-result { padding: 7px 10px; border-bottom: 1px solid #eef2f9; cursor: pointer; font-size: 0.82rem; }
 .geo-result:last-child { border-bottom: none; }
 .geo-result:hover { background: #eef3ff; }
 .geo-result.terminal { background: #f0faf0; border-left: 3px solid #27ae60; }
 .geo-result.terminal:hover { background: #e1f4e6; }
 .geo-result .gname { font-weight: 600; color: #1a1a3e; }
 .geo-result.terminal .gname { color: #196f3d; }
-.geo-result .gloc  { color: #777; font-size: 0.78rem; margin-top: 2px; }
-.geo-result .gtag  { display: inline-block; background: #27ae60; color: white; font-size: 0.66rem; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
-.geo-result .gcoords { color: #aaa; font-size: 0.72rem; font-family: ui-monospace, monospace; margin-top: 2px; }
-.geo-section { background: #f4f7fc; padding: 6px 12px; font-size: 0.72rem; color: #555; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
-.geo-loading { padding: 12px; text-align: center; color: #888; font-size: 0.84rem; }
-.geo-empty { padding: 12px; text-align: center; color: #c0392b; font-size: 0.84rem; }
+.geo-result .gloc { color: #777; font-size: 0.76rem; margin-top: 2px; }
+.geo-result .gtag { display: inline-block; background: #27ae60; color: white; font-size: 0.64rem; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+.geo-result .gcoords { color: #aaa; font-size: 0.7rem; font-family: ui-monospace, monospace; margin-top: 2px; }
+.geo-section { background: #f4f7fc; padding: 5px 10px; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+.geo-loading { padding: 10px; text-align: center; color: #888; font-size: 0.82rem; }
+.geo-empty { padding: 10px; text-align: center; color: #c0392b; font-size: 0.82rem; }
 
 @media (max-width: 720px) {
-    .place-row { grid-template-columns: 1fr; gap: 6px; }
-    .place-row .acts { justify-content: flex-end; }
+    #layout { flex-direction: column; height: auto; }
+    #sidebar { width: 100%; height: 50vh; }
+    .map-area { height: 50vh; }
 }
 </style>
 </head>
@@ -156,32 +182,35 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
     </nav>
 </div>
 
-<div class="page">
-
-    <div class="intro">
-        <b>Paradas y catálogo geolocalizado.</b>
-        Acá ves las paradas que aparecen en las rutas y dónde están en el mapa.
-        Empezá por <b>Pendientes</b> para ir geolocalizando las que todavía son solo texto.
-        Al guardar una parada con sus coordenadas, queda en el catálogo y se reusa en todas las rutas que la mencionan.
+<div id="layout">
+    <div id="sidebar">
+        <div class="sidebar-top">
+            <h2>Catálogo de paradas</h2>
+            <div class="intro">
+                <b>📍 Geolocaliza paradas.</b> Empieza por <b>Pendientes</b> para resolver las que aún son texto suelto. Click en cualquier parada para verla en el mapa.
+            </div>
+            <div id="alert" class="alert"></div>
+            <div class="search-row">
+                <input id="search" type="text" placeholder="Buscar nombre o municipio…" />
+                <button class="btn btn-primary" onclick="openCreate()">+ Nueva</button>
+            </div>
+            <div class="view-tabs">
+                <button class="view-tab danger" data-view="pending" onclick="setView('pending')">Pendientes <span class="num" id="s-pending">—</span></button>
+                <button class="view-tab"        data-view="all"     onclick="setView('all')">Geolocalizadas <span class="num" id="s-total">—</span></button>
+                <button class="view-tab good"   data-view="used"    onclick="setView('used')">En uso <span class="num" id="s-usadas">—</span></button>
+                <button class="view-tab warn"   data-view="unused"  onclick="setView('unused')">Sin usar <span class="num" id="s-huerf">—</span></button>
+            </div>
+        </div>
+        <div id="list"><div class="loader">Cargando…</div></div>
     </div>
 
-    <div id="alert" class="alert"></div>
-
-    <!-- Filtros unificados: lo principal arriba, una sola decisión -->
-    <div class="stats-row">
-        <div class="stat-box danger" id="sb-pending" onclick="setView('pending')" title="Nombres en rutas que aún no tienen coordenada"><div class="num" id="s-pending">—</div><div class="lbl">Pendientes</div></div>
-        <div class="stat-box"         id="sb-all"     onclick="setView('all')"     title="Catálogo: todas las paradas geolocalizadas"><div class="num" id="s-total">—</div><div class="lbl">Geolocalizadas</div></div>
-        <div class="stat-box good"    id="sb-used"    onclick="setView('used')"    title="Catálogo: solo en uso"><div class="num" id="s-usadas">—</div><div class="lbl">En uso</div></div>
-        <div class="stat-box warn"    id="sb-unused"  onclick="setView('unused')"  title="Catálogo: sin usar en ninguna ruta"><div class="num" id="s-huerf">—</div><div class="lbl">Sin usar</div></div>
+    <div class="map-area">
+        <div id="pick-banner" class="pick-banner">
+            📍 Haz clic en el mapa para fijar la coordenada
+            <button class="btn-cancel" onclick="stopPicking(true)">Cancelar</button>
+        </div>
+        <div id="map"></div>
     </div>
-
-    <div class="toolbar">
-        <input id="search" type="text" placeholder="Buscar por nombre o municipio…" />
-        <button class="btn btn-primary" onclick="openCreate()">+ Nueva parada</button>
-    </div>
-
-    <div id="pending-wrap"></div>
-    <div id="list-wrap"><div class="loader">Cargando…</div></div>
 </div>
 
 <!-- Modal crear/editar parada -->
@@ -189,6 +218,7 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
   <div class="modal">
     <button type="button" class="modal-close" onclick="closeModal()" aria-label="Cerrar">×</button>
     <h2 id="modal-title">Nueva parada</h2>
+
     <div class="form-row">
         <div class="form-group">
             <label>Nombre *</label>
@@ -200,22 +230,36 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
             <input id="m-municipio" type="text" placeholder="Por si hay varios con el mismo nombre" />
         </div>
     </div>
-    <div class="form-group">
-        <label>Posición en el mapa *</label>
-        <div class="geo-search-row">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="suggestLocation()">🔍 Sugerir ubicación desde OSM</button>
-            <small style="color:#888">Busca el nombre actual en OpenStreetMap y te muestra opciones.</small>
-        </div>
-        <div id="geo-results" class="geo-results"></div>
-        <div id="m-map" style="margin-top:8px"></div>
-        <div class="map-coords">Coordenada: <b id="m-latlon">— · —</b> · Haz clic en el mapa o arrastra el marcador.</div>
-    </div>
-    <div class="form-row" style="margin-top:10px">
+
+    <div class="form-row">
         <div class="form-group">
-            <label>Notas (opcional)</label>
-            <textarea id="m-notas" rows="2" placeholder="Cualquier detalle útil"></textarea>
+            <label>Buscar en OpenStreetMap</label>
+            <div class="geo-tools">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="suggestLocation()">🔍 Sugerir ubicación</button>
+                <small style="color:#888">Prioriza terminales de transporte.</small>
+            </div>
+            <div id="geo-results" class="geo-results"></div>
         </div>
     </div>
+
+    <div class="coords-row">
+        <div class="form-group">
+            <label>Latitud *</label>
+            <input id="m-lat" type="number" step="0.000001" placeholder="5.535300" />
+        </div>
+        <div class="form-group">
+            <label>Longitud *</label>
+            <input id="m-lon" type="number" step="0.000001" placeholder="-73.367800" />
+        </div>
+        <button type="button" class="btn-pick" onclick="startPicking()">🗺️ Ubicar en el mapa</button>
+    </div>
+    <small style="color:#888;display:block;margin-top:4px">Cierra el formulario y deja que hagas click directo en el mapa para fijar la coordenada.</small>
+
+    <div class="form-group" style="margin-top:10px">
+        <label>Notas (opcional)</label>
+        <textarea id="m-notas" rows="2" placeholder="Información adicional"></textarea>
+    </div>
+
     <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
         <button id="m-delete" class="btn btn-danger" style="display:none" onclick="deletePlace()">Eliminar</button>
@@ -226,20 +270,84 @@ body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #1a1a3e; 
 
 <script src="/js/regions.js"></script>
 <script>
+const activeRegionKey = (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca';
+const activeRegion = (typeof REGIONS !== 'undefined') ? REGIONS[activeRegionKey] : { center: [5.5353, -73.3678], zoom: 8 };
+
 const state = {
-    region: (typeof getCurrentRegion === 'function') ? getCurrentRegion() : 'boyaca',
+    region: activeRegionKey,
     places: [],
-    usage: new Map(),     // place_id -> count of references
-    pending: [],          // [{ nombre, count, fuentes: ['origen','destino','via'] }]
+    usage: new Map(),     // place_id -> count
+    pending: [],          // [{ nombre, count, fuentes }]
     search: '',
-    view: 'pending',      // 'pending' | 'all' | 'used' | 'unused'
-    editing: null,        // place actual en edición o null
-    pendingOriginal: null, // nombre original cuando se geolocaliza desde "pendientes"
-                           // (sirve para corregir typos: alias -> nombre correcto)
+    view: 'pending',
+    editing: null,        // place actual en edición
+    pendingOriginal: null,// nombre original del pending al geolocalizar (alias)
+    selectedId: null,     // id de place seleccionado en lista/mapa
 };
 
-let mapModal = null, mapMarker = null;
+// --- Mapa permanente ---
+const map = L.map('map').setView(activeRegion.center, activeRegion.zoom);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19
+}).addTo(map);
+const markers = {}; // place_id -> L.marker
 
+let pickingMode = false;
+let onPickResolve = null;
+
+map.on('click', (e) => {
+    if (!pickingMode) return;
+    fillCoords(e.latlng.lat, e.latlng.lng);
+    stopPicking(false);
+});
+
+function fillCoords(lat, lon) {
+    document.getElementById('m-lat').value = (+lat).toFixed(6);
+    document.getElementById('m-lon').value = (+lon).toFixed(6);
+}
+
+function startPicking() {
+    pickingMode = true;
+    document.getElementById('map').classList.add('picking');
+    document.getElementById('pick-banner').classList.add('show');
+    closeModal();
+}
+
+function stopPicking(cancelled) {
+    pickingMode = false;
+    document.getElementById('map').classList.remove('picking');
+    document.getElementById('pick-banner').classList.remove('show');
+    if (!cancelled) document.getElementById('modal-bg').classList.add('open');
+}
+
+function makePlaceIcon(used) {
+    const cls = used ? 'lf-marker' : 'lf-marker huerf';
+    return L.divIcon({
+        className: '',
+        html: `<div class="${cls}"></div>`,
+        iconSize: [18, 18], iconAnchor: [9, 9],
+    });
+}
+
+function refreshMarkers() {
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    for (const k of Object.keys(markers)) delete markers[k];
+    for (const p of state.places) {
+        const used = (state.usage.get(p.id) || 0) > 0;
+        const m = L.marker([+p.lat, +p.lon], { icon: makePlaceIcon(used) }).addTo(map);
+        const usesText = used ? `${state.usage.get(p.id)} ruta(s)` : 'sin uso';
+        m.bindPopup(
+            `<strong>${escapeHtml(p.nombre)}</strong><br>
+             <span style="color:#666">${escapeHtml(p.municipio || '')} · ${usesText}</span><br>
+             <small style="color:#aaa">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</small><br>
+             <a href="#" onclick='openEditById(${p.id});return false;' style="color:#1a1a3e;font-weight:600">Editar</a>`
+        );
+        m.on('click', () => { state.selectedId = p.id; render(); });
+        markers[p.id] = m;
+    }
+}
+
+// --- Helpers ---
 function norm(s) { return String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 
 function alertMsg(msg, type = 'success') {
@@ -249,27 +357,31 @@ function alertMsg(msg, type = 'success') {
     setTimeout(() => el.classList.remove('show'), 3500);
 }
 
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// --- Carga ---
 async function load() {
     try {
         const [placesRes, routesRes] = await Promise.all([
             fetch(`/api/places?region=${state.region}`).then(r => r.json()),
             fetch(`/api/routes?region=${state.region}`).then(r => r.json()),
         ]);
-        state.places = placesRes.places || [];
+        state.places = (placesRes.places || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-        // Calcular cuántas veces cada place se usa Y agrupar nombres pendientes
         const usage = new Map();
         const bump = (id) => { if (id != null) usage.set(id, (usage.get(id) || 0) + 1); };
-        const pending = new Map(); // normName -> { nombre, count, fuentes:Set }
+        const pending = new Map();
 
-        function addPending(nombreText, fuente) {
-            if (!nombreText) return;
-            const key = norm(nombreText);
-            if (!key) return;
-            if (!pending.has(key)) pending.set(key, { nombre: nombreText.trim(), count: 0, fuentes: new Set() });
-            const e = pending.get(key);
-            e.count++;
-            e.fuentes.add(fuente);
+        function addPending(t, fuente) {
+            if (!t) return;
+            const k = norm(t);
+            if (!k) return;
+            if (!pending.has(k)) pending.set(k, { nombre: t.trim(), count: 0, fuentes: new Set() });
+            const e = pending.get(k);
+            e.count++; e.fuentes.add(fuente);
         }
 
         for (const r of routesRes.routes || []) {
@@ -288,53 +400,11 @@ async function load() {
             .sort((a, b) => b.count - a.count);
 
         updateStats();
+        refreshMarkers();
         render();
-        renderPending();
     } catch (e) {
-        document.getElementById('list-wrap').innerHTML = `<div class="empty">Error al cargar: ${e.message}</div>`;
+        document.getElementById('list').innerHTML = `<div class="empty">Error: ${escapeHtml(e.message)}</div>`;
     }
-}
-
-function pendingMatches(p) {
-    if (!state.search) return true;
-    return norm(p.nombre).includes(norm(state.search));
-}
-
-function renderPending() {
-    const wrap = document.getElementById('pending-wrap');
-    // Solo se muestra si la vista activa es "pending"
-    if (state.view !== 'pending') { wrap.innerHTML = ''; return; }
-    const filtered = state.pending.filter(pendingMatches);
-    if (!state.pending.length) {
-        wrap.innerHTML = `<div class="empty">🎉 No hay paradas pendientes de geolocalizar.</div>`;
-        return;
-    }
-    if (!filtered.length) {
-        wrap.innerHTML = `<div class="empty">Sin coincidencias para "${escapeHtml(state.search)}" entre las pendientes.</div>`;
-        return;
-    }
-
-    const rows = filtered.map(p => {
-        const fuentesLbl = p.fuentes.map(f => ({origen:'origen', destino:'destino', via:'paso intermedio'}[f] || f)).join(', ');
-        return `
-        <div class="pending-row">
-            <div class="pname">${escapeHtml(p.nombre)}</div>
-            <div class="puses">${p.count} mención${p.count !== 1 ? 'es' : ''} en rutas</div>
-            <div class="ploc">${escapeHtml(fuentesLbl)}</div>
-            <div>
-                <button class="btn btn-primary btn-sm" onclick='openCreateFromPending(${JSON.stringify(p.nombre).replace(/'/g, "&#39;")})'>📍 Geolocalizar</button>
-            </div>
-        </div>`;
-    }).join('');
-
-    wrap.innerHTML = `
-    <div class="pending-wrap">
-        <div class="pending-head">
-            <h2>⚠️ Pendientes de geolocalizar (${state.pending.length})</h2>
-            <p>Estos nombres están escritos en rutas pero todavía no tienen coordenada. Al geolocalizar uno, se vincula automáticamente con todas las rutas que lo mencionan.</p>
-        </div>
-        ${rows}
-    </div>`;
 }
 
 function updateStats() {
@@ -344,216 +414,99 @@ function updateStats() {
     document.getElementById('s-total').textContent = total;
     document.getElementById('s-usadas').textContent = usadas;
     document.getElementById('s-huerf').textContent = total - usadas;
-    // Marcar el stat-box activo
     for (const v of ['pending', 'all', 'used', 'unused']) {
-        document.getElementById(`sb-${v}`).classList.toggle('active', state.view === v);
+        document.querySelector(`.view-tab[data-view="${v}"]`).classList.toggle('active', state.view === v);
     }
 }
 
 function setView(v) {
     state.view = v;
+    state.selectedId = null;
     updateStats();
     render();
-    renderPending();
 }
 
-function matches(p) {
-    // Filtro por uso (clickeable en los stats)
+// --- Filtros ---
+function placeMatches(p) {
     const uses = state.usage.get(p.id) || 0;
     if (state.view === 'used'   && uses === 0) return false;
     if (state.view === 'unused' && uses > 0)   return false;
-    // Filtro por texto
     if (!state.search) return true;
     const q = norm(state.search);
     return norm(p.nombre).includes(q) || norm(p.municipio || '').includes(q);
 }
+function pendingMatches(p) {
+    if (!state.search) return true;
+    return norm(p.nombre).includes(norm(state.search));
+}
 
+// --- Render lista ---
 function render() {
-    const wrap = document.getElementById('list-wrap');
-    // Si la vista es "pending", el catálogo se oculta
-    if (state.view === 'pending') { wrap.innerHTML = ''; return; }
+    const list = document.getElementById('list');
 
-    const filtered = state.places.filter(matches);
-    if (!filtered.length) {
-        wrap.innerHTML = state.places.length
-            ? `<div class="empty">Sin coincidencias para "${escapeHtml(state.search)}".</div>`
-            : `<div class="empty">No hay paradas todavía. Crea una con "+ Nueva parada", o ve a <a href="/rutas.html">/rutas</a> y geolocaliza una al cargar una ruta.</div>`;
-        return;
-    }
-    wrap.innerHTML = `
-        <div class="places-list">
-            <div class="place-row head">
-                <div>Nombre</div>
-                <div>Municipio</div>
-                <div>Coordenadas</div>
-                <div>Uso</div>
-                <div></div>
-            </div>
-            ${filtered.map(renderRow).join('')}
-        </div>`;
-}
-
-function renderRow(p) {
-    const uses = state.usage.get(p.id) || 0;
-    const useText = uses === 0 ? 'sin usar' : `${uses} ruta${uses !== 1 ? 's' : ''}`;
-    return `
-    <div class="place-row">
-        <div class="name"><span class="pin">📍</span> ${escapeHtml(p.nombre)}</div>
-        <div class="muni">${escapeHtml(p.municipio || '')}</div>
-        <div class="coords">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</div>
-        <div class="usage ${uses === 0 ? 'zero' : ''}">${useText}</div>
-        <div class="acts">
-            <button class="btn btn-ghost btn-sm" onclick='openEdit(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
-        </div>
-    </div>`;
-}
-
-// ----- Modal -----
-function openModal() {
-    document.getElementById('modal-bg').classList.add('open');
-    setTimeout(() => mapModal && mapModal.invalidateSize(), 80);
-}
-function closeModal() {
-    document.getElementById('modal-bg').classList.remove('open');
-}
-function onModalBgClick(e) {
-    // Cerrar sólo cuando se hace clic en el fondo, no dentro del modal.
-    if (e.target.id === 'modal-bg') closeModal();
-}
-// ESC cierra el modal
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('modal-bg').classList.contains('open')) {
-        closeModal();
-    }
-});
-
-function ensureMap() {
-    if (mapModal) return;
-    mapModal = L.map('m-map').setView([5.54, -73.36], 8); // centro Boyacá
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, attribution: '© OpenStreetMap'
-    }).addTo(mapModal);
-    mapModal.on('click', (e) => setMarker(e.latlng.lat, e.latlng.lng));
-}
-
-function setMarker(lat, lon) {
-    if (mapMarker) mapModal.removeLayer(mapMarker);
-    mapMarker = L.marker([lat, lon], { draggable: true }).addTo(mapModal);
-    mapMarker.on('dragend', (e) => {
-        const ll = e.target.getLatLng();
-        document.getElementById('m-latlon').textContent =
-            `${ll.lat.toFixed(6)} · ${ll.lng.toFixed(6)}`;
-    });
-    document.getElementById('m-latlon').textContent =
-        `${lat.toFixed(6)} · ${lon.toFixed(6)}`;
-}
-
-function clearMarker() {
-    if (mapMarker) { mapModal.removeLayer(mapMarker); mapMarker = null; }
-    document.getElementById('m-latlon').textContent = '— · —';
-}
-
-// --- Sugerencias de ubicación desde OpenStreetMap (Photon) ---
-// Prioriza terminales de transporte (amenity=bus_station). Si la persona
-// escribió "Bogotá", el resultado más útil es "Terminal Salitre" con su
-// coordenada precisa, no el centroide de la ciudad.
-async function suggestLocation() {
-    const q = document.getElementById('m-nombre').value.trim();
-    const box = document.getElementById('geo-results');
-    if (!q) {
-        box.innerHTML = `<div class="geo-empty">Escribí primero el nombre de la parada.</div>`;
-        return;
-    }
-    box.innerHTML = `<div class="geo-loading">Buscando "${escapeHtml(q)}" en OpenStreetMap…</div>`;
-    try {
-        const baseUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(q + ', Colombia')}&limit=6&lat=5.54&lon=-73.36`;
-        // Dos consultas en paralelo: terminales primero, ciudades después.
-        const [terms, gens] = await Promise.all([
-            fetch(`${baseUrl}&osm_tag=amenity:bus_station`).then(r => r.json()).catch(() => ({ features: [] })),
-            fetch(baseUrl).then(r => r.json()).catch(() => ({ features: [] })),
-        ]);
-
-        const seen = new Set();
-        const items = [];
-        const idOf = f => `${f.properties?.osm_type || ''}:${f.properties?.osm_id || ''}`;
-
-        for (const f of (terms.features || [])) {
-            if (seen.has(idOf(f))) continue;
-            seen.add(idOf(f));
-            items.push({ feat: f, isTerminal: true });
-        }
-        for (const f of (gens.features || [])) {
-            if (seen.has(idOf(f))) continue;
-            seen.add(idOf(f));
-            items.push({ feat: f, isTerminal: false });
-        }
-
-        if (!items.length) {
-            box.innerHTML = `<div class="geo-empty">Sin resultados. Intentá con otra ortografía o ubicá a mano en el mapa.</div>`;
+    if (state.view === 'pending') {
+        if (!state.pending.length) {
+            list.innerHTML = `<div class="empty">🎉 No hay paradas pendientes de geolocalizar.</div>`;
             return;
         }
-
-        const html = [];
-        const hasTerminals = items.some(i => i.isTerminal);
-        const hasGenerales = items.some(i => !i.isTerminal);
-
-        if (hasTerminals) html.push(`<div class="geo-section">🚌 Terminales de transporte</div>`);
-        for (const it of items.filter(i => i.isTerminal)) html.push(renderGeoResult(it, q));
-
-        if (hasGenerales) html.push(`<div class="geo-section">📍 Otras ubicaciones</div>`);
-        for (const it of items.filter(i => !i.isTerminal)) html.push(renderGeoResult(it, q));
-
-        box.innerHTML = html.join('');
-    } catch (e) {
-        box.innerHTML = `<div class="geo-empty">Error al consultar OSM: ${escapeHtml(e.message)}</div>`;
-    }
-}
-
-function renderGeoResult({ feat, isTerminal }, queryOriginal) {
-    const p = feat.properties || {};
-    const [lon, lat] = feat.geometry.coordinates;
-    const osmName = p.name || '';
-    const city = p.city || p.county || '';
-    const adminParts = [p.city, p.county, p.state, p.country].filter(Boolean);
-    const loc = adminParts.join(', ');
-
-    // Sugerencia de nombre: si es terminal y el nombre OSM es distinto al
-    // típico nombre de la ciudad, sugerimos "Ciudad — NombreTerminal".
-    let suggestedName;
-    if (isTerminal && osmName) {
-        // Si la búsqueda fue genérica (ej. "Bogotá") y el terminal tiene un
-        // nombre concreto distinto, lo combinamos.
-        const queryIsCity = city && norm(queryOriginal) === norm(city);
-        const sameAsCity = norm(osmName) === norm(city);
-        if (queryIsCity && !sameAsCity) {
-            suggestedName = `${city} — ${osmName}`;
-        } else {
-            suggestedName = osmName;
+        const filtered = state.pending.filter(pendingMatches);
+        if (!filtered.length) {
+            list.innerHTML = `<div class="empty">Sin coincidencias para "${escapeHtml(state.search)}" entre las pendientes.</div>`;
+            return;
         }
-    } else {
-        suggestedName = osmName || queryOriginal;
+        list.innerHTML = filtered.map(p => {
+            const fuentes = p.fuentes.map(f => ({origen:'origen',destino:'destino',via:'paso intermedio'}[f]||f)).join(', ');
+            const arg = JSON.stringify(p.nombre).replace(/'/g, "&#39;");
+            return `<div class="item pending" onclick='openCreateFromPending(${arg})'>
+                <div class="name">${escapeHtml(p.nombre)}</div>
+                <div class="meta">${p.count} mención${p.count !== 1 ? 'es' : ''} · ${escapeHtml(fuentes)}</div>
+                <div class="row-actions"><button class="btn btn-primary btn-sm" onclick='event.stopPropagation();openCreateFromPending(${arg})'>📍 Geolocalizar</button></div>
+            </div>`;
+        }).join('');
+        return;
     }
 
-    const payload = JSON.stringify({ name: suggestedName, lat, lon, city }).replace(/'/g, "&#39;");
-    return `<div class="geo-result ${isTerminal ? 'terminal' : ''}" onclick='useGeoResult(${payload})'>
-        <div class="gname">${escapeHtml(suggestedName)}${isTerminal ? '<span class="gtag">Terminal</span>' : ''}</div>
-        ${loc ? `<div class="gloc">${escapeHtml(loc)}</div>` : ''}
-        <div class="gcoords">${(+lat).toFixed(5)}, ${(+lon).toFixed(5)}</div>
-    </div>`;
+    // Vistas del catálogo (all / used / unused)
+    const filtered = state.places.filter(placeMatches);
+    if (!filtered.length) {
+        list.innerHTML = state.places.length
+            ? `<div class="empty">Sin coincidencias para esta búsqueda/filtro.</div>`
+            : `<div class="empty">No hay paradas todavía. Crea una con "+ Nueva", o entrá a <a href="/rutas.html">/rutas</a> y geolocaliza desde ahí.</div>`;
+        return;
+    }
+    list.innerHTML = filtered.map(p => {
+        const uses = state.usage.get(p.id) || 0;
+        const usesText = uses === 0 ? '<span style="color:#c0392b;font-style:italic">sin usar</span>' : `${uses} ruta${uses !== 1 ? 's' : ''}`;
+        const sel = state.selectedId === p.id ? 'active' : '';
+        return `<div class="item ${sel}" id="item-${p.id}" onclick="selectPlace(${p.id})">
+            <div class="name">${escapeHtml(p.nombre)}</div>
+            <div class="meta">${escapeHtml(p.municipio || '—')} · ${usesText}</div>
+            <div class="coords">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</div>
+            <div class="row-actions">
+                <button class="btn btn-ghost btn-sm" onclick='event.stopPropagation();openEditById(${p.id})'>Editar</button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
-function useGeoResult(r) {
-    setMarker(+r.lat, +r.lon);
-    mapModal.setView([+r.lat, +r.lon], 14);
-    // Si la sugerencia trae un nombre más específico, lo proponemos en el input.
-    // El usuario sigue pudiendo ajustarlo antes de guardar.
-    const nameInput = document.getElementById('m-nombre');
-    if (r.name && r.name !== nameInput.value) nameInput.value = r.name;
-    // Si municipio está vacío, lo prellenamos.
-    const muniInput = document.getElementById('m-municipio');
-    if (!muniInput.value.trim() && r.city) muniInput.value = r.city;
-    document.getElementById('geo-results').innerHTML = '';
+function selectPlace(id) {
+    state.selectedId = id;
+    render();
+    const p = state.places.find(pp => pp.id === id);
+    if (!p) return;
+    map.setView([+p.lat, +p.lon], 15);
+    markers[id]?.openPopup();
 }
+
+// --- Modal: abrir / cerrar ---
+function openModal() { document.getElementById('modal-bg').classList.add('open'); }
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+function onModalBgClick(e) { if (e.target.id === 'modal-bg') closeModal(); }
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (pickingMode) return stopPicking(true);
+    if (document.getElementById('modal-bg').classList.contains('open')) closeModal();
+});
 
 function openCreate() {
     state.editing = null;
@@ -561,12 +514,11 @@ function openCreate() {
     document.getElementById('modal-title').textContent = 'Nueva parada';
     document.getElementById('m-nombre').value = '';
     document.getElementById('m-municipio').value = '';
+    document.getElementById('m-lat').value = '';
+    document.getElementById('m-lon').value = '';
     document.getElementById('m-notas').value = '';
     document.getElementById('m-delete').style.display = 'none';
     document.getElementById('geo-results').innerHTML = '';
-    ensureMap();
-    clearMarker();
-    mapModal.setView([5.54, -73.36], 8);
     openModal();
 }
 
@@ -577,64 +529,125 @@ function openCreateFromPending(nombre) {
     document.getElementById('m-nombre').value = nombre;
 }
 
-function openEdit(place) {
-    state.editing = place;
-    document.getElementById('modal-title').textContent = `Editar: ${place.nombre}`;
-    document.getElementById('m-nombre').value = place.nombre;
-    document.getElementById('m-municipio').value = place.municipio || '';
-    document.getElementById('m-notas').value = place.notas || '';
+function openEditById(id) {
+    const p = state.places.find(pp => pp.id === id);
+    if (!p) return;
+    state.editing = p;
+    state.pendingOriginal = null;
+    document.getElementById('modal-title').textContent = `Editar: ${p.nombre}`;
+    document.getElementById('m-nombre').value = p.nombre;
+    document.getElementById('m-municipio').value = p.municipio || '';
+    document.getElementById('m-lat').value = p.lat;
+    document.getElementById('m-lon').value = p.lon;
+    document.getElementById('m-notas').value = p.notas || '';
     document.getElementById('m-delete').style.display = '';
     document.getElementById('geo-results').innerHTML = '';
-    ensureMap();
-    setMarker(+place.lat, +place.lon);
-    mapModal.setView([+place.lat, +place.lon], 13);
+    map.setView([+p.lat, +p.lon], 15);
     openModal();
 }
 
+// --- Sugerencias OSM (Photon) ---
+async function suggestLocation() {
+    const q = document.getElementById('m-nombre').value.trim();
+    const box = document.getElementById('geo-results');
+    if (!q) { box.innerHTML = `<div class="geo-empty">Escribí primero el nombre.</div>`; return; }
+    box.innerHTML = `<div class="geo-loading">Buscando "${escapeHtml(q)}"…</div>`;
+    try {
+        const baseUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(q + ', Colombia')}&limit=6&lat=${activeRegion.center[0]}&lon=${activeRegion.center[1]}`;
+        const [terms, gens] = await Promise.all([
+            fetch(`${baseUrl}&osm_tag=amenity:bus_station`).then(r => r.json()).catch(() => ({ features: [] })),
+            fetch(baseUrl).then(r => r.json()).catch(() => ({ features: [] })),
+        ]);
+        const seen = new Set();
+        const items = [];
+        const idOf = f => `${f.properties?.osm_type || ''}:${f.properties?.osm_id || ''}`;
+        for (const f of (terms.features || [])) {
+            if (seen.has(idOf(f))) continue;
+            seen.add(idOf(f));
+            items.push({ feat: f, isTerminal: true });
+        }
+        for (const f of (gens.features || [])) {
+            if (seen.has(idOf(f))) continue;
+            seen.add(idOf(f));
+            items.push({ feat: f, isTerminal: false });
+        }
+        if (!items.length) { box.innerHTML = `<div class="geo-empty">Sin resultados.</div>`; return; }
+        const html = [];
+        if (items.some(i => i.isTerminal)) html.push(`<div class="geo-section">🚌 Terminales</div>`);
+        for (const it of items.filter(i => i.isTerminal)) html.push(renderGeoResult(it, q));
+        if (items.some(i => !i.isTerminal)) html.push(`<div class="geo-section">📍 Otras ubicaciones</div>`);
+        for (const it of items.filter(i => !i.isTerminal)) html.push(renderGeoResult(it, q));
+        box.innerHTML = html.join('');
+    } catch (e) {
+        box.innerHTML = `<div class="geo-empty">Error: ${escapeHtml(e.message)}</div>`;
+    }
+}
+
+function renderGeoResult({ feat, isTerminal }, queryOriginal) {
+    const p = feat.properties || {};
+    const [lon, lat] = feat.geometry.coordinates;
+    const osmName = p.name || '';
+    const city = p.city || p.county || '';
+    const adminParts = [p.city, p.county, p.state, p.country].filter(Boolean);
+    const loc = adminParts.join(', ');
+    let suggestedName;
+    if (isTerminal && osmName) {
+        const queryIsCity = city && norm(queryOriginal) === norm(city);
+        const sameAsCity  = norm(osmName) === norm(city);
+        suggestedName = (queryIsCity && !sameAsCity) ? `${city} — ${osmName}` : osmName;
+    } else {
+        suggestedName = osmName || queryOriginal;
+    }
+    const payload = JSON.stringify({ name: suggestedName, lat, lon, city }).replace(/'/g, "&#39;");
+    return `<div class="geo-result ${isTerminal ? 'terminal' : ''}" onclick='useGeoResult(${payload})'>
+        <div class="gname">${escapeHtml(suggestedName)}${isTerminal ? '<span class="gtag">Terminal</span>' : ''}</div>
+        ${loc ? `<div class="gloc">${escapeHtml(loc)}</div>` : ''}
+        <div class="gcoords">${(+lat).toFixed(5)}, ${(+lon).toFixed(5)}</div>
+    </div>`;
+}
+
+function useGeoResult(r) {
+    fillCoords(r.lat, r.lon);
+    map.setView([+r.lat, +r.lon], 14);
+    const nameInput = document.getElementById('m-nombre');
+    if (r.name && r.name !== nameInput.value) nameInput.value = r.name;
+    const muni = document.getElementById('m-municipio');
+    if (!muni.value.trim() && r.city) muni.value = r.city;
+    document.getElementById('geo-results').innerHTML = '';
+}
+
+// --- Guardar / borrar ---
 async function savePlace() {
     const nombre = document.getElementById('m-nombre').value.trim();
-    if (!nombre)    { alertMsg('Pon un nombre', 'error'); return; }
-    if (!mapMarker) { alertMsg('Marca la posición en el mapa', 'error'); return; }
-    const ll = mapMarker.getLatLng();
+    const lat = parseFloat(document.getElementById('m-lat').value);
+    const lon = parseFloat(document.getElementById('m-lon').value);
+    if (!nombre)                            { alertMsg('Pon un nombre', 'error'); return; }
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) { alertMsg('Marca la posición (en mapa, OSM, o tipea lat/lon)', 'error'); return; }
+
     const body = {
         region_id: state.region,
-        nombre,
-        lat: ll.lat,
-        lon: ll.lng,
+        nombre, lat, lon,
         municipio: document.getElementById('m-municipio').value.trim() || null,
         notas:     document.getElementById('m-notas').value.trim() || null,
     };
-    // Si vino de "pendientes" y el usuario corrigió ortografía, manda el alias
-    // para que el backend vincule las rutas con el nombre original.
     if (!state.editing && state.pendingOriginal && state.pendingOriginal !== nombre) {
         body.aliases = [state.pendingOriginal];
     }
     try {
-        let r;
-        if (state.editing) {
-            r = await fetch(`/api/places?id=${state.editing.id}`, {
-                method: 'PUT',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(body),
-            }).then(r => r.json());
-        } else {
-            r = await fetch(`/api/places`, {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(body),
-            }).then(r => r.json());
-        }
+        const url = state.editing ? `/api/places?id=${state.editing.id}` : '/api/places';
+        const method = state.editing ? 'PUT' : 'POST';
+        const r = await fetch(url, {
+            method, headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+        }).then(r => r.json());
         if (r.error) {
-            if (r.existing) {
-                alertMsg(`Ya existe "${r.existing.nombre}" en el catálogo. Usa esa parada o cambia el nombre.`, 'error');
-                return;
-            }
+            if (r.existing) { alertMsg(`Ya existe "${r.existing.nombre}". Usa esa o cambia el nombre.`, 'error'); return; }
             throw new Error(r.error);
         }
         let msg = state.editing ? 'Parada actualizada' : 'Parada creada';
         if (r.linked) {
             const total = (r.linked.waypoints || 0) + (r.linked.origenes || 0) + (r.linked.destinos || 0);
-            if (total > 0) msg += ` · vinculada con ${total} mención${total !== 1 ? 'es' : ''} en rutas`;
+            if (total > 0) msg += ` · vinculada con ${total} mención${total !== 1 ? 'es' : ''}`;
         }
         alertMsg(msg);
         closeModal();
@@ -648,7 +661,7 @@ async function deletePlace() {
     if (!state.editing) return;
     const uses = state.usage.get(state.editing.id) || 0;
     const msg = uses > 0
-        ? `Esta parada está en uso por ${uses} ruta${uses !== 1 ? 's' : ''}. Si la borras, esas rutas quedarán con el nombre como solo texto (sin geolocalizar). ¿Continuar?`
+        ? `Esta parada está en uso por ${uses} ruta${uses !== 1 ? 's' : ''}. Si la borras, esas rutas vuelven a "solo texto". ¿Continuar?`
         : `¿Eliminar la parada "${state.editing.nombre}"?`;
     if (!confirm(msg)) return;
     try {
@@ -662,18 +675,11 @@ async function deletePlace() {
     }
 }
 
-// ----- Filtros -----
+// --- Buscador ---
 document.getElementById('search').addEventListener('input', e => {
     state.search = e.target.value;
     render();
-    renderPending();
 });
-
-// ----- Utils -----
-function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c =>
-        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 
 load();
 </script>
