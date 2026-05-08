@@ -176,16 +176,31 @@
         .res-editor .res-row input[type=date] { max-width: 140px; flex: 0 0 auto; }
         .res-editor .res-row input[placeholder="Número"] { max-width: 130px; flex: 0 0 auto; }
 
-        /* Diagrama: indicador de geolocalización */
-        .rd-stop.geo .rd-dot { background: #27ae60; border-color: #196f3d; }
-        .rd-stop.term.geo .rd-dot { background: #196f3d; border-color: #0c4a25; }
-        .rd-stop:not(.geo) .rd-dot { border-color: #b6bbc8; background: white; }
-        .rd-stop:not(.geo).term .rd-dot { background: #b6bbc8; }
-        .rd-stop:not(.geo) .rd-lbl { color: #888; }
+        /* Diagrama: indicador de geolocalización
+           Un solo eje visual: color = estado.
+           - Verde lleno  = geolocalizada
+           - Gris  vacío  = pendiente (clickeable)
+           El tamaño grande de los extremos se distingue por posición. */
+        .rd-stop.geo .rd-dot     { background: #27ae60; border-color: #196f3d; }
+        .rd-stop.pending .rd-dot { background: white;   border-color: #b6bbc8; }
+        .rd-stop.pending         { cursor: pointer; }
+        .rd-stop.pending:hover .rd-dot { border-color: #2a5ec8; background: #eef3ff; }
+        .rd-stop.pending:hover .rd-lbl { color: #2a5ec8; }
+        .rd-stop.pending .rd-lbl { color: #888; }
         .rd-stop .rd-pin { font-size: 0.62rem; margin-top: 2px; }
         .rd-progress { font-size: 0.66rem; color: #2a3e7a; margin-left: 8px; font-weight: 700; }
         .rd-progress.partial { color: #b8860b; }
         .rd-progress.empty   { color: #c0392b; }
+        .rd-progress.complete { color: #196f3d; }
+
+        .rd-caption { display: flex; align-items: center; gap: 8px; }
+        .rd-cta {
+            margin-left: auto; background: #1a1a3e; color: white;
+            border: none; padding: 5px 12px; border-radius: 18px;
+            font-size: 0.74rem; font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .rd-cta:hover { background: #2a5ec8; }
 
         /* Vía chips con badge de place */
         .form-group .via-chip.geo { background: #e0fae8; color: #196f3d; }
@@ -251,6 +266,10 @@
         <select id="filter-op">
             <option value="">Todas las empresas</option>
         </select>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;color:#1a1a3e;cursor:pointer">
+            <input type="checkbox" id="filter-complete" />
+            Solo rutas completas
+        </label>
         <button class="btn btn-ghost btn-sm" onclick="expandAll(true)">Expandir todo</button>
         <button class="btn btn-ghost btn-sm" onclick="expandAll(false)">Colapsar todo</button>
         <button class="btn btn-primary" onclick="openCreate()">+ Nuevo corredor</button>
@@ -367,6 +386,7 @@ const state = {
     operators: [],
     places: [],              // catálogo humano de lugares (cache local)
     filterOp: '',
+    onlyComplete: false,     // toggle: solo rutas con todas sus paradas geolocalizadas
     search: '',
     collapsed: new Set(),    // keys colapsados
     editing: null,           // { id_ida } si se está editando
@@ -449,6 +469,11 @@ function matches(pair) {
         const has = pair.vias.some(v => v.operadores.some(op => String(op.operator_id) === String(state.filterOp)));
         if (!has) return false;
     }
+    // Filtro "solo completas": al menos una vía con todas sus paradas geolocalizadas.
+    if (state.onlyComplete) {
+        const anyComplete = pair.vias.some(v => viaIsComplete(pair, v));
+        if (!anyComplete) return false;
+    }
     if (state.search) {
         const q = norm(state.search);
         const hay = norm(pair.pair_label + ' ' +
@@ -458,6 +483,13 @@ function matches(pair) {
         if (!hay.includes(q)) return false;
     }
     return true;
+}
+
+// Una vía está "completa" si los dos terminales y todas sus paradas
+// intermedias tienen place_id (geolocalización).
+function viaIsComplete(pair, via) {
+    if (!pair.cityA_place || !pair.cityB_place) return false;
+    return (via.via || []).every(w => w.place_id != null);
 }
 
 function render() {
@@ -476,16 +508,20 @@ function renderPair(pair) {
     const key = `p:${pair.pair_label}`;
     const collapsed = state.collapsed.has(key);
     const pairJson = JSON.stringify({cityA: pair.cityA, cityB: pair.cityB}).replace(/'/g,"&#39;");
+    // Si el filtro "solo completas" está activo, mostrar sólo las vías completas
+    const visibleVias = state.onlyComplete
+        ? pair.vias.filter(v => viaIsComplete(pair, v))
+        : pair.vias;
     return `
     <div class="pair-group">
         <div class="pair-head" onclick="toggle('${escapeAttr(key)}')">
             <span class="chev">${collapsed ? '▸' : '▾'}</span>
             <span class="tag">Corredor</span>
             <span class="title">${escapeHtml(pair.pair_label)}</span>
-            <span class="meta">${pair.total_operadores} empresa${pair.total_operadores!==1?'s':''} · ${pair.vias.length} ruta${pair.vias.length!==1?'s':''}</span>
+            <span class="meta">${pair.total_operadores} empresa${pair.total_operadores!==1?'s':''} · ${visibleVias.length} ruta${visibleVias.length!==1?'s':''}</span>
         </div>
         <div class="pair-body ${collapsed ? 'collapsed' : ''}">
-            ${pair.vias.map(v => renderVia(pair, v)).join('')}
+            ${visibleVias.map(v => renderVia(pair, v)).join('')}
             <div class="add-row">
                 <button class="btn-add" onclick='openAddVia(${pairJson})'>+ Agregar ruta a ${escapeHtml(pair.pair_label)}</button>
             </div>
@@ -537,24 +573,37 @@ function renderRouteDiagram(pair, via) {
         const isGeo = !!s.place;
         const tip = isGeo
             ? `Geolocalizada: ${(+s.place.lat).toFixed(4)}, ${(+s.place.lon).toFixed(4)}`
-            : 'Solo texto, pendiente de geolocalizar';
+            : 'Click para geolocalizar';
+        // Las paradas SIN coordenada son clickeables: abren el mapita.
+        const click = isGeo ? '' : `onclick='quickGeolocate(${JSON.stringify(s.nombre).replace(/'/g, "&#39;")})'`;
         parts.push(`
-            <div class="rd-stop ${s.term ? 'term' : ''} ${isGeo ? 'geo' : ''}" title="${escapeAttr(tip)}">
+            <div class="rd-stop ${s.term ? 'term' : ''} ${isGeo ? 'geo' : 'pending'}" title="${escapeAttr(tip)}" ${click}>
                 <div class="rd-dot"></div>
                 <div class="rd-lbl">${escapeHtml(s.nombre)}</div>
             </div>
         `);
         if (i < n - 1) parts.push(`<div class="rd-line"></div>`);
     }
-    const progClass = geoCount === 0 ? 'empty' : (geoCount === n ? '' : 'partial');
+    const allGeo = geoCount === n;
+    const progClass = geoCount === 0 ? 'empty' : (allGeo ? 'complete' : 'partial');
+    const cta = allGeo
+        ? `<button class="rd-cta" onclick='traceRoutePlaceholder(${JSON.stringify(pair.pair_label).replace(/'/g, "&#39;")})'>🗺️ Trazar ruta en el mapa</button>`
+        : '';
     return `
     <div class="rd-wrap">
         <div class="rd-caption">
             Ruta · ${stops.length} paradas
             <span class="rd-progress ${progClass}">${geoCount}/${n} geolocalizadas</span>
+            ${cta}
         </div>
         <div class="rd">${parts.join('')}</div>
     </div>`;
+}
+
+// Botón dummy por ahora: cuando esté integrado Valhalla, llamará al
+// servicio de ruteo y dibujará el trazado real en /editor.html.
+function traceRoutePlaceholder(label) {
+    alert(`Próximamente: trazar la ruta ${label} con Valhalla y publicar en OpenStreetMap.\n\nPor ahora todas sus paradas ya están geolocalizadas, lista para ese paso.`);
 }
 
 function renderOp(pair, via, op) {
@@ -835,6 +884,14 @@ let mapPicker = null;
 let mapMarker = null;
 let mapResolver = null;
 
+// Atajo: click en una parada gris del diagrama → abre el mapita con el
+// nombre prellenado. Al guardar, el backend auto-vincula todas las rutas
+// que usaban ese nombre (incluyendo esta), y la lista se refresca.
+async function quickGeolocate(nombre) {
+    const created = await openMapModal({ nombre });
+    if (created) await load();
+}
+
 function openMapModal({ nombre = '', defaultLat = null, defaultLon = null } = {}) {
     document.getElementById('map-nombre').value = nombre;
     document.getElementById('map-municipio').value = '';
@@ -996,6 +1053,10 @@ document.getElementById('search').addEventListener('input', e => {
 });
 document.getElementById('filter-op').addEventListener('change', e => {
     state.filterOp = e.target.value;
+    render();
+});
+document.getElementById('filter-complete').addEventListener('change', e => {
+    state.onlyComplete = e.target.checked;
     render();
 });
 
