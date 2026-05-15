@@ -1,0 +1,523 @@
+{
+  "empresa": "Cooflotax",
+  "operator_id": 8,
+  "fuente": "TARIFAS_ACTUALES_TERMINAL_TUNJA.xlsx :: hoja COOFLOTAX",
+  "generado": "2026-05-15",
+  "rutas_oficiales_en_base": 10,
+  "resumen": {
+    "pares_extraidos": 50,
+    "celdas_saltadas": 0,
+    "por_tipo": {
+      "vereda_paradero": 40,
+      "intermunicipal": 7,
+      "anomalia": 3
+    },
+    "por_confianza": {
+      "baja": 43,
+      "media": 5,
+      "alta": 2
+    }
+  },
+  "tarifas": [
+    {
+      "origen": "Tunja",
+      "destino": "Piedra Gorda",
+      "tarifa_cop": 5000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Soracá",
+      "tarifa_cop": 3000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Municipio real pero NO hay ruta oficial Cooflotax que lo cubra. ¿Falta la ruta?",
+      "tipo": "intermunicipal",
+      "confianza": "media"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Roca",
+      "tarifa_cop": 5500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Boqueron Virgen",
+      "tarifa_cop": 6000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "La Laja",
+      "tarifa_cop": 5500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Empalme",
+      "tarifa_cop": 6500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Mina",
+      "tarifa_cop": 7000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Auroras Panelas",
+      "tarifa_cop": 6000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Rosal",
+      "tarifa_cop": 7500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Soacha, Barrial,Zarzas",
+      "tarifa_cop": 7500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Celda con varios destinos juntos: hay que separarlos.",
+      "tipo": "anomalia",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "La Cruz",
+      "tarifa_cop": 6500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Mismo destino con precios distintos: [6500, 12000]. ¿Dos rutas o error?",
+      "tipo": "anomalia",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Icarina",
+      "tarifa_cop": 8500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Laguneta",
+      "tarifa_cop": 7500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Gobernación",
+      "tarifa_cop": 6500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cementerio",
+      "tarifa_cop": 9000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Iguaque",
+      "tarifa_cop": 9000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Municipio real pero NO hay ruta oficial Cooflotax que lo cubra. ¿Falta la ruta?",
+      "tipo": "intermunicipal",
+      "confianza": "media"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "El Alto",
+      "tarifa_cop": 7000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Viracacha",
+      "tarifa_cop": 9500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Municipio real pero NO hay ruta oficial Cooflotax que lo cubra. ¿Falta la ruta?",
+      "tipo": "intermunicipal",
+      "confianza": "media"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cerro",
+      "tarifa_cop": 10000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Juribita",
+      "tarifa_cop": 8000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Puerto Genaro",
+      "tarifa_cop": 10000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Iguaque Cerro",
+      "tarifa_cop": 4000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Sotos",
+      "tarifa_cop": 8500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cienega",
+      "tarifa_cop": 11000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Municipio real pero NO hay ruta oficial Cooflotax que lo cubra. ¿Falta la ruta?",
+      "tipo": "intermunicipal",
+      "confianza": "media"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Casa Blanca",
+      "tarifa_cop": 4500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Hotel",
+      "tarifa_cop": 11000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Viracacha Icarina",
+      "tarifa_cop": 4500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Piedra Gorda Iguaque",
+      "tarifa_cop": 6500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "La Cruz",
+      "tarifa_cop": 12000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Mismo destino con precios distintos: [6500, 12000]. ¿Dos rutas o error?",
+      "tipo": "anomalia",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Casa Blanca Tunja",
+      "tarifa_cop": 9000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siachoque",
+      "tarifa_cop": 9000,
+      "route_id": 111,
+      "route_match": "Tunja → Siachoque",
+      "duda": null,
+      "tipo": "intermunicipal",
+      "confianza": "alta"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Andrés Lopez",
+      "tarifa_cop": 13000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "San Jose",
+      "tarifa_cop": 15000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Llano Grande",
+      "tarifa_cop": 9500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Duitama",
+      "tarifa_cop": 12000,
+      "route_id": 11,
+      "route_match": "Tunja → Duitama",
+      "duda": null,
+      "tipo": "intermunicipal",
+      "confianza": "alta"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Frutillal",
+      "tarifa_cop": 8000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Barne-Playa",
+      "tarifa_cop": 7000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Caseta",
+      "tarifa_cop": 7500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Siderurgica",
+      "tarifa_cop": 9000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Colegio",
+      "tarifa_cop": 7000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Manzano",
+      "tarifa_cop": 10000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Romeros",
+      "tarifa_cop": 6500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Paipa",
+      "tarifa_cop": 11000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Municipio real pero NO hay ruta oficial Cooflotax que lo cubra. ¿Falta la ruta?",
+      "tipo": "intermunicipal",
+      "confianza": "media"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Crucero",
+      "tarifa_cop": 6000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Cascajal",
+      "tarifa_cop": 8500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Salvial",
+      "tarifa_cop": 4000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Llano Grande Salvial",
+      "tarifa_cop": 8500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Alto Sote",
+      "tarifa_cop": 5500,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Crucero Salvial",
+      "tarifa_cop": 5000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    },
+    {
+      "origen": "Tunja",
+      "destino": "Llano Grande Alto Sote",
+      "tarifa_cop": 5000,
+      "route_id": null,
+      "route_match": null,
+      "duda": "Parece vereda/paradero, no municipio. ¿Es paradero/tramo de qué ruta?",
+      "tipo": "vereda_paradero",
+      "confianza": "baja"
+    }
+  ]
+}
