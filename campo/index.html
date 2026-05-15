@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1565c0">
+  <title>Captura de campo — Terminal</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0;
+           background: #f0f2f5; color: #1a1a1a; }
+    header { background: #1565c0; color: #fff; padding: 14px 16px;
+             display: flex; align-items: center; gap: 10px; }
+    header h1 { margin: 0; font-size: 17px; flex: 1; }
+    #estado { font-size: 12px; font-weight: bold; padding: 3px 10px;
+              border-radius: 999px; }
+    .online  { background: #2e7d32; } .offline { background: #c62828; }
+    main { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .vista { display: none; } .vista.activa { display: block; }
+
+    button { font-size: 16px; font-weight: bold; border: none;
+             border-radius: 8px; padding: 13px; cursor: pointer; }
+    .primary { width: 100%; color: #fff; background: #1565c0; margin-top: 10px; }
+    .primary:active { background: #0d47a1; }
+    .link { background: none; color: #1565c0; padding: 8px 0; width: 100%; }
+    input, textarea { width: 100%; padding: 12px; font-size: 16px;
+             border: 2px solid #cfd8dc; border-radius: 8px; }
+
+    .empresa { width: 100%; text-align: left; background: #fff; color: #1a1a1a;
+               margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1);
+               display: flex; align-items: center; }
+    .empresa .n { flex: 1; }
+    .badge { background: #1565c0; color: #fff; font-size: 13px;
+             padding: 3px 9px; border-radius: 999px; }
+    .badge.cero { background: #2e7d32; }
+
+    .card { background: #fff; border-radius: 8px; padding: 14px;
+            margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .card.hecha { opacity: .5; }
+    .card .ruta { font-size: 12px; color: #888; margin: 0 0 4px; }
+    .card .preg { font-weight: bold; margin: 0 0 10px; }
+    .ok { color: #2e7d32; font-weight: bold; }
+
+    .envio { position: sticky; bottom: 0; background: #fff;
+             border-top: 1px solid #ddd; padding: 12px;
+             margin: 16px -16px -16px; }
+    .aviso { font-size: 13px; color: #555; margin: 8px 0 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="titulo">Captura de campo</h1>
+    <span id="estado" class="online">…</span>
+  </header>
+
+  <main>
+    <!-- 1. Identidad: clave de la demo + nombre del pasante -->
+    <section id="vista-identidad" class="vista activa">
+      <h2>🔒 Acceso</h2>
+      <p class="aviso">Demo de clase. Clave básica (no es seguridad real).</p>
+      <input id="clave" type="text" autocapitalize="off" autocomplete="off"
+             placeholder="clave"><br><br>
+      <input id="pasante" type="text" placeholder="Tu nombre (queda como autor del dato)">
+      <button class="primary" id="btnEntrar">Entrar</button>
+      <p class="aviso" id="errIdent"></p>
+    </section>
+
+    <!-- 2. Elegir empresa -->
+    <section id="vista-empresas" class="vista">
+      <p class="aviso">Selecciona la empresa en cuya ventanilla estás.</p>
+      <div id="listaEmpresas">Cargando…</div>
+    </section>
+
+    <!-- 3. Qué falta de esa empresa -->
+    <section id="vista-pendientes" class="vista">
+      <button class="link" id="btnVolver">← Cambiar de empresa</button>
+      <h2 id="nombreEmpresa"></h2>
+      <div id="listaPendientes"></div>
+      <button class="link" id="btnNoListada">+ Agregar ruta / dato no listado</button>
+      <div class="envio">
+        <button class="primary" id="btnEnviar">Enviar capturas (0)</button>
+        <p class="aviso" id="avisoEnvio"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
