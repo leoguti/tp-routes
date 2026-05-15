@@ -49,9 +49,41 @@
       margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1);
     }
     li .hora { display: block; font-size: 12px; color: #888; margin-top: 4px; }
+
+    /* Pantalla de clave (no es seguridad real, solo un portón básico) */
+    #gate {
+      position: fixed; inset: 0; background: #1565c0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; padding: 24px; z-index: 9999;
+    }
+    #gate.oculto { display: none; }
+    #gate .caja {
+      background: #fff; border-radius: 12px; padding: 24px;
+      width: 100%; max-width: 360px; text-align: center;
+    }
+    #gate h2 { margin: 0 0 4px; font-size: 20px; }
+    #gate p  { margin: 0 0 16px; font-size: 14px; color: #555; }
+    #gate input {
+      width: 100%; padding: 12px; font-size: 18px; text-align: center;
+      border: 2px solid #cfd8dc; border-radius: 8px; margin-bottom: 10px;
+    }
+    #gate .error { color: #c62828; font-size: 13px; min-height: 18px; }
   </style>
 </head>
 <body>
+  <!-- Portón con clave básica. NO es seguridad de verdad (cualquiera
+       que mire el código la ve); solo evita que entre gente al azar
+       mientras hacemos la clase. -->
+  <div id="gate">
+    <div class="caja">
+      <h2>🔒 Demo de clase</h2>
+      <p>Escribe la clave que te dio el profe</p>
+      <input id="clave" type="text" inputmode="text"
+             autocapitalize="off" autocomplete="off" placeholder="clave">
+      <div class="error" id="errClave"></div>
+    </div>
+  </div>
+
   <header>
     <h1>📓 Cuaderno de campo</h1>
     <span id="estado" class="online">Conectando…</span>
@@ -66,6 +98,36 @@
   </main>
 
   <script>
+    // ============================================================
+    //  0) PORTÓN CON CLAVE BÁSICA
+    //     Importante para la clase: esto NO es seguridad real.
+    //     La clave está en el código, así que cualquiera que
+    //     sepa mirar la ve. Sirve solo para que no entre gente
+    //     al azar durante la demo. La seguridad de verdad
+    //     (contraseñas, usuarios) la vemos más adelante.
+    // ============================================================
+    const CLAVE = 'busboy';
+    const gate = document.getElementById('gate');
+
+    function abrir() {
+      gate.classList.add('oculto');
+      sessionStorage.setItem('demo_ok', '1');
+    }
+    // Si ya entró antes en esta sesión, no la vuelve a pedir
+    // (así funciona incluso al recargar sin internet).
+    if (sessionStorage.getItem('demo_ok') === '1') abrir();
+
+    document.getElementById('clave').addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const valor = e.target.value.trim().toLowerCase();
+      if (valor === CLAVE) {
+        abrir();
+      } else {
+        document.getElementById('errClave').textContent = 'Clave incorrecta';
+        e.target.value = '';
+      }
+    });
+
     // ============================================================
     //  1) GUARDAR DATOS EN EL CELULAR  (localStorage)
     //     Esto vive DENTRO del navegador, no en internet.
