@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport: que se vea bien en el celular -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1565c0">
+  <title>Cuaderno de campo (offline)</title>
+  <link rel="manifest" href="./manifest.json">
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0; background: #f0f2f5; color: #1a1a1a;
+    }
+    header {
+      background: #1565c0; color: #fff;
+      padding: 16px; text-align: center;
+    }
+    header h1 { margin: 0 0 4px; font-size: 20px; }
+
+    /* El semáforo de conexión */
+    #estado {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: 13px; font-weight: bold;
+    }
+    .online  { background: #2e7d32; }
+    .offline { background: #c62828; }
+
+    main { max-width: 480px; margin: 0 auto; padding: 16px; }
+
+    textarea {
+      width: 100%; height: 90px; padding: 12px; font-size: 16px;
+      border: 2px solid #cfd8dc; border-radius: 8px; resize: none;
+    }
+    button {
+      width: 100%; margin-top: 10px; padding: 14px;
+      font-size: 17px; font-weight: bold; color: #fff;
+      background: #1565c0; border: none; border-radius: 8px;
+    }
+    button:active { background: #0d47a1; }
+
+    .contador { margin: 18px 0 8px; font-size: 14px; color: #555; }
+
+    ul { list-style: none; padding: 0; margin: 0; }
+    li {
+      background: #fff; border-radius: 8px; padding: 12px;
+      margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+    li .hora { display: block; font-size: 12px; color: #888; margin-top: 4px; }
+
+    /* Pantalla de clave (no es seguridad real, solo un portón básico) */
+    #gate {
+      position: fixed; inset: 0; background: #1565c0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; padding: 24px; z-index: 9999;
+    }
+    #gate.oculto { display: none; }
+    #gate .caja {
+      background: #fff; border-radius: 12px; padding: 24px;
+      width: 100%; max-width: 360px; text-align: center;
+    }
+    #gate h2 { margin: 0 0 4px; font-size: 20px; }
+    #gate p  { margin: 0 0 16px; font-size: 14px; color: #555; }
+    #gate input {
+      width: 100%; padding: 12px; font-size: 18px; text-align: center;
+      border: 2px solid #cfd8dc; border-radius: 8px; margin-bottom: 10px;
+    }
+    #gate .error { color: #c62828; font-size: 13px; min-height: 18px; }
+  </style>
+</head>
+<body>
+  <!-- Portón con clave básica. NO es seguridad de verdad (cualquiera
+       que mire el código la ve); solo evita que entre gente al azar
+       mientras hacemos la clase. -->
+  <div id="gate">
+    <div class="caja">
+      <h2>🔒 Demo de clase</h2>
+      <p>Escribe la clave que te dio el profe</p>
+      <input id="clave" type="text" inputmode="text"
+             autocapitalize="off" autocomplete="off" placeholder="clave">
+      <div class="error" id="errClave"></div>
+    </div>
+  </div>
+
+  <header>
+    <h1>📓 Cuaderno de campo</h1>
+    <span id="estado" class="online">Conectando…</span>
+  </header>
+
+  <main>
+    <textarea id="texto" placeholder="Ej: Empresa Águila — Tunja a Sogamoso sale 5:30am, tarifa 18 mil"></textarea>
+    <button id="guardar">Guardar nota</button>
+
+    <p class="contador"><span id="num">0</span> notas guardadas en este celular</p>
+    <ul id="lista"></ul>
+  </main>
+
+  <script>
+    // ============================================================
+    //  0) PORTÓN CON CLAVE BÁSICA
+    //     Importante para la clase: esto NO es seguridad real.
+    //     La clave está en el código, así que cualquiera que
+    //     sepa mirar la ve. Sirve solo para que no entre gente
+    //     al azar durante la demo. La seguridad de verdad
+    //     (contraseñas, usuarios) la vemos más adelante.
+    // ============================================================
+    const CLAVE = 'busboy';
+    const gate = document.getElementById('gate');
+
+    function abrir() {
+      gate.classList.add('oculto');
+      sessionStorage.setItem('demo_ok', '1');
+    }
+    // Si ya entró antes en esta sesión, no la vuelve a pedir
+    // (así funciona incluso al recargar sin internet).
+    if (sessionStorage.getItem('demo_ok') === '1') abrir();
+
+    document.getElementById('clave').addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const valor = e.target.value.trim().toLowerCase();
+      if (valor === CLAVE) {
+        abrir();
+      } else {
+        document.getElementById('errClave').textContent = 'Clave incorrecta';
+        e.target.value = '';
+      }
+    });
+
+    // ============================================================
+    //  1) GUARDAR DATOS EN EL CELULAR  (localStorage)
+    //     Esto vive DENTRO del navegador, no en internet.
+    //     Por eso sobrevive aunque no haya señal y aunque
+    //     cierres y vuelvas a abrir la página.
+    // ============================================================
+    const lista = document.getElementById('lista');
+    const num   = document.getElementById('num');
+
+    function leerNotas() {
+      return JSON.parse(localStorage.getItem('notas') || '[]');
+    }
+
+    function pintar() {
+      const notas = leerNotas();
+      num.textContent = notas.length;
+      lista.innerHTML = notas
+        .map(n => `<li>${n.texto}<span class="hora">${n.hora}</span></li>`)
+        .reverse().join('');
+    }
+
+    document.getElementById('guardar').onclick = () => {
+      const texto = document.getElementById('texto').value.trim();
+      if (!texto) return;
+      const notas = leerNotas();
+      notas.push({ texto, hora: new Date().toLocaleString('es-CO') });
+      localStorage.setItem('notas', JSON.stringify(notas));
+      document.getElementById('texto').value = '';
+      pintar();
+    };
+
+    pintar();
+
+    // ============================================================
+    //  2) EL SEMÁFORO  (¿hay internet ahora mismo?)
+    //     El navegador nos avisa cuando entra o se va la señal.
+    // ============================================================
+    const estado = document.getElementById('estado');
+    function actualizarEstado() {
+      if (navigator.onLine) {
+        estado.textContent = '🟢 En línea';
+        estado.className = 'online';
+      } else {
+        estado.textContent = '🔴 Sin conexión';
+        estado.className = 'offline';
+      }
+    }
+    window.addEventListener('online',  actualizarEstado);
+    window.addEventListener('offline', actualizarEstado);
+    actualizarEstado();
+
+    // ============================================================
+    //  3) EL SERVICE WORKER  (la magia: la página abre sin internet)
+    //     Le pedimos al navegador que instale un ayudante que
+    //     guarda la página completa. La próxima vez abre desde
+    //     ahí, aunque estés en un sótano sin señal.
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
+</html>
