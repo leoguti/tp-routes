@@ -66,7 +66,12 @@ y posibles paradas. Esto aprovecha su conocimiento del recorrido real sin
 tener que ir físicamente. Pendiente de diseñar cómo se integra (¿un visor
 Street View embebido junto al mapa donde fijan el punto?).
 
----
+**Decisión de Leonardo (hacer luego, hoy solo anotar):** la app tendrá una
+**sección SEPARADA** —distinta del módulo de tarifas/horarios— dedicada a la
+**recolección de paradas**: capturar la **ubicación GPS** de cada paradero,
+hecho **con los conductores**. Es un flujo aparte (otro tipo de dato, otro
+actor, otra UX). Conecta con la idea de Street View de arriba. No se
+construye ahora.
 
 ## 2. Producto de captura de campo — estado
 
@@ -155,6 +160,11 @@ resolver la sección 1.
 4. v2 de `/campo/`: captura de foto (compresión + cola offline en IndexedDB
    + subida a R2 reusando el patrón del otro proyecto).
 5. Limpiar de producción los experimentos temporales cuando corresponda.
+6. **Plan de uso (piloto):** se entrega la PWA `/campo/` al **equipo de
+   recolección de campo del terminal**. Si les funciona/gusta, se adopta;
+   los datos recogidos se procesan con Claude Code + Leonardo (sección 3).
+7. **Módulo separado de recolección de paradas** (ubicación GPS con
+   conductores) — ver sección 1.b. A diseñar/construir más adelante.
 
 > Memoria persistente del proyecto (contexto, decisiones, estilo de trabajo):
 > `~/.claude/projects/-home-leonardo-tp-routes/memory/`.
