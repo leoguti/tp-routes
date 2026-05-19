@@ -114,12 +114,13 @@ async function guardarCapturas(sql, region, body) {
             const r = await sql`
                 INSERT INTO field_notes
                     (region_id, operator_id, operator_text, route_id, route_text,
-                     campo, valor, nota_libre, pasante, client_uuid, capturado_en)
+                     campo, valor, nota_libre, pasante, informante, client_uuid, capturado_en)
                 VALUES
                     (${region}, ${it.operator_id || null}, ${it.operator_text || null},
                      ${it.route_id || null}, ${it.route_text || null},
                      ${it.campo || 'otro'}, ${it.valor || null}, ${it.nota_libre || null},
-                     ${it.pasante || null}, ${it.client_uuid || null}, ${it.capturado_en || null})
+                     ${it.pasante || null}, ${it.informante || null},
+                     ${it.client_uuid || null}, ${it.capturado_en || null})
                 ON CONFLICT (client_uuid) DO NOTHING
             `;
             guardados += r.count ?? r.rowCount ?? 0;

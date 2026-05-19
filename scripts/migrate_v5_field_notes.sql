@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS field_notes (
     nota_libre     TEXT,                 -- comentario adicional
 
     -- Autoría y trazabilidad
-    pasante        TEXT,                 -- nombre del pasante (autoría del dato)
+    pasante        TEXT,                 -- nombre del pasante (quien captura)
+    informante     TEXT,                 -- quién brindó la información (despachador/funcionario en ventanilla)
     client_uuid    TEXT UNIQUE,          -- idempotencia: reintentar sync no duplica
     capturado_en   TIMESTAMPTZ,          -- hora real en el celular (puede ser offline)
 

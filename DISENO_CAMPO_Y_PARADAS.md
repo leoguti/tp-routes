@@ -59,6 +59,13 @@ marca el punto en campo con GPS? ¿se ubican después en revisión sobre un
 mapa? ¿se reusa el editor de waypoints/`places` que ya existe?). Es un
 desafío de UX + datos, ligado directamente a la sección 1. No resolver ahora.
 
+**Idea de Leonardo (solo anotada, no implementar aún):** los **conductores
+del terminal** pueden definir/ubicar los puntos de parada usando **Google
+Street View** — recorren virtualmente la vía y determinan ahí los paraderos
+y posibles paradas. Esto aprovecha su conocimiento del recorrido real sin
+tener que ir físicamente. Pendiente de diseñar cómo se integra (¿un visor
+Street View embebido junto al mapa donde fijan el punto?).
+
 ---
 
 ## 2. Producto de captura de campo — estado
@@ -101,6 +108,18 @@ para quitar de producción luego.
   dedicada `agency_contacts` solo si la idea de WhatsApp sale de stand-by.
 - **WhatsApp de agradecimiento + enlace corto post-visita:** en STAND-BY,
   no urgente, anotado para no perderlo.
+- **Capturar el informante:** además del pasante (quien captura), se guarda
+  **quién brindó la información** (despachador/funcionario en ventanilla).
+  Implementado en `/campo/` y en `field_notes.informante`.
+
+### 3.b Flujo de validación oficial (nota, no implementar aún)
+
+Leonardo: el flujo previsto es **encuestas (captura en campo) → se genera un
+reporte → se envía oficialmente para ser validado** (por la autoridad /
+empresa / terminal). Es decir, la "bandeja de revisión" no termina en la
+aprobación interna: produce un **reporte oficial** que va a un tercero para
+validación formal antes de darse por bueno. Pendiente de diseñar (formato
+del reporte, a quién se envía, cómo se registra la validación de vuelta).
 
 ---
 
