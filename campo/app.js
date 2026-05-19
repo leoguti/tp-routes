@@ -21,6 +21,13 @@ const store = {
     if (val === undefined) return JSON.parse(localStorage.getItem('snap_' + key) || 'null');
     localStorage.setItem('snap_' + key, JSON.stringify(val));
   },
+  // Quién brinda la información, recordado por empresa (sobrevive offline).
+  inform(empId, v) {
+    const m = JSON.parse(localStorage.getItem('campo_informantes') || '{}');
+    if (v === undefined) return m[empId] || '';
+    m[empId] = v;
+    localStorage.setItem('campo_informantes', JSON.stringify(m));
+  },
 };
 
 let empresaActual = null;
@@ -98,6 +105,9 @@ async function irAPendientes(empresa) {
   $('titulo').textContent = empresa.corto || empresa.nombre;
   $('nombreEmpresa').textContent = empresa.nombre;
   verVista('vista-pendientes');
+  const inpInf = $('informante');
+  inpInf.value = store.inform(empresa.id);
+  inpInf.oninput = () => store.inform(empresa.id, inpInf.value.trim());
   const cont = $('listaPendientes');
   cont.innerHTML = 'Cargando…';
   try {
@@ -165,6 +175,7 @@ function encolar(parcial) {
   cola.push({
     ...parcial,
     pasante: store.pasante,
+    informante: (($('informante') && $('informante').value.trim()) || null),
     client_uuid: uuid(),                       // idempotencia: reenviar no duplica
     capturado_en: new Date().toISOString(),
   });
