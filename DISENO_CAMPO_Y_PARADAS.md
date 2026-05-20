@@ -68,6 +68,28 @@ Street View embebido junto al mapa donde fijan el punto?).
 
 ---
 
+## 1.c Reunión en el Terminal de Tunja — 2026-05-19
+
+Asistentes: **gerente del terminal** + **equipo de recolección de datos**
+(las personas que van a ir a las ventanillas de las empresas).
+
+Lo que se mostró: la PWA `/campo/` funcionando en celular, tal cual está hoy.
+
+Decisiones de la reunión:
+
+1. **El equipo del terminal adopta la app.** Ya no es un experimento de
+   clase: se va a usar de verdad para llenar tarifas/horarios faltantes.
+2. **Reunión de presentación formal: 2026-05-21.** Hay que tener listo para
+   esa fecha lo mínimo viable.
+3. **Hay que agregar autenticación por correo** de cada miembro del equipo
+   (no solo el nombre libre tipo "pasante"): cada captura queda atribuida a
+   un correo conocido. **Uno de los correos ya está definido** (pendiente:
+   listar el resto y diseñar el flujo de login — magic link, código, etc.).
+4. **Captura de paradas vía Google Street View confirmada**: los
+   conductores recorren la vía en Street View y la app **genera/registra la
+   posición GPS** del paradero marcado. Esto **deja de ser idea anotada
+   (sección 1.b) y pasa a algo acordado** con el equipo del terminal.
+
 ## 2. Producto de captura de campo — estado
 
 Prototipo para que los **pasantes** (≠ los estudiantes de la clase de
@@ -155,6 +177,16 @@ resolver la sección 1.
 4. v2 de `/campo/`: captura de foto (compresión + cola offline en IndexedDB
    + subida a R2 reusando el patrón del otro proyecto).
 5. Limpiar de producción los experimentos temporales cuando corresponda.
+6. **Plan de uso (piloto): ✅ acordado en reunión 2026-05-19** (sección 1.c).
+   La PWA `/campo/` se entrega al equipo de recolección del terminal y
+   empieza a usarse formalmente desde 2026-05-21.
+7. **Módulo separado de recolección de paradas — confirmado en reunión:**
+   Street View → GPS, con conductores. Ya no es solo idea, es acuerdo.
+   Sigue siendo trabajo *posterior* al MVP de login.
+8. **Antes de 2026-05-21 (MVP para reunión de presentación):**
+   - Diseñar el login por correo del equipo (magic link o código).
+   - Recoger la lista de correos del equipo (1 ya conocido, faltan el resto).
+   - Sustituir el `pasante` libre por el correo autenticado en `field_notes`.
 
 > Memoria persistente del proyecto (contexto, decisiones, estilo de trabajo):
 > `~/.claude/projects/-home-leonardo-tp-routes/memory/`.
