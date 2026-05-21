@@ -57,6 +57,60 @@
                background: #cfd8dc; }
     .divisor span { padding: 0 12px; font-size: 13px; }
     #otpBox input { margin-bottom: 10px; }
+
+    /* Pestañas (Tarifas / Paradas) dentro de la empresa */
+    .tabs { display: flex; gap: 6px; margin: 8px 0 14px; }
+    .tab { flex: 1; background: #e8eaf0; color: #555; font-size: 14px; padding: 11px 6px; }
+    .tab.activa { background: #1565c0; color: #fff; }
+    .lbl { display: block; font-size: 13px; color: #555; margin: 14px 0 4px; font-weight: bold; }
+    select { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #cfd8dc; border-radius: 8px; background: #fff; }
+    .corredor { width: 100%; text-align: left; background: #fff; color: #1a1a1a;
+                margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.1); padding: 12px; font-weight: normal; }
+    .corredor.sel { background: #e3f2fd; border: 2px solid #1565c0; }
+
+    /* Paradas: progreso + estados (forma + texto + color, no solo emoji) */
+    .par-progreso { font-weight: bold; color: #1a1a1a; margin: 10px 0 4px; }
+    .par-barra { height: 8px; background: #e8eaf0; border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+    .par-barra > div { height: 100%; background: #27ae60; width: 0; transition: width .3s; }
+    .par-sec { font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase;
+               letter-spacing: .5px; margin: 16px 0 6px; }
+    .par { width: 100%; text-align: left; background: #fff; color: #1a1a1a;
+           margin-bottom: 6px; padding: 13px 12px; min-height: 56px;
+           display: flex; align-items: center; gap: 10px; font-weight: normal;
+           box-shadow: 0 1px 3px rgba(0,0,0,.1); border: 2px solid transparent; }
+    .par-chip { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+    .par-nom { flex: 1; }
+    .par-go { color: #c4c4c4; font-size: 20px; }
+    .par-falta { border-color: #e67e22; background: #fff7ef; }
+    .par-falta .par-chip { background: #e67e22; color: #fff; }
+    .par-falta .par-nom { font-weight: bold; }
+    .par-revisar { border-color: #f1c40f; background: #fffdf3; }
+    .par-revisar .par-chip { background: #b8860b; color: #fff; }
+    .par-ok { opacity: .72; }
+    .par-ok .par-chip { background: #e0f0e5; color: #196f3d; }
+    .secundario { background: #e8eaf0; color: #555; }
+    .par-det-titulo { font-size: 18px; font-weight: bold; color: #196f3d; margin: 10px 0 6px; }
+    .par-sep { border: none; border-top: 1px solid #e0e6f0; margin: 16px 0 10px; }
+
+    /* Línea de metro vertical (en orden origen→destino; el orden es la información) */
+    .metro { margin: 4px 0 6px; }
+    .mstop { width: 100%; display: flex; align-items: center; gap: 8px;
+             background: transparent; border: none; text-align: left; cursor: pointer;
+             padding: 12px 8px 12px 40px; min-height: 56px; position: relative; font-size: 15px; }
+    .mstop::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 3px; background: #cfd8dc; }
+    .mstop:first-child::before { top: 50%; }
+    .mstop:last-child::before  { bottom: 50%; }
+    .mstop::after { content: ''; position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+                    width: 16px; height: 16px; border-radius: 50%; background: #cfd8dc; border: 3px solid #f0f2f5; }
+    .mstop .mname { flex: 1; color: #1a1a1a; }
+    .mstop .par-go { color: #c4c4c4; font-size: 20px; }
+    .mstop-ok { opacity: .7; }
+    .mstop-ok::after { background: #27ae60; }
+    .mstop-revisar::after { background: #b8860b; }
+    .mstop-falta { background: #fff7ef; border-radius: 8px; }
+    .mstop-falta .mname { font-weight: bold; }
+    .mstop-falta::after { background: #fff; border: 4px solid #e67e22; left: 10px; }
+    .mterm::after { width: 20px; height: 20px; left: 9px; }   /* origen/destino más grandes */
   </style>
 </head>
 <body>
@@ -106,14 +160,97 @@
     <section id="vista-pendientes" class="vista">
       <button class="link" id="btnVolver">← Cambiar de empresa</button>
       <h2 id="nombreEmpresa"></h2>
-      <p class="aviso">¿Quién te está dando la información? (nombre y cargo si lo dice)</p>
-      <input id="informante" type="text" autocapitalize="words"
-             placeholder="Ej: Sr. José, despachador">
-      <div id="listaPendientes" style="margin-top:14px"></div>
-      <button class="link" id="btnNoListada">+ Agregar ruta / dato no listado</button>
-      <div class="envio">
-        <button class="primary" id="btnEnviar">Enviar capturas (0)</button>
-        <p class="aviso" id="avisoEnvio"></p>
+
+      <div class="tabs">
+        <button class="tab activa" id="tabTarifas">💵 Tarifas y horarios</button>
+        <button class="tab" id="tabParadas">📍 Paradas</button>
+      </div>
+
+      <!-- Panel por defecto: tarifas y horarios -->
+      <div id="panelTarifas">
+        <p class="aviso">¿Quién te está dando la información? (nombre y cargo si lo dice)</p>
+        <input id="informante" type="text" autocapitalize="words"
+               placeholder="Ej: Sr. José, despachador">
+        <div id="listaPendientes" style="margin-top:14px"></div>
+        <button class="link" id="btnNoListada">+ Agregar ruta / dato no listado</button>
+        <div class="envio">
+          <button class="primary" id="btnEnviar">Enviar capturas (0)</button>
+          <p class="aviso" id="avisoEnvio"></p>
+        </div>
+      </div>
+
+      <!-- Panel: localización de paradas (con un conductor) -->
+      <div id="panelParadas" hidden>
+        <p class="aviso">Geolocaliza las paradas de cada corredor. Te ayuda un conductor de la empresa.</p>
+
+        <label class="lbl">Conductor (alias o placa, opcional)</label>
+        <input id="parConductor" type="text" placeholder="Ej: Don Pedro / placa ABC123">
+
+        <label class="lbl">Corredor (ruta de la empresa)</label>
+        <div id="parCorredores">Cargando corredores…</div>
+
+        <!-- Paradas oficiales del corredor (aparece al elegir corredor) -->
+        <div id="parParadas" hidden>
+          <p class="ruta" id="parCorredorSel" style="font-weight:bold;color:#1565c0;margin-top:14px"></p>
+          <p class="par-progreso" id="parProgreso"></p>
+          <div class="par-barra"><div id="parBarra"></div></div>
+          <div id="parListaOficiales">Cargando paradas…</div>
+          <button class="link" id="parNoListada">➕ Esta parada no está en la lista</button>
+        </div>
+
+        <!-- Captura/geolocalización de una parada -->
+        <div id="parCaptura" hidden>
+          <button class="link" id="parVolverParadas">← Volver a las paradas</button>
+          <p class="ruta" id="parParadaSel" style="font-weight:bold;color:#1565c0;margin:6px 0"></p>
+
+          <div id="parNombreWrap" hidden>
+            <label class="lbl">Nombre de la parada nueva</label>
+            <input id="parNombre" type="text" placeholder="Ej: Paipa, frente a la iglesia">
+          </div>
+
+          <label class="lbl">Coordenada</label>
+          <input id="parCoord" type="text" inputmode="text"
+                 placeholder="Pega de Google: 5.535300, -73.367800  (o usa el mapa)">
+          <button class="link" id="parMostrarMapa">🗺️ Marcar en el mapa</button>
+          <button class="link" id="parAbrirGmaps">↗️ Abrir Google Maps / Street View</button>
+          <div id="parMapWrap" hidden>
+            <div id="parMap" style="height:280px;border-radius:8px;margin:6px 0;border:1px solid #cfd8dc"></div>
+            <p class="aviso">Toca el mapa donde para el bus; arrastra el pin para ajustar.</p>
+          </div>
+          <p class="aviso" id="parCoordEstado"></p>
+
+          <label class="lbl">Tipo de parada (opcional)</label>
+          <select id="parTipo">
+            <option value="">— sin especificar —</option>
+            <option value="terminal">Terminal</option>
+            <option value="parada_formal">Parada formal</option>
+            <option value="parada_informal">Parada informal</option>
+            <option value="punto_urbano">Punto urbano</option>
+          </select>
+
+          <label class="lbl">Nota (opcional)</label>
+          <input id="parNota" type="text" placeholder="Referencia visual: 'frente a la iglesia'">
+
+          <button class="primary" id="parAgregar">Guardar ubicación</button>
+        </div>
+
+        <!-- Detalle protegido de una parada ya ubicada (paso extra para editar) -->
+        <div id="parDetalle" hidden>
+          <button class="link" id="parDetVolver">← Volver a las paradas</button>
+          <p class="par-det-titulo" id="parDetNombre"></p>
+          <p class="aviso" id="parDetCoord"></p>
+          <button class="primary" id="parDetStreetView">👁️ Ver en Street View</button>
+          <button class="link" id="parDetMapa">🗺️ Ver en el mapa</button>
+          <hr class="par-sep">
+          <p class="aviso">Esta parada ya está ubicada. Solo edítala si está mal.</p>
+          <button class="primary secundario" id="parDetEditar">✏️ Editar ubicación</button>
+        </div>
+
+        <div id="parLista" style="margin-top:12px"></div>
+        <div class="envio">
+          <button class="primary" id="parEnviar">Enviar paradas (0)</button>
+          <p class="aviso" id="parAvisoEnvio"></p>
+        </div>
       </div>
     </section>
   </main>
