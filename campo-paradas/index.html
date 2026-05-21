@@ -137,7 +137,7 @@
 
       <!-- Panel: localización de paradas (con un conductor) -->
       <div id="panelParadas" hidden>
-        <p class="aviso">Marca dónde para el bus de cada corredor. Te ayuda un conductor de la empresa.</p>
+        <p class="aviso">Geolocaliza las paradas de cada corredor. Te ayuda un conductor de la empresa.</p>
 
         <label class="lbl">Conductor (alias o placa, opcional)</label>
         <input id="parConductor" type="text" placeholder="Ej: Don Pedro / placa ABC123">
@@ -145,12 +145,23 @@
         <label class="lbl">Corredor (ruta de la empresa)</label>
         <div id="parCorredores">Cargando corredores…</div>
 
-        <!-- Captura de paradas: aparece al elegir un corredor -->
-        <div id="parCaptura" hidden>
+        <!-- Paradas oficiales del corredor (aparece al elegir corredor) -->
+        <div id="parParadas" hidden>
           <p class="ruta" id="parCorredorSel" style="font-weight:bold;color:#1565c0;margin-top:14px"></p>
+          <p class="aviso">⚪ falta ubicar · ✅ ya tiene ubicación · 🟡 capturada (por revisar). Toca una para ubicarla.</p>
+          <div id="parListaOficiales">Cargando paradas…</div>
+          <button class="link" id="parNoListada">➕ Esta parada no está en la lista</button>
+        </div>
 
-          <label class="lbl">Nombre de la parada</label>
-          <input id="parNombre" type="text" placeholder="Ej: Paipa, frente a la iglesia">
+        <!-- Captura/geolocalización de una parada -->
+        <div id="parCaptura" hidden>
+          <button class="link" id="parVolverParadas">← Volver a las paradas</button>
+          <p class="ruta" id="parParadaSel" style="font-weight:bold;color:#1565c0;margin:6px 0"></p>
+
+          <div id="parNombreWrap" hidden>
+            <label class="lbl">Nombre de la parada nueva</label>
+            <input id="parNombre" type="text" placeholder="Ej: Paipa, frente a la iglesia">
+          </div>
 
           <label class="lbl">Coordenada</label>
           <input id="parCoord" type="text" inputmode="text"
@@ -175,13 +186,13 @@
           <label class="lbl">Nota (opcional)</label>
           <input id="parNota" type="text" placeholder="Referencia visual: 'frente a la iglesia'">
 
-          <button class="primary" id="parAgregar">Agregar parada</button>
+          <button class="primary" id="parAgregar">Guardar ubicación</button>
+        </div>
 
-          <div id="parLista" style="margin-top:12px"></div>
-          <div class="envio">
-            <button class="primary" id="parEnviar">Enviar paradas (0)</button>
-            <p class="aviso" id="parAvisoEnvio"></p>
-          </div>
+        <div id="parLista" style="margin-top:12px"></div>
+        <div class="envio">
+          <button class="primary" id="parEnviar">Enviar paradas (0)</button>
+          <p class="aviso" id="parAvisoEnvio"></p>
         </div>
       </div>
     </section>

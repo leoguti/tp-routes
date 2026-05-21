@@ -375,5 +375,21 @@ no autopromueve a tablas oficiales.
 
 ---
 
+## 6. Consideración pendiente (pensar luego): trazado ≠ unir paradas
+
+El **trazado real** de un corredor NO es unir las paradas en línea ni el auto-ruteo
+más corto: a veces la ruta toma una **vía especial por restricciones legales** (la
+empresa no puede usar cierta vía/autopista). Por eso el **shape** (geometría del
+recorrido) puede necesitar **waypoints de trazado propios**, distintos de las
+paradas — puntos donde NO sube/baja nadie, que solo fuerzan el camino correcto.
+
+**Implicación:** **auto-rutear con Valhalla entre paradas puede dar la vía
+equivocada**; el conocimiento del conductor sobre la vía real (y las prohibidas) es
+clave. Esto pertenece al módulo de **trazado/shape** (`route_shapes`, Valhalla),
+**separado** de la captura de paradas (stops) de este documento. Anotado para
+tenerlo en cuenta; se aborda en su fase, sin bloquear la captura de paradas.
+
+---
+
 *Documento de análisis. No ejecuta cambios. Para implementar, abrir tarea aparte
 con autorización explícita de Leonardo para cualquier migración o escritura a BD.*

@@ -364,6 +364,7 @@ let corredorActual = null;
 let ordenPar = 0;
 let metodoGeoActual = 'pegado_gmaps';
 let parMap = null, parPin = null, leafletProm = null;
+let paradaActual = null, esNuevaActual = false, paradasOficiales = [];
 
 // Cambiar de pestaña dentro de la empresa.
 $('tabTarifas').onclick = () => mostrarTab('tarifas');
@@ -387,6 +388,7 @@ async function iniciarParadas() {
   cont.dataset.emp = String(empresaActual.id);
   corredorActual = null;
   $('parCaptura').hidden = true;
+  $('parParadas').hidden = true;
   cont.innerHTML = 'Cargando corredores…';
   try {
     const data = await apiGet('/api/paradas?op=' + empresaActual.id, 'corr_' + empresaActual.id);
@@ -407,23 +409,117 @@ async function iniciarParadas() {
   }
 }
 
-function elegirCorredor(c, btn) {
+async function elegirCorredor(c, btn) {
   corredorActual = c;
   document.querySelectorAll('#parCorredores .corredor').forEach((x) => x.classList.remove('sel'));
   btn.classList.add('sel');
   $('parCorredorSel').textContent = '📍 ' + c.route_text;
-  $('parCaptura').hidden = false;
-  ordenPar = store.colaPar.filter((p) => p.route_id === c.id).length;   // continúa la numeración
-  limpiarFormParada();
+  $('parCaptura').hidden = true;
+  $('parParadas').hidden = false;
+  ordenPar = store.colaPar.filter((p) => p.route_id === c.id).length;
   renderListaPar();
+  await cargarParadasOficiales(c.id);
 }
+
+const normP = (s) => String(s ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+// Marca local (persistente) de "ya capturé esta parada", para mostrarla 🟡
+// aunque la cola ya se haya enviado (verde ✅ solo llega tras la promoción).
+function marcarCapturada(routeId, nombre) {
+  const k = routeId + '::' + normP(nombre);
+  const s = JSON.parse(localStorage.getItem('campo_par_capt') || '[]');
+  if (!s.includes(k)) { s.push(k); localStorage.setItem('campo_par_capt', JSON.stringify(s)); }
+}
+function capturadaLocal(nombre) {
+  if (!corredorActual) return false;
+  const s = JSON.parse(localStorage.getItem('campo_par_capt') || '[]');
+  return s.includes(corredorActual.id + '::' + normP(nombre));
+}
+
+// Trae las paradas OFICIALES del corredor (verde/gris) y las pinta.
+async function cargarParadasOficiales(routeId) {
+  const cont = $('parListaOficiales');
+  cont.innerHTML = 'Cargando paradas…';
+  try {
+    const data = await apiGet('/api/paradas?route=' + routeId, 'parof_' + routeId);
+    paradasOficiales = data.paradas || [];
+    renderParadasOficiales();
+  } catch {
+    cont.innerHTML = '<p class="aviso">No se pudieron cargar las paradas. Ábrelo con señal una vez.</p>';
+  }
+}
+
+function renderParadasOficiales() {
+  const cont = $('parListaOficiales');
+  if (!paradasOficiales.length) {
+    cont.innerHTML = '<p class="aviso">Este corredor no tiene paradas listadas. Usa "no está en la lista".</p>';
+    return;
+  }
+  cont.innerHTML = '';
+  paradasOficiales.forEach((p) => {
+    const estado = p.geo ? '✅' : (capturadaLocal(p.nombre) ? '🟡' : '⚪');
+    const b = document.createElement('button');
+    b.className = 'corredor';
+    b.textContent = `${estado}  ${p.nombre}`;
+    b.onclick = () => elegirParada(p);
+    cont.appendChild(b);
+  });
+}
+
+// Elegir una parada OFICIAL para geolocalizarla (nombre fijo, no editable).
+function elegirParada(p) {
+  paradaActual = p;
+  esNuevaActual = false;
+  $('parNombreWrap').hidden = true;
+  $('parParadaSel').textContent = (p.geo ? '✅ ' : '⚪ ') + p.nombre;
+  $('parParadas').hidden = true;
+  $('parCaptura').hidden = false;
+  limpiarFormParada();
+  if (p.geo && p.lat != null && p.lon != null) {        // ya geolocalizada: precarga para confirmar/ajustar
+    $('parCoord').value = (+p.lat).toFixed(6) + ', ' + (+p.lon).toFixed(6);
+    $('parCoord').oninput();
+  }
+}
+
+// Capturar una parada que NO está en la lista oficial (marca es_nueva).
+$('parNoListada').onclick = () => {
+  paradaActual = null;
+  esNuevaActual = true;
+  $('parNombreWrap').hidden = false;
+  $('parParadaSel').textContent = '➕ Parada nueva (no estaba en la lista)';
+  $('parParadas').hidden = true;
+  $('parCaptura').hidden = false;
+  limpiarFormParada();
+};
+
+$('parVolverParadas').onclick = () => {
+  $('parCaptura').hidden = true;
+  $('parParadas').hidden = false;
+  renderParadasOficiales();
+};
 
 // ---- Coordenada: parseo + validación ------------------------
 const BOY = { latMin: 4.4, latMax: 7.2, lonMin: -74.8, lonMax: -72.0 };       // Boyacá (advertir si sale)
 const COL = { latMin: -4.3, latMax: 13.5, lonMin: -79.1, lonMax: -66.8 };     // Colombia (cota dura)
 
+// Grados-minutos-segundos: 5°32'07.1"N 73°22'04.1"O  → decimal (O = Oeste).
+function parsearDMS(txt) {
+  const re = /(\d+(?:\.\d+)?)\s*[°º]\s*(?:(\d+(?:\.\d+)?)\s*['′]\s*)?(?:(\d+(?:\.\d+)?)\s*["″]?\s*)?([NSEWOnsewo])/g;
+  const partes = [...txt.matchAll(re)];
+  if (partes.length < 2) return null;
+  let lat = null, lon = null;
+  for (const p of partes) {
+    let dec = parseFloat(p[1]) + (parseFloat(p[2] || 0)) / 60 + (parseFloat(p[3] || 0)) / 3600;
+    const hem = p[4].toUpperCase();
+    if (hem === 'S' || hem === 'W' || hem === 'O') dec = -dec;   // O = Oeste = longitud negativa
+    if (hem === 'N' || hem === 'S') lat = dec; else lon = dec;
+  }
+  return (lat !== null && lon !== null) ? { lat, lon } : null;
+}
+
 function parsearCoord(txt) {
   if (!txt) return null;
+  if (/[°º]/.test(txt)) { const d = parsearDMS(txt); if (d) return d; }   // DMS si trae grados
   let m = txt.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);          // URL Google: !3dLAT!4dLON
   if (m) return { lat: +m[1], lon: +m[2] };
   m = txt.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);                   // URL Google: @lat,lon
@@ -529,9 +625,9 @@ $('parMostrarMapa').onclick = async () => {
 
 // ---- Agregar / enviar paradas -------------------------------
 $('parAgregar').onclick = () => {
-  const nombre = $('parNombre').value.trim();
+  const nombre = esNuevaActual ? $('parNombre').value.trim() : (paradaActual ? paradaActual.nombre : '');
   const c = coordActual();
-  if (!nombre)        { $('parAvisoEnvio').textContent = 'Escribe el nombre de la parada.'; return; }
+  if (!nombre)        { $('parAvisoEnvio').textContent = 'Escribe el nombre de la parada nueva.'; return; }
   if (!c || !c.ok)    { $('parAvisoEnvio').textContent = 'Pega o corrige la coordenada primero.'; return; }
   ordenPar++;
   encolarParada({
@@ -541,15 +637,19 @@ $('parAgregar').onclick = () => {
     route_text: corredorActual ? corredorActual.route_text : null,
     nombre,
     lat: c.lat, lon: c.lon,
-    orden: ordenPar,
+    orden: (paradaActual && paradaActual.orden != null) ? paradaActual.orden : ordenPar,
     tipo: $('parTipo').value || null,
     metodo_geo: metodoGeoActual,
     nota_libre: $('parNota').value.trim() || null,
+    es_nueva: esNuevaActual,
     informante_rol: 'conductor',
     informante_alias: $('parConductor').value.trim() || null,
   });
-  $('parAvisoEnvio').textContent = '';
-  limpiarFormParada();
+  if (corredorActual) marcarCapturada(corredorActual.id, nombre);
+  // Volver a la lista de paradas, marcando la recién capturada (🟡).
+  $('parCaptura').hidden = true;
+  $('parParadas').hidden = false;
+  renderParadasOficiales();
 };
 
 function encolarParada(parcial) {
