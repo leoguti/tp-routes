@@ -132,8 +132,9 @@ async function guardarCapturas(sql, region, body, userId) {
                      ${it.pasante || null}, ${it.informante || null}, ${userId || null},
                      ${it.client_uuid || null}, ${it.capturado_en || null})
                 ON CONFLICT (client_uuid) DO NOTHING
+                RETURNING id
             `;
-            guardados += r.count ?? r.rowCount ?? 0;
+            guardados += r.length;   // filas realmente insertadas (RETURNING devuelve 1, o 0 si fue duplicado)
         }
         return { ok: true, guardados };
     } catch (e) {
