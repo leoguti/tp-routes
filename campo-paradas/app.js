@@ -389,6 +389,7 @@ async function iniciarParadas() {
   corredorActual = null;
   $('parCaptura').hidden = true;
   $('parParadas').hidden = true;
+  $('parDetalle').hidden = true;
   cont.innerHTML = 'Cargando corredores…';
   try {
     const data = await apiGet('/api/paradas?op=' + empresaActual.id, 'corr_' + empresaActual.id);
@@ -449,37 +450,119 @@ async function cargarParadasOficiales(routeId) {
   }
 }
 
-function renderParadasOficiales() {
-  const cont = $('parListaOficiales');
-  if (!paradasOficiales.length) {
-    cont.innerHTML = '<p class="aviso">Este corredor no tiene paradas listadas. Usa "no está en la lista".</p>';
-    return;
-  }
-  cont.innerHTML = '';
-  paradasOficiales.forEach((p) => {
-    const estado = p.geo ? '✅' : (capturadaLocal(p.nombre) ? '🟡' : '⚪');
-    const b = document.createElement('button');
-    b.className = 'corredor';
-    b.textContent = `${estado}  ${p.nombre}`;
-    b.onclick = () => elegirParada(p);
-    cont.appendChild(b);
-  });
+function estadoParada(p) {
+  if (p.geo) return 'ok';                              // ya geolocalizada (oficial)
+  if (capturadaLocal(p.nombre)) return 'revisar';     // capturada en sesión, por revisar
+  return 'falta';                                      // gris: falta ubicar
 }
 
-// Elegir una parada OFICIAL para geolocalizarla (nombre fijo, no editable).
+function actualizarProgreso(ubicadas, total, faltan) {
+  if (!total) { $('parProgreso').textContent = ''; $('parBarra').style.width = '0'; return; }
+  $('parProgreso').textContent = faltan === 0
+    ? '✓ Todas ubicadas. Revisa y envía.'
+    : `Faltan ${faltan} de ${total} paradas`;
+  $('parBarra').style.width = Math.round((ubicadas / total) * 100) + '%';
+}
+
+function filaParada(p) {
+  const e = estadoParada(p);
+  const b = document.createElement('button');
+  b.className = 'par par-' + e;
+  const chip = document.createElement('span');
+  chip.className = 'par-chip';
+  chip.textContent = e === 'falta' ? 'FALTA' : e === 'revisar' ? 'POR REVISAR' : 'UBICADA 🔒';
+  const nom = document.createElement('span');
+  nom.className = 'par-nom';
+  nom.textContent = p.nombre;
+  const go = document.createElement('span');
+  go.className = 'par-go';
+  go.textContent = '›';
+  b.append(chip, nom, go);
+  b.onclick = () => elegirParada(p);
+  return b;
+}
+
+function renderParadasOficiales() {
+  const cont = $('parListaOficiales');
+  cont.innerHTML = '';
+  if (!paradasOficiales.length) {
+    cont.innerHTML = '<p class="aviso">Este corredor no tiene paradas listadas. Usa "no está en la lista".</p>';
+    actualizarProgreso(0, 0, 0);
+    return;
+  }
+  const grupos = { falta: [], revisar: [], ok: [] };
+  paradasOficiales.forEach((p) => grupos[estadoParada(p)].push(p));   // conserva el orden de la ruta dentro de cada grupo
+  actualizarProgreso(grupos.ok.length, paradasOficiales.length, grupos.falta.length);
+
+  const seccion = (titulo, arr) => {
+    if (!arr.length) return;
+    const h = document.createElement('p');
+    h.className = 'par-sec';
+    h.textContent = titulo;
+    cont.appendChild(h);
+    arr.forEach((p) => cont.appendChild(filaParada(p)));
+  };
+  seccion(`Pendientes (${grupos.falta.length})`, grupos.falta);
+  seccion(`Por revisar (${grupos.revisar.length})`, grupos.revisar);
+  seccion(`Ya ubicadas (${grupos.ok.length})`, grupos.ok);
+}
+
+// Tocar una parada: si ya está ubicada (verde) → detalle protegido; si no → captura directa.
 function elegirParada(p) {
+  if (p.geo) { verDetalleParada(p); return; }
+  abrirCapturaParada(p);
+}
+
+// Abre el formulario de captura para una parada OFICIAL (nombre fijo, no editable).
+function abrirCapturaParada(p) {
   paradaActual = p;
   esNuevaActual = false;
   $('parNombreWrap').hidden = true;
-  $('parParadaSel').textContent = (p.geo ? '✅ ' : '⚪ ') + p.nombre;
+  const e = estadoParada(p);
+  $('parParadaSel').textContent = (e === 'ok' ? '✅ ' : e === 'revisar' ? '🟡 ' : '⚪ ') + p.nombre;
   $('parParadas').hidden = true;
+  $('parDetalle').hidden = true;
   $('parCaptura').hidden = false;
   limpiarFormParada();
-  if (p.geo && p.lat != null && p.lon != null) {        // ya geolocalizada: precarga para confirmar/ajustar
+  if (p.geo && p.lat != null && p.lon != null) {        // editar una ya ubicada: precarga
     $('parCoord').value = (+p.lat).toFixed(6) + ', ' + (+p.lon).toFixed(6);
     $('parCoord').oninput();
   }
 }
+
+// Detalle de solo-lectura de una parada ya ubicada (paso extra antes de editar).
+function verDetalleParada(p) {
+  paradaActual = p;
+  $('parDetNombre').textContent = '● ' + p.nombre;
+  $('parDetCoord').textContent = (p.lat != null && p.lon != null)
+    ? 'Coordenada: ' + (+p.lat).toFixed(6) + ', ' + (+p.lon).toFixed(6)
+    : 'Sin coordenada';
+  $('parParadas').hidden = true;
+  $('parCaptura').hidden = true;
+  $('parDetalle').hidden = false;
+}
+
+$('parDetVolver').onclick = () => {
+  $('parDetalle').hidden = true;
+  $('parParadas').hidden = false;
+  renderParadasOficiales();
+};
+$('parDetStreetView').onclick = () => {
+  if (paradaActual && paradaActual.lat != null) {
+    window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${paradaActual.lat},${paradaActual.lon}`, '_blank');
+  }
+};
+$('parDetMapa').onclick = () => {
+  if (paradaActual && paradaActual.lat != null) {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${paradaActual.lat},${paradaActual.lon}`, '_blank');
+  }
+};
+$('parDetEditar').onclick = () => {
+  if (!paradaActual) return;
+  if (confirm(`¿Cambiar la ubicación de ${paradaActual.nombre}? Ya estaba ubicada.`)) {
+    abrirCapturaParada(paradaActual);
+  }
+};
 
 // Capturar una parada que NO está en la lista oficial (marca es_nueva).
 $('parNoListada').onclick = () => {
@@ -488,6 +571,7 @@ $('parNoListada').onclick = () => {
   $('parNombreWrap').hidden = false;
   $('parParadaSel').textContent = '➕ Parada nueva (no estaba en la lista)';
   $('parParadas').hidden = true;
+  $('parDetalle').hidden = true;
   $('parCaptura').hidden = false;
   limpiarFormParada();
 };
