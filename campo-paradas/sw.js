@@ -8,7 +8,7 @@
 //    de la app, que reintenta sola cuando vuelve la conexión.
 // ============================================================
 
-const CACHE = 'campo-paradas-v2';
+const CACHE = 'campo-paradas-v3';
 const SHELL = ['./', './index.html', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', (e) => {

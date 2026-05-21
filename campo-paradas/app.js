@@ -560,6 +560,13 @@ $('parCoord').oninput = () => {
 };
 
 $('parAbrirGmaps').onclick = () => {
+  const c = coordActual();
+  if (c && c.ok) {
+    // Street View EN la coordenada exacta: el conductor VE el punto y confirma "sí, es ahí".
+    window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lon}`, '_blank');
+    return;
+  }
+  // Sin coordenada todavía: abrir Google Maps buscando el destino (para llegar a la zona).
   const destino = corredorActual ? corredorActual.route_text.split('→').pop().trim() : '';
   window.open('https://www.google.com/maps/search/' + encodeURIComponent((destino || '') + ' Boyacá Colombia'), '_blank');
 };
