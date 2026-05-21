@@ -91,6 +91,26 @@
     .secundario { background: #e8eaf0; color: #555; }
     .par-det-titulo { font-size: 18px; font-weight: bold; color: #196f3d; margin: 10px 0 6px; }
     .par-sep { border: none; border-top: 1px solid #e0e6f0; margin: 16px 0 10px; }
+
+    /* Línea de metro vertical (en orden origen→destino; el orden es la información) */
+    .metro { margin: 4px 0 6px; }
+    .mstop { width: 100%; display: flex; align-items: center; gap: 8px;
+             background: transparent; border: none; text-align: left; cursor: pointer;
+             padding: 12px 8px 12px 40px; min-height: 56px; position: relative; font-size: 15px; }
+    .mstop::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 3px; background: #cfd8dc; }
+    .mstop:first-child::before { top: 50%; }
+    .mstop:last-child::before  { bottom: 50%; }
+    .mstop::after { content: ''; position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+                    width: 16px; height: 16px; border-radius: 50%; background: #cfd8dc; border: 3px solid #f0f2f5; }
+    .mstop .mname { flex: 1; color: #1a1a1a; }
+    .mstop .par-go { color: #c4c4c4; font-size: 20px; }
+    .mstop-ok { opacity: .7; }
+    .mstop-ok::after { background: #27ae60; }
+    .mstop-revisar::after { background: #b8860b; }
+    .mstop-falta { background: #fff7ef; border-radius: 8px; }
+    .mstop-falta .mname { font-weight: bold; }
+    .mstop-falta::after { background: #fff; border: 4px solid #e67e22; left: 10px; }
+    .mterm::after { width: 20px; height: 20px; left: 9px; }   /* origen/destino más grandes */
   </style>
 </head>
 <body>
