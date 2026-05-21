@@ -9,20 +9,29 @@
 // estado 'pendiente'); NUNCA tocan route_fares/route_trips/routes.
 
 const { neon } = require('@neondatabase/serverless');
+const { leerSesion } = require('../lib/session');
 
 module.exports = async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
     const region = req.query.region || 'boyaca';
 
     try {
+        // Lecturas (GET): públicas, solo listas de rutas.
         if (req.method === 'GET' && req.query.op) {
             return res.json(await pendientesDeEmpresa(sql, region, req.query.op));
         }
         if (req.method === 'GET') {
             return res.json(await listaEmpresas(sql, region));
         }
+        // Escrituras (POST): exigen sesión válida. El dato se atribuye al usuario.
         if (req.method === 'POST') {
-            return res.json(await guardarCapturas(sql, region, req.body));
+            const secret = process.env.SESSION_SECRET;
+            const { sesion, tokenRenovado } = secret ? leerSesion(req, secret) : { sesion: null };
+            if (!sesion) return res.status(401).json({ ok: false, error: 'sesion_requerida' });
+
+            const resultado = await guardarCapturas(sql, region, req.body, sesion.uid);
+            if (tokenRenovado) resultado.sesion = tokenRenovado;  // renovación deslizante
+            return res.json(resultado);
         }
         return res.status(405).json({ error: 'Método no permitido' });
     } catch (e) {
@@ -103,7 +112,8 @@ async function pendientesDeEmpresa(sql, region, op) {
 }
 
 // Guarda el lote de capturas. Idempotente por client_uuid (reintentar no duplica).
-async function guardarCapturas(sql, region, body) {
+// userId: id del usuario autenticado (field_users); queda en cada fila.
+async function guardarCapturas(sql, region, body, userId) {
     const items = (body && body.items) || [];
     if (!Array.isArray(items) || !items.length) {
         return { ok: false, error: 'Sin items' };
@@ -114,12 +124,12 @@ async function guardarCapturas(sql, region, body) {
             const r = await sql`
                 INSERT INTO field_notes
                     (region_id, operator_id, operator_text, route_id, route_text,
-                     campo, valor, nota_libre, pasante, informante, client_uuid, capturado_en)
+                     campo, valor, nota_libre, pasante, informante, user_id, client_uuid, capturado_en)
                 VALUES
                     (${region}, ${it.operator_id || null}, ${it.operator_text || null},
                      ${it.route_id || null}, ${it.route_text || null},
                      ${it.campo || 'otro'}, ${it.valor || null}, ${it.nota_libre || null},
-                     ${it.pasante || null}, ${it.informante || null},
+                     ${it.pasante || null}, ${it.informante || null}, ${userId || null},
                      ${it.client_uuid || null}, ${it.capturado_en || null})
                 ON CONFLICT (client_uuid) DO NOTHING
             `;
