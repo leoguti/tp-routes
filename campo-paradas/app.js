@@ -466,22 +466,25 @@ function actualizarProgreso(ubicadas, total, faltan) {
 
 function filaParada(p) {
   const e = estadoParada(p);
+  const term = (p.rol === 'origen' || p.rol === 'destino');
   const b = document.createElement('button');
-  b.className = 'par par-' + e;
+  b.className = 'mstop mstop-' + e + (term ? ' mterm' : '');
+  const nom = document.createElement('span');
+  nom.className = 'mname';
+  nom.textContent = p.nombre + (p.rol === 'origen' ? '  (origen)' : p.rol === 'destino' ? '  (destino)' : '');
   const chip = document.createElement('span');
   chip.className = 'par-chip';
   chip.textContent = e === 'falta' ? 'FALTA' : e === 'revisar' ? 'POR REVISAR' : 'UBICADA 🔒';
-  const nom = document.createElement('span');
-  nom.className = 'par-nom';
-  nom.textContent = p.nombre;
   const go = document.createElement('span');
   go.className = 'par-go';
   go.textContent = '›';
-  b.append(chip, nom, go);
+  b.append(nom, chip, go);
   b.onclick = () => elegirParada(p);
   return b;
 }
 
+// Lista en ORDEN (origen → intermedias → destino) como línea de metro vertical.
+// El estado se ve por color/forma en su posición; NO se reordena: el orden es la información.
 function renderParadasOficiales() {
   const cont = $('parListaOficiales');
   cont.innerHTML = '';
@@ -490,21 +493,14 @@ function renderParadasOficiales() {
     actualizarProgreso(0, 0, 0);
     return;
   }
-  const grupos = { falta: [], revisar: [], ok: [] };
-  paradasOficiales.forEach((p) => grupos[estadoParada(p)].push(p));   // conserva el orden de la ruta dentro de cada grupo
-  actualizarProgreso(grupos.ok.length, paradasOficiales.length, grupos.falta.length);
+  const faltan = paradasOficiales.filter((p) => estadoParada(p) === 'falta').length;
+  const ubicadas = paradasOficiales.filter((p) => estadoParada(p) === 'ok').length;
+  actualizarProgreso(ubicadas, paradasOficiales.length, faltan);
 
-  const seccion = (titulo, arr) => {
-    if (!arr.length) return;
-    const h = document.createElement('p');
-    h.className = 'par-sec';
-    h.textContent = titulo;
-    cont.appendChild(h);
-    arr.forEach((p) => cont.appendChild(filaParada(p)));
-  };
-  seccion(`Pendientes (${grupos.falta.length})`, grupos.falta);
-  seccion(`Por revisar (${grupos.revisar.length})`, grupos.revisar);
-  seccion(`Ya ubicadas (${grupos.ok.length})`, grupos.ok);
+  const metro = document.createElement('div');
+  metro.className = 'metro';
+  paradasOficiales.forEach((p) => metro.appendChild(filaParada(p)));   // EN ORDEN
+  cont.appendChild(metro);
 }
 
 // Tocar una parada: si ya está ubicada (verde) → detalle protegido; si no → captura directa.
