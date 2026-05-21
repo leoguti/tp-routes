@@ -23,6 +23,7 @@ module.exports = async function handler(req, res) {
 
     try {
         if (req.method === 'GET') {
+            if (req.query.route) return res.json(await paradasDeCorredor(sql, req.query.route));
             if (!req.query.op) return res.status(400).json({ error: 'Falta op (empresa)' });
             return res.json(await corredoresDeEmpresa(sql, region, req.query.op));
         }
@@ -63,6 +64,39 @@ async function corredoresDeEmpresa(sql, region, op) {
     };
 }
 
+// Paradas OFICIALES de un corredor = origen + waypoints + destino.
+// geo=true si tienen place_id (geolocalizadas, "verde"); geo=false = "gris" (faltan).
+async function paradasDeCorredor(sql, routeId) {
+    const [r] = await sql`
+        SELECT r.id, r.origen_text, r.destino_text, r.origen_place_id, r.destino_place_id,
+               po.lat AS o_lat, po.lon AS o_lon, pd.lat AS d_lat, pd.lon AS d_lon
+        FROM routes r
+        LEFT JOIN places po ON po.id = r.origen_place_id
+        LEFT JOIN places pd ON pd.id = r.destino_place_id
+        WHERE r.id = ${routeId}
+    `;
+    if (!r) return { error: 'Corredor no encontrado' };
+
+    const wps = await sql`
+        SELECT w.orden, w.nombre_text, w.place_id, p.lat, p.lon
+        FROM route_waypoints w
+        LEFT JOIN places p ON p.id = w.place_id
+        WHERE w.route_id = ${routeId} ORDER BY w.orden
+    `;
+
+    const paradas = [
+        { rol: 'origen', orden: 0, nombre: r.origen_text, place_id: r.origen_place_id || null,
+          lat: r.o_lat, lon: r.o_lon, geo: !!r.origen_place_id },
+        ...wps.map((w) => ({
+            rol: 'via', orden: w.orden, nombre: w.nombre_text, place_id: w.place_id || null,
+            lat: w.lat, lon: w.lon, geo: !!w.place_id,
+        })),
+        { rol: 'destino', orden: 9999, nombre: r.destino_text, place_id: r.destino_place_id || null,
+          lat: r.d_lat, lon: r.d_lon, geo: !!r.destino_place_id },
+    ];
+    return { route_id: Number(routeId), paradas };
+}
+
 // Guarda el lote de paradas. Idempotente por client_uuid; valida coordenadas.
 async function guardarParadas(sql, region, body, userId) {
     const items = (body && body.items) || [];
@@ -79,13 +113,14 @@ async function guardarParadas(sql, region, body, userId) {
             const r = await sql`
                 INSERT INTO field_stops
                     (region_id, operator_id, operator_text, route_id, route_text,
-                     nombre, lat, lon, orden, tipo, metodo_geo, nota_libre,
+                     nombre, lat, lon, orden, tipo, metodo_geo, nota_libre, es_nueva,
                      user_id, informante_rol, informante_alias, client_uuid, capturado_en)
                 VALUES
                     (${region}, ${it.operator_id || null}, ${it.operator_text || null},
                      ${it.route_id || null}, ${it.route_text || null},
                      ${it.nombre || null}, ${lat}, ${lon}, ${it.orden || null},
                      ${it.tipo || null}, ${it.metodo_geo || null}, ${it.nota_libre || null},
+                     ${it.es_nueva ? true : false},
                      ${userId || null}, ${it.informante_rol || null}, ${it.informante_alias || null},
                      ${it.client_uuid || null}, ${it.capturado_en || null})
                 ON CONFLICT (client_uuid) DO NOTHING
