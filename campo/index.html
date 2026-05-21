@@ -46,28 +46,58 @@
              border-top: 1px solid #ddd; padding: 12px;
              margin: 16px -16px -16px; }
     .aviso { font-size: 13px; color: #555; margin: 8px 0 0; }
+
+    /* Login */
+    .salir { background: rgba(255,255,255,.2); color: #fff; font-size: 13px;
+             padding: 6px 12px; }
+    #googleBtn { display: flex; justify-content: center; margin: 18px 0 6px; }
+    .divisor { display: flex; align-items: center; color: #90a4ae;
+               margin: 20px 0; }
+    .divisor::before, .divisor::after { content: ''; flex: 1; height: 1px;
+               background: #cfd8dc; }
+    .divisor span { padding: 0 12px; font-size: 13px; }
+    #otpBox input { margin-bottom: 10px; }
   </style>
 </head>
 <body>
   <header>
     <h1 id="titulo">Captura de campo</h1>
+    <button id="btnSalir" class="salir" hidden>Salir</button>
     <span id="estado" class="online">…</span>
   </header>
 
   <main>
-    <!-- 1. Identidad: clave de la demo + nombre del pasante -->
+    <!-- 1. Identidad: login con Google + respaldo por código (OTP) -->
     <section id="vista-identidad" class="vista activa">
-      <h2>🔒 Acceso</h2>
-      <p class="aviso">Demo de clase. Clave básica (no es seguridad real).</p>
-      <input id="clave" type="text" autocapitalize="off" autocomplete="off"
-             placeholder="clave"><br><br>
-      <input id="pasante" type="text" placeholder="Tu nombre (queda como autor del dato)">
-      <button class="primary" id="btnEntrar">Entrar</button>
-      <p class="aviso" id="errIdent"></p>
+      <h2>Entrar</h2>
+      <p class="aviso">Entra con tu correo del Terminal o del colegio.</p>
+
+      <!-- Botón oficial de Google -->
+      <div id="googleBtn"></div>
+      <p class="aviso" id="googleAviso" style="text-align:center"></p>
+
+      <div class="divisor"><span>o</span></div>
+
+      <!-- Respaldo: código de un solo uso por correo -->
+      <button class="link" id="btnMostrarOtp">¿No puedes con Google? Recibe un código por correo →</button>
+      <div id="otpBox" hidden>
+        <input id="otpCorreo" type="email" autocapitalize="off" autocomplete="email"
+               placeholder="tu-correo@ejemplo.com">
+        <button class="primary" id="btnPedirCodigo">Enviarme el código</button>
+        <div id="otpPaso2" hidden>
+          <p class="aviso">Si tu correo está autorizado, te llegará un código. Escríbelo aquí:</p>
+          <input id="otpCodigo" type="text" inputmode="numeric" maxlength="6"
+                 autocomplete="one-time-code" placeholder="código de 6 dígitos">
+          <button class="primary" id="btnVerificarCodigo">Entrar</button>
+        </div>
+      </div>
+
+      <p class="aviso" id="errIdent" style="color:#c62828"></p>
     </section>
 
     <!-- 2. Elegir empresa -->
     <section id="vista-empresas" class="vista">
+      <p class="aviso" id="saludo"></p>
       <p class="aviso">Selecciona la empresa en cuya ventanilla estás.</p>
       <div id="listaEmpresas">Cargando…</div>
     </section>
@@ -88,6 +118,7 @@
     </section>
   </main>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="./app.js"></script>
 </body>
 </html>

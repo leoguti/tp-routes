@@ -9,12 +9,15 @@
 //     'pendiente'; nunca toca los datos oficiales directamente.
 // ============================================================
 
-const CLAVE = 'busboy';
+// Client ID público de Google (OAuth). Es público, no es secreto.
+const GOOGLE_CLIENT_ID = '717687409072-enpabm0qbnfuqval48elvgm1on1vsmqp.apps.googleusercontent.com';
 
 // ---- Estado guardado en el celular --------------------------
 const store = {
-  get pasante() { return localStorage.getItem('campo_pasante') || ''; },
-  set pasante(v) { localStorage.setItem('campo_pasante', v); },
+  get sesion() { return localStorage.getItem('campo_sesion') || ''; },
+  set sesion(v) { v ? localStorage.setItem('campo_sesion', v) : localStorage.removeItem('campo_sesion'); },
+  get usuario() { return JSON.parse(localStorage.getItem('campo_usuario') || 'null'); },
+  set usuario(v) { v ? localStorage.setItem('campo_usuario', JSON.stringify(v)) : localStorage.removeItem('campo_usuario'); },
   get cola() { return JSON.parse(localStorage.getItem('campo_cola') || '[]'); },
   set cola(v) { localStorage.setItem('campo_cola', JSON.stringify(v)); },
   snap(key, val) {                         // foto de la última respuesta del servidor
@@ -45,7 +48,7 @@ function verVista(id) {
 // fetch con red primero y, si falla, la última foto guardada (offline).
 async function apiGet(path, snapKey) {
   try {
-    const r = await fetch(path);
+    const r = await fetch(path, { headers: authHeaders() });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     store.snap(snapKey, data);
@@ -66,21 +69,151 @@ function pintarEstado() {
 window.addEventListener('online',  () => { pintarEstado(); enviar(); });
 window.addEventListener('offline', pintarEstado);
 
-// ---- 1. Identidad -------------------------------------------
-$('btnEntrar').onclick = () => {
-  const clave = $('clave').value.trim().toLowerCase();
-  const nombre = $('pasante').value.trim();
-  if (clave !== CLAVE) { $('errIdent').textContent = 'Clave incorrecta'; return; }
-  if (!nombre) { $('errIdent').textContent = 'Escribe tu nombre'; return; }
-  store.pasante = nombre;
-  sessionStorage.setItem('campo_ok', '1');
-  irAEmpresas();
+// ---- 1. Identidad: login con Google + respaldo por código (OTP) ----------
+const err = (msg) => { $('errIdent').textContent = msg || ''; };
+
+// Header de autorización para las llamadas a la API.
+function authHeaders(extra) {
+  const h = extra || {};
+  if (store.sesion) h.Authorization = 'Bearer ' + store.sesion;
+  return h;
+}
+
+// Carga el botón oficial de Google cuando su librería esté lista.
+function iniciarGoogle() {
+  let intentos = 50;
+  const t = setInterval(() => {
+    if (window.google && google.accounts && google.accounts.id) {
+      clearInterval(t);
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential });
+      google.accounts.id.renderButton($('googleBtn'), {
+        type: 'standard', theme: 'filled_blue', size: 'large',
+        shape: 'pill', text: 'signin_with', locale: 'es',
+      });
+    } else if (--intentos <= 0) {
+      clearInterval(t);
+      $('googleAviso').textContent = 'No se pudo cargar Google. Usa el código por correo.';
+    }
+  }, 100);
+}
+
+function onGoogleCredential(resp) {
+  loginCon({ action: 'google', credential: resp.credential });
+}
+
+// Respaldo OTP: desplegar el formulario del código.
+$('btnMostrarOtp').onclick = () => {
+  $('otpBox').hidden = false;
+  $('btnMostrarOtp').hidden = true;
+  $('otpCorreo').focus();
 };
+
+$('btnPedirCodigo').onclick = async () => {
+  const correo = $('otpCorreo').value.trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(correo)) { err('Escribe un correo válido'); return; }
+  err('');
+  $('btnPedirCodigo').disabled = true;
+  $('btnPedirCodigo').textContent = 'Enviando…';
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'otp_request', correo }),
+    });
+    const data = await r.json();
+    if (data.ok) { $('otpPaso2').hidden = false; $('otpCodigo').focus(); }
+    else err('No se pudo enviar el código. Intenta de nuevo.');
+  } catch {
+    err('Sin conexión. El login necesita señal una vez.');
+  } finally {
+    $('btnPedirCodigo').disabled = false;
+    $('btnPedirCodigo').textContent = 'Enviarme el código';
+  }
+};
+
+$('btnVerificarCodigo').onclick = () => {
+  const correo = $('otpCorreo').value.trim().toLowerCase();
+  const codigo = $('otpCodigo').value.trim();
+  if (!/^\d{6}$/.test(codigo)) { err('El código son 6 dígitos'); return; }
+  loginCon({ action: 'otp_verify', correo, codigo });
+};
+
+// Manda las credenciales al backend y, si todo va bien, entra.
+async function loginCon(payload) {
+  err('');
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json();
+    if (data.ok && data.sesion) {
+      store.sesion = data.sesion;
+      store.usuario = data.usuario || null;
+      entrar();
+    } else {
+      err(mensajeError(data.error));
+    }
+  } catch {
+    err('Sin conexión. El login necesita señal una vez.');
+  }
+}
+
+function mensajeError(code) {
+  return ({
+    no_autorizado: 'Tu correo no está en la lista de autorizados. Avísale a Paola.',
+    codigo_incorrecto: 'Código incorrecto. Revísalo e intenta de nuevo.',
+    sin_codigo_vigente: 'El código venció o no se pidió. Pide uno nuevo.',
+    demasiados_intentos: 'Demasiados intentos. Pide un código nuevo.',
+    codigo_invalido: 'El código son 6 dígitos.',
+    auth_no_configurado: 'El acceso aún no está activado en el servidor.',
+  })[code] || 'No se pudo entrar. Intenta de nuevo.';
+}
+
+// Ya autenticado: muestra "Salir" y va a elegir empresa.
+function entrar() {
+  $('btnSalir').hidden = false;
+  irAEmpresas();
+}
+
+// Cierra sesión.
+$('btnSalir').onclick = () => {
+  store.sesion = ''; store.usuario = null;
+  $('btnSalir').hidden = true;
+  if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+  verVista('vista-identidad');
+};
+
+function sesionVencida() {
+  store.sesion = ''; store.usuario = null;
+  $('btnSalir').hidden = true;
+  verVista('vista-identidad');
+  err('Tu sesión venció. Vuelve a entrar — tus capturas siguen guardadas en el celular.');
+}
+
+// Al abrir: si hay sesión guardada, validarla (y renovarla); si no, mostrar login.
+async function arrancarSesion() {
+  if (!store.sesion) return;
+  try {
+    const r = await fetch('/api/auth?action=me', { headers: authHeaders() });
+    const data = await r.json();
+    if (data.autenticado) {
+      if (data.sesion) store.sesion = data.sesion;   // renovación deslizante
+      if (data.usuario) store.usuario = data.usuario;
+      entrar();
+    } else {
+      store.sesion = ''; store.usuario = null;        // expiró: mostrar login
+    }
+  } catch {
+    if (store.usuario) entrar();                       // sin señal: confiar en la sesión guardada
+  }
+}
 
 // ---- 2. Empresas --------------------------------------------
 async function irAEmpresas() {
   $('titulo').textContent = 'Elegir empresa';
   verVista('vista-empresas');
+  const u = store.usuario;
+  $('saludo').textContent = u && u.nombre ? ('Hola, ' + u.nombre) : '';
   const cont = $('listaEmpresas');
   try {
     const { empresas } = await apiGet('/api/campo', 'empresas');
@@ -174,7 +307,7 @@ function encolar(parcial) {
   const cola = store.cola;
   cola.push({
     ...parcial,
-    pasante: store.pasante,
+    pasante: (store.usuario && store.usuario.nombre) || null,
     informante: (($('informante') && $('informante').value.trim()) || null),
     client_uuid: uuid(),                       // idempotencia: reenviar no duplica
     capturado_en: new Date().toISOString(),
@@ -196,10 +329,12 @@ async function enviar() {
   try {
     const r = await fetch('/api/campo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ items: cola }),
     });
+    if (r.status === 401) { sesionVencida(); return; }
     const data = await r.json();
+    if (data.sesion) store.sesion = data.sesion;   // renovación deslizante
     if (data.ok) {
       store.cola = [];                          // enviado (servidor es idempotente)
       $('avisoEnvio').textContent = `✓ ${data.guardados} enviado(s) a la bandeja de revisión.`;
@@ -222,11 +357,8 @@ $('btnEnviar').onclick = enviar;
 // ---- Arranque -----------------------------------------------
 pintarEstado();
 pintarBotonEnviar();
-if (store.pasante && sessionStorage.getItem('campo_ok') === '1') {
-  irAEmpresas();
-} else if (store.pasante) {
-  $('pasante').value = store.pasante;           // recuerda el nombre, pide clave de sesión
-}
+iniciarGoogle();      // prepara el botón de Google
+arrancarSesion();     // si hay sesión guardada y válida, entra directo
 
 // El ayudante offline (mismo principio que la demo que ya vimos).
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
