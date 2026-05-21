@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1565c0">
+  <title>Captura de campo — Terminal</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0;
+           background: #f0f2f5; color: #1a1a1a; }
+    header { background: #1565c0; color: #fff; padding: 14px 16px;
+             display: flex; align-items: center; gap: 10px; }
+    header h1 { margin: 0; font-size: 17px; flex: 1; }
+    #estado { font-size: 12px; font-weight: bold; padding: 3px 10px;
+              border-radius: 999px; }
+    .online  { background: #2e7d32; } .offline { background: #c62828; }
+    main { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .vista { display: none; } .vista.activa { display: block; }
+
+    button { font-size: 16px; font-weight: bold; border: none;
+             border-radius: 8px; padding: 13px; cursor: pointer; }
+    .primary { width: 100%; color: #fff; background: #1565c0; margin-top: 10px; }
+    .primary:active { background: #0d47a1; }
+    .link { background: none; color: #1565c0; padding: 8px 0; width: 100%; }
+    input, textarea { width: 100%; padding: 12px; font-size: 16px;
+             border: 2px solid #cfd8dc; border-radius: 8px; }
+
+    .empresa { width: 100%; text-align: left; background: #fff; color: #1a1a1a;
+               margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1);
+               display: flex; align-items: center; }
+    .empresa .n { flex: 1; }
+    .badge { background: #1565c0; color: #fff; font-size: 13px;
+             padding: 3px 9px; border-radius: 999px; }
+    .badge.cero { background: #2e7d32; }
+
+    .card { background: #fff; border-radius: 8px; padding: 14px;
+            margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .card.hecha { opacity: .5; }
+    .card .ruta { font-size: 12px; color: #888; margin: 0 0 4px; }
+    .card .preg { font-weight: bold; margin: 0 0 10px; }
+    .ok { color: #2e7d32; font-weight: bold; }
+
+    .envio { position: sticky; bottom: 0; background: #fff;
+             border-top: 1px solid #ddd; padding: 12px;
+             margin: 16px -16px -16px; }
+    .aviso { font-size: 13px; color: #555; margin: 8px 0 0; }
+
+    /* Login */
+    .salir { background: rgba(255,255,255,.2); color: #fff; font-size: 13px;
+             padding: 6px 12px; }
+    #googleBtn { display: flex; justify-content: center; margin: 18px 0 6px; }
+    .divisor { display: flex; align-items: center; color: #90a4ae;
+               margin: 20px 0; }
+    .divisor::before, .divisor::after { content: ''; flex: 1; height: 1px;
+               background: #cfd8dc; }
+    .divisor span { padding: 0 12px; font-size: 13px; }
+    #otpBox input { margin-bottom: 10px; }
+
+    /* Pestañas (Tarifas / Paradas) dentro de la empresa */
+    .tabs { display: flex; gap: 6px; margin: 8px 0 14px; }
+    .tab { flex: 1; background: #e8eaf0; color: #555; font-size: 14px; padding: 11px 6px; }
+    .tab.activa { background: #1565c0; color: #fff; }
+    .lbl { display: block; font-size: 13px; color: #555; margin: 14px 0 4px; font-weight: bold; }
+    select { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #cfd8dc; border-radius: 8px; background: #fff; }
+    .corredor { width: 100%; text-align: left; background: #fff; color: #1a1a1a;
+                margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.1); padding: 12px; font-weight: normal; }
+    .corredor.sel { background: #e3f2fd; border: 2px solid #1565c0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="titulo">Captura de campo</h1>
+    <button id="btnSalir" class="salir" hidden>Salir</button>
+    <span id="estado" class="online">…</span>
+  </header>
+
+  <main>
+    <!-- 1. Identidad: login con Google + respaldo por código (OTP) -->
+    <section id="vista-identidad" class="vista activa">
+      <h2>Entrar</h2>
+      <p class="aviso">Entra con tu correo del Terminal o del colegio.</p>
+
+      <!-- Botón oficial de Google -->
+      <div id="googleBtn"></div>
+      <p class="aviso" id="googleAviso" style="text-align:center"></p>
+
+      <div class="divisor"><span>o</span></div>
+
+      <!-- Respaldo: código de un solo uso por correo -->
+      <button class="link" id="btnMostrarOtp">¿No puedes con Google? Recibe un código por correo →</button>
+      <div id="otpBox" hidden>
+        <input id="otpCorreo" type="email" autocapitalize="off" autocomplete="email"
+               placeholder="tu-correo@ejemplo.com">
+        <button class="primary" id="btnPedirCodigo">Enviarme el código</button>
+        <div id="otpPaso2" hidden>
+          <p class="aviso">Si tu correo está autorizado, te llegará un código. Escríbelo aquí:</p>
+          <input id="otpCodigo" type="text" inputmode="numeric" maxlength="6"
+                 autocomplete="one-time-code" placeholder="código de 6 dígitos">
+          <button class="primary" id="btnVerificarCodigo">Entrar</button>
+        </div>
+      </div>
+
+      <p class="aviso" id="errIdent" style="color:#c62828"></p>
+    </section>
+
+    <!-- 2. Elegir empresa -->
+    <section id="vista-empresas" class="vista">
+      <p class="aviso" id="saludo"></p>
+      <p class="aviso">Selecciona la empresa en cuya ventanilla estás.</p>
+      <div id="listaEmpresas">Cargando…</div>
+    </section>
+
+    <!-- 3. Qué falta de esa empresa -->
+    <section id="vista-pendientes" class="vista">
+      <button class="link" id="btnVolver">← Cambiar de empresa</button>
+      <h2 id="nombreEmpresa"></h2>
+
+      <div class="tabs">
+        <button class="tab activa" id="tabTarifas">💵 Tarifas y horarios</button>
+        <button class="tab" id="tabParadas">📍 Paradas</button>
+      </div>
+
+      <!-- Panel por defecto: tarifas y horarios -->
+      <div id="panelTarifas">
+        <p class="aviso">¿Quién te está dando la información? (nombre y cargo si lo dice)</p>
+        <input id="informante" type="text" autocapitalize="words"
+               placeholder="Ej: Sr. José, despachador">
+        <div id="listaPendientes" style="margin-top:14px"></div>
+        <button class="link" id="btnNoListada">+ Agregar ruta / dato no listado</button>
+        <div class="envio">
+          <button class="primary" id="btnEnviar">Enviar capturas (0)</button>
+          <p class="aviso" id="avisoEnvio"></p>
+        </div>
+      </div>
+
+      <!-- Panel: localización de paradas (con un conductor) -->
+      <div id="panelParadas" hidden>
+        <p class="aviso">Marca dónde para el bus de cada corredor. Te ayuda un conductor de la empresa.</p>
+
+        <label class="lbl">Conductor (alias o placa, opcional)</label>
+        <input id="parConductor" type="text" placeholder="Ej: Don Pedro / placa ABC123">
+
+        <label class="lbl">Corredor (ruta de la empresa)</label>
+        <div id="parCorredores">Cargando corredores…</div>
+
+        <!-- Captura de paradas: aparece al elegir un corredor -->
+        <div id="parCaptura" hidden>
+          <p class="ruta" id="parCorredorSel" style="font-weight:bold;color:#1565c0;margin-top:14px"></p>
+
+          <label class="lbl">Nombre de la parada</label>
+          <input id="parNombre" type="text" placeholder="Ej: Paipa, frente a la iglesia">
+
+          <label class="lbl">Coordenada</label>
+          <input id="parCoord" type="text" inputmode="text"
+                 placeholder="Pega de Google: 5.535300, -73.367800  (o usa el mapa)">
+          <button class="link" id="parMostrarMapa">🗺️ Marcar en el mapa</button>
+          <button class="link" id="parAbrirGmaps">↗️ Abrir Google Maps / Street View</button>
+          <div id="parMapWrap" hidden>
+            <div id="parMap" style="height:280px;border-radius:8px;margin:6px 0;border:1px solid #cfd8dc"></div>
+            <p class="aviso">Toca el mapa donde para el bus; arrastra el pin para ajustar.</p>
+          </div>
+          <p class="aviso" id="parCoordEstado"></p>
+
+          <label class="lbl">Tipo de parada (opcional)</label>
+          <select id="parTipo">
+            <option value="">— sin especificar —</option>
+            <option value="terminal">Terminal</option>
+            <option value="parada_formal">Parada formal</option>
+            <option value="parada_informal">Parada informal</option>
+            <option value="punto_urbano">Punto urbano</option>
+          </select>
+
+          <label class="lbl">Nota (opcional)</label>
+          <input id="parNota" type="text" placeholder="Referencia visual: 'frente a la iglesia'">
+
+          <button class="primary" id="parAgregar">Agregar parada</button>
+
+          <div id="parLista" style="margin-top:12px"></div>
+          <div class="envio">
+            <button class="primary" id="parEnviar">Enviar paradas (0)</button>
+            <p class="aviso" id="parAvisoEnvio"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="./app.js"></script>
+</body>
+</html>
