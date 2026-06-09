@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
     }
 };
 
-// Empresas + cuántas rutas tienen sin tarifa o sin horario.
+// Empresas + cuántas rutas tienen sin tarifa, sin horario, sin frecuencia, o capturas a re-confirmar.
 async function listaEmpresas(sql, region) {
     const rows = await sql`
         SELECT o.id,
@@ -39,7 +39,12 @@ async function listaEmpresas(sql, region) {
                count(r.id) AS rutas,
                count(r.id) FILTER (
                    WHERE NOT EXISTS (SELECT 1 FROM route_fares f WHERE f.route_id = r.id)
-                      OR NOT EXISTS (SELECT 1 FROM route_trips  t WHERE t.route_id = r.id)
+                      OR (NOT EXISTS (SELECT 1 FROM route_frequencies fq WHERE fq.route_id = r.id)
+                          AND NOT EXISTS (SELECT 1 FROM route_trips t WHERE t.route_id = r.id))
+                      OR EXISTS (SELECT 1 FROM route_frequencies fq2 WHERE fq2.route_id = r.id AND fq2.headway_min IS NULL)
+                      OR EXISTS (SELECT 1 FROM field_notes fn
+                                  WHERE fn.route_id = r.id
+                                    AND fn.estado IN ('repreguntar','confirmado_no_opera'))
                ) AS pendientes
         FROM operators o
         LEFT JOIN routes r
@@ -62,6 +67,12 @@ async function listaEmpresas(sql, region) {
 }
 
 // "Qué falta" de una empresa: una pregunta concreta a la vez.
+// Tipos de pregunta:
+//   tarifa     — no hay route_fares para la ruta.
+//   horario    — no hay route_frequencies ni route_trips (modo + ventana).
+//   frecuencia — hay frequency cargada pero sin headway_min (cada-cuánto).
+//   confirmar_no_opera — un informante previo dijo "no opera"; pedimos segunda fuente.
+//   aclarar    — captura previa quedó ambigua y se marcó 'repreguntar'.
 async function pendientesDeEmpresa(sql, region, op) {
     const [emp] = await sql`SELECT id, nombre FROM operators WHERE id = ${op}`;
     if (!emp) return { error: 'Empresa no encontrada' };
@@ -69,7 +80,10 @@ async function pendientesDeEmpresa(sql, region, op) {
     const rutas = await sql`
         SELECT r.id, r.origen_text, r.destino_text,
                NOT EXISTS (SELECT 1 FROM route_fares f WHERE f.route_id = r.id) AS falta_tarifa,
-               NOT EXISTS (SELECT 1 FROM route_trips  t WHERE t.route_id = r.id) AS falta_horario
+               NOT EXISTS (SELECT 1 FROM route_frequencies fq WHERE fq.route_id = r.id)
+                 AND NOT EXISTS (SELECT 1 FROM route_trips t WHERE t.route_id = r.id) AS falta_horario,
+               EXISTS (SELECT 1 FROM route_frequencies fq2
+                        WHERE fq2.route_id = r.id AND fq2.headway_min IS NULL) AS falta_frecuencia
         FROM routes r
         WHERE r.operator_id = ${op}
           AND r.region_id   = ${region}
@@ -78,8 +92,38 @@ async function pendientesDeEmpresa(sql, region, op) {
         LIMIT 80
     `;
 
+    // Capturas previas que pidieron repreguntar / fueron marcadas no-opera.
+    // (Una sola fuente "no opera" no basta: pedimos confirmación de un segundo.)
+    const repreguntas = await sql`
+        SELECT DISTINCT route_id, route_text, estado,
+               (array_agg(valor)        FILTER (WHERE valor IS NOT NULL))[1] AS valor_previo,
+               (array_agg(informante)   FILTER (WHERE informante IS NOT NULL))[1] AS quien_dijo
+        FROM field_notes
+        WHERE operator_id = ${op} AND region_id = ${region}
+          AND estado IN ('repreguntar','confirmado_no_opera')
+        GROUP BY route_id, route_text, estado
+    `;
+
+    // Las repreguntas (rutas con captura previa ambigua o un solo "no opera")
+    // tienen PRIORIDAD: van primero y reemplazan las preguntas normales de esa ruta.
+    const rutasConRepregunta = new Set(repreguntas.map((rq) => rq.route_id));
     const pendientes = [];
+    for (const rq of repreguntas) {
+        const valor = rq.valor_previo ? ` (anterior: "${rq.valor_previo}"${rq.quien_dijo ? ', según ' + rq.quien_dijo : ''})` : '';
+        if (rq.estado === 'confirmado_no_opera') {
+            pendientes.push({
+                route_id: rq.route_id, route_text: rq.route_text, campo: 'confirmar_no_opera',
+                pregunta: `Un taquillero anterior dijo que ${rq.route_text} NO sale${valor}. ¿Lo confirma? Responde "no opera" o el horario/tarifa si sí opera.`,
+            });
+        } else {
+            pendientes.push({
+                route_id: rq.route_id, route_text: rq.route_text, campo: 'aclarar',
+                pregunta: `Captura previa de ${rq.route_text} no quedó clara${valor}. ¿Puedes precisar tarifa y horario?`,
+            });
+        }
+    }
     for (const r of rutas) {
+        if (rutasConRepregunta.has(r.id)) continue;  // ya cubierta arriba
         const ruta = `${r.origen_text} → ${r.destino_text}`;
         if (r.falta_tarifa) {
             pendientes.push({
@@ -90,10 +134,16 @@ async function pendientesDeEmpresa(sql, region, op) {
         if (r.falta_horario) {
             pendientes.push({
                 route_id: r.id, route_text: ruta, campo: 'horario',
-                pregunta: `¿A qué hora sale el primero y el último ${ruta}?`,
+                pregunta: `Para ${ruta}: ¿despachan a horas específicas (listar) o de forma continua (primera y última hora del día)?`,
+            });
+        } else if (r.falta_frecuencia) {
+            pendientes.push({
+                route_id: r.id, route_text: ruta, campo: 'frecuencia',
+                pregunta: `En ${ruta}, ¿cada cuánto sale un bus en promedio? Una estimación está bien — si sale "cuando se llena", anótalo así.`,
             });
         }
     }
+
     // Visita corta y respetuosa: máximo 12 preguntas por empresa.
     return {
         empresa: { id: emp.id, nombre: emp.nombre },
