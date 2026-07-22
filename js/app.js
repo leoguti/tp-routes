@@ -546,7 +546,7 @@ function updateRouteNamePreview() {
     const to = document.getElementById('route-to').value.trim();
     const preview = document.getElementById('route-name-preview');
     if (ref || from || to) {
-        preview.textContent = `Nombre: ${ref || '?'} - ${from || '?'} - ${to || '?'}`;
+        preview.textContent = `Nombre de la ruta: ${ref || '?'} - ${from || '?'} - ${to || '?'}`;
     } else {
         preview.textContent = '';
     }
