@@ -128,6 +128,9 @@ const REGION = "boyaca";
 const BOYACA = { latMin:4.5, latMax:7.6, lonMin:-74.8, lonMax:-71.5 };
 
 let ME = null, SCORE = 0, target = null, pendientes = [], marker = null, map = null;
+let mencionesPorNombre = {};      // norm(nombre) -> nº de rutas donde aparece
+let yaLocalizados = new Set();     // norm(nombre) de paradas ya localizadas
+const ajustes = {};                // penalizaciones/ajustes del profe (en memoria)
 
 // ---- Login ----
 const namesBox = document.getElementById('names');
@@ -145,7 +148,8 @@ function entrar(nombre){
   document.getElementById('me').textContent = ME;
   initMap();
   cargarPendientes();
-  escucharRanking();
+  refrescarRanking();
+  setInterval(refrescarRanking, 5000);
 }
 
 // ---- Mapa ----
@@ -182,15 +186,27 @@ function validarLocal(){
 function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,''); }
 async function cargarPendientes(){
   try{
-    const routes = await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
-    const pend = new Map();
-    const add = (t)=>{ if(!t)return; const k=norm(t); if(!k)return; if(!pend.has(k))pend.set(k,{nombre:t.trim(),count:0}); pend.get(k).count++; };
+    const [routes, placesData] = await Promise.all([
+      fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
+      fetch(`/api/places?region=${REGION}`).then(r=>r.json()).catch(()=>({places:[]}))
+    ]);
+    // paradas que YA están localizadas (no deben aparecer como pendientes)
+    yaLocalizados = new Set((placesData.places||[]).map(p=>norm(p.nombre)));
+    // contar menciones por nombre en todas las rutas
+    mencionesPorNombre = {};
+    const nombreDe = {};
+    const add = (t)=>{ if(!t)return; const k=norm(t); if(!k)return;
+      mencionesPorNombre[k]=(mencionesPorNombre[k]||0)+1; if(!nombreDe[k])nombreDe[k]=t.trim(); };
     for(const r of routes.routes||[]){
       if(!r.origen_place_id) add(r.origen_text);
       if(!r.destino_place_id) add(r.destino_text);
       for(const w of r.waypoints||[]) if(!w.place_id) add(w.nombre_text);
     }
-    pendientes = [...pend.values()].sort((a,b)=>b.count-a.count);
+    // pendientes = las que faltan (no localizadas aún), ordenadas por menciones
+    pendientes = Object.keys(mencionesPorNombre)
+      .filter(k=>!yaLocalizados.has(k))
+      .map(k=>({nombre:nombreDe[k], count:mencionesPorNombre[k]}))
+      .sort((a,b)=>b.count-a.count);
     siguienteParada();
   }catch(e){ document.getElementById('target-name').textContent='Error cargando: '+e.message; }
 }
@@ -247,18 +263,16 @@ async function localizar(){
         notas:`Carrera de paradas · localizada por ${ME}${dentro?'':' · ⚠️ FUERA DE BOYACÁ, revisar'}` }) }).then(r=>r.json());
     if(r.error && !r.existing){ throw new Error(r.error); }
     const yaExistia = !!r.existing;
-    // 2) Avisar al chat (ranking + revisión profe/IA)
-    const estado = !dentro ? 'SOSPECHOSA' : (yaExistia ? 'REPETIDA' : 'OK');
-    await fetch(NTFY,{ method:'POST', headers:{'Title':'juego'},
-      body: `${ME}|${target.nombre}|${lat.toFixed(5)},${lon.toFixed(5)}|${pts}|${target.count}|${estado}` }).catch(()=>{});
-    // 3) Puntos provisionales locales
+    // Puntos provisionales locales (el ranking global se calcula desde la plataforma)
     if(dentro && !yaExistia){ SCORE += pts; toast('¡+'+pts+' puntos! 🎯'); }
     else if(yaExistia){ toast('Esa ya estaba localizada 🤔 sin puntos', true); }
     else { toast('Guardada, pero fuera de Boyacá ⚠️ el profe revisa', true); }
     document.getElementById('myscore').textContent = SCORE;
-    // quitar de pendientes y siguiente
+    // marcar como localizada, quitar de pendientes y siguiente
+    yaLocalizados.add(norm(target.nombre));
     pendientes = pendientes.filter(p=>p!==target);
     siguienteParada();
+    refrescarRanking();
   }catch(e){ toast('Error: '+e.message, true); }
   finally{ enviando=false; }
 }
@@ -272,25 +286,23 @@ function pintarRanking(){
   const med=['🥇','🥈','🥉'];
   box.innerHTML = arr.map(([n,p],i)=>`<div class="rk ${n===ME?'me':''}"><span><span class="medal">${med[i]||'▫️'}</span>${n}</span><b>${p}</b></div>`).join('');
 }
-function escucharRanking(){
-  // historial + vivo
-  fetch(NTFY+'/json?poll=1&since=6h').then(r=>r.text()).then(t=>{
-    t.trim().split(/\n/).forEach(l=>{ if(l){ try{ acumular(JSON.parse(l)); }catch(e){} } }); pintarRanking();
-  }).catch(()=>{});
-  const es = new EventSource(NTFY+'/sse');
-  es.onmessage = ev => { try{ acumular(JSON.parse(ev.data)); pintarRanking(); }catch(e){} };
-}
-function acumular(m){
-  if(m.event!=='message') return;
-  // formato: NOMBRE|parada|lat,lon|pts|menciones|estado    (Title 'juego')  |  o ajustes del profe con Title 'ajuste'
-  const parts = (m.message||'').split('|');
-  if((m.title==='juego') && parts.length>=6){
-    const [nombre,,,pts,,estado]=parts;
-    if(estado==='OK'){ puntajes[nombre]=(puntajes[nombre]||0)+(+pts||0); }
-  }
-  if(m.title==='ajuste' && parts.length>=2){ // formato ajuste: NOMBRE|delta   (profe/IA quita o suma)
-    const [nombre,delta]=parts; puntajes[nombre]=(puntajes[nombre]||0)+(+delta||0);
-  }
+async function refrescarRanking(){
+  // Fuente de verdad: la plataforma (/api/places). Robusto, sin depender de ntfy.
+  try{
+    const data = await fetch(`/api/places?region=${REGION}`).then(r=>r.json());
+    const pts = {};
+    for(const p of data.places||[]){
+      const m = /localizada por ([^·|]+)/.exec(p.notas||'');
+      if(!m) continue;                     // paradas previas sin autor no cuentan
+      const autor = m[1].trim();
+      const menc = mencionesPorNombre[norm(p.nombre)] || 0;
+      pts[autor] = (pts[autor]||0) + puntos(menc);
+    }
+    for(const [n,d] of Object.entries(ajustes)) pts[n] = (pts[n]||0) + d;  // penalizaciones del profe
+    for(const k of Object.keys(puntajes)) delete puntajes[k];
+    Object.assign(puntajes, pts);
+    pintarRanking();
+  }catch(e){}
 }
 
 // ---- Toast ----
