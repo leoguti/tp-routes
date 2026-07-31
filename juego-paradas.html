@@ -91,15 +91,15 @@
           <b>2)</b> Marca en el mapa o pega lat/long<br>
           <b>3)</b> ¡Dale LOCALIZAR!
         </div>
-        <button class="act btn-osm" onclick="buscarOSM()">🔍 Buscar en el mapa (automático)</button>
+        <button class="act btn-osm" id="btn-buscar">🔍 Buscar en el mapa (automático)</button>
         <div id="osm-results"></div>
         <div class="row">
           <div><label>Latitud</label><input id="lat" type="number" step="0.000001" placeholder="5.826..."></div>
           <div><label>Longitud</label><input id="lon" type="number" step="0.000001" placeholder="-73.03..."></div>
         </div>
         <div id="flag" class="flag"></div>
-        <button class="act btn-go" onclick="localizar()">🎯 ¡LOCALIZAR!</button>
-        <button class="act btn-skip" onclick="siguienteParada(true)">⏭️ Otra parada</button>
+        <button class="act btn-go" id="btn-localizar">🎯 ¡LOCALIZAR!</button>
+        <button class="act btn-skip" id="btn-otra">⏭️ Otra parada</button>
       </div>
 
       <!-- MAPA -->
@@ -121,6 +121,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+"use strict";
+(function(){   // ⛨ todo encapsulado: nada queda accesible desde la consola (anti-automatización)
 const NAMES = ["Brayan","Peña","Nadia","Ana María","Yosef","Stefania","Edward","David","Cristian","Santiago"];
 const NTFY = "https://ntfy.envs.net/carrera-paradas-salesiano"; // tópico del juego (ranking + avisos al profe/IA)
 const REGION = "boyaca";
@@ -249,11 +251,14 @@ async function buscarOSM(){
 }
 
 // ---- Localizar (guardar + avisar) ----
-let enviando=false;
+let enviando=false, ultimaLoc=0;
 async function localizar(){
   if(enviando||!target) return;
+  const ahora=Date.now();
+  if(ahora - ultimaLoc < 3000){ toast('Un momento… tómate tu tiempo ⏳', true); return; } // anti-ráfaga
   const lat=parseFloat(document.getElementById('lat').value), lon=parseFloat(document.getElementById('lon').value);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)){ toast('Marca la ubicación primero 📍', true); return; }
+  ultimaLoc=ahora;
   const dentro = validarLocal();
   enviando=true;
   const pts = puntos(target.count);
@@ -309,4 +314,10 @@ async function refrescarRanking(){
 // ---- Toast ----
 let tt;
 function toast(msg,bad){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'+(bad?' bad':''); clearTimeout(tt); tt=setTimeout(()=>t.className='',2200); }
+
+// ---- Conectar botones (dentro del scope privado; no hay funciones globales que la consola pueda invocar) ----
+document.getElementById('btn-buscar').addEventListener('click', buscarOSM);
+document.getElementById('btn-localizar').addEventListener('click', localizar);
+document.getElementById('btn-otra').addEventListener('click', ()=>siguienteParada(true));
+})();
 </script>
