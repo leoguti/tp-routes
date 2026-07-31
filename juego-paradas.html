@@ -124,8 +124,9 @@
 const NAMES = ["Brayan","Peña","Nadia","Ana María","Yosef","Stefania","Edward","David","Cristian","Santiago"];
 const NTFY = "https://ntfy.envs.net/carrera-paradas-salesiano"; // tópico del juego (ranking + avisos al profe/IA)
 const REGION = "boyaca";
-// Rango grueso de Boyacá para validación local rápida (la revisión fina la hace el profe+IA)
-const BOYACA = { latMin:4.5, latMax:7.6, lonMin:-74.8, lonMax:-71.5 };
+// Rango grueso de COLOMBIA (las rutas intermunicipales salen de Boyacá: Bogotá, Ocaña, Tame…).
+// Solo avisa si el punto cae fuera del país (otro país = error claro). La revisión fina la hace el profe.
+const BOYACA = { latMin:-4.3, latMax:13.5, lonMin:-79.1, lonMax:-66.8 };
 
 let ME = null, SCORE = 0, target = null, pendientes = [], marker = null, map = null;
 let mencionesPorNombre = {};      // norm(nombre) -> nº de rutas donde aparece
@@ -177,9 +178,9 @@ function validarLocal(){
   const f = document.getElementById('flag');
   if(!Number.isFinite(la)||!Number.isFinite(lo)){ f.textContent=''; return true; }
   if(la<BOYACA.latMin||la>BOYACA.latMax||lo<BOYACA.lonMin||lo>BOYACA.lonMax){
-    f.textContent='⚠️ Ese punto NO parece estar en Boyacá. Revísalo o el profe puede quitarte puntos.'; return false;
+    f.textContent='⚠️ Ese punto parece estar FUERA de Colombia. Revísalo o el profe puede quitarte puntos.'; return false;
   }
-  f.textContent='✅ Dentro de Boyacá'; return true;
+  f.textContent='✅ Ubicación válida'; return true;
 }
 
 // ---- Pendientes (las que faltan localizar, ordenadas por menciones) ----
@@ -260,13 +261,13 @@ async function localizar(){
     // 1) Guardar en la plataforma (queda el rastro con el nombre en notas)
     const r = await fetch('/api/places',{ method:'POST', headers:{'content-type':'application/json'},
       body: JSON.stringify({ region_id:REGION, nombre:target.nombre, lat, lon,
-        notas:`Carrera de paradas · localizada por ${ME}${dentro?'':' · ⚠️ FUERA DE BOYACÁ, revisar'}` }) }).then(r=>r.json());
+        notas:`Carrera de paradas · localizada por ${ME}${dentro?'':' · ⚠️ FUERA DE COLOMBIA, revisar'}` }) }).then(r=>r.json());
     if(r.error && !r.existing){ throw new Error(r.error); }
     const yaExistia = !!r.existing;
     // Puntos provisionales locales (el ranking global se calcula desde la plataforma)
     if(dentro && !yaExistia){ SCORE += pts; toast('¡+'+pts+' puntos! 🎯'); }
     else if(yaExistia){ toast('Esa ya estaba localizada 🤔 sin puntos', true); }
-    else { toast('Guardada, pero fuera de Boyacá ⚠️ el profe revisa', true); }
+    else { toast('Guardada, pero fuera de Colombia ⚠️ el profe revisa', true); }
     document.getElementById('myscore').textContent = SCORE;
     // marcar como localizada, quitar de pendientes y siguiente
     yaLocalizados.add(norm(target.nombre));
