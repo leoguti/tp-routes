@@ -1,0 +1,299 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🏁 Carrera de Cazadores de Paradas</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root { --bg:#0f1020; --pan:#1a1c34; --pan2:#232647; --acc:#ffd43b; --acc2:#4dd4ff; --ok:#38d996; --bad:#ff5d6c; --txt:#eef; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--txt); }
+  #app { max-width:1200px; margin:0 auto; padding:12px; }
+  h1 { text-align:center; margin:6px 0 2px; font-size:1.6rem; letter-spacing:.5px; }
+  .sub { text-align:center; color:#9aa0c8; font-size:.85rem; margin-bottom:10px; }
+
+  /* Pantalla elegir nombre */
+  #login { max-width:420px; margin:8vh auto; background:var(--pan); border-radius:18px; padding:28px; text-align:center; box-shadow:0 10px 40px #0008; }
+  #login h2 { margin:0 0 6px; }
+  #login p { color:#9aa0c8; margin:0 0 18px; }
+  .names { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .name-btn { background:var(--pan2); border:2px solid transparent; color:var(--txt); padding:14px; border-radius:12px; font-size:1rem; cursor:pointer; transition:.12s; }
+  .name-btn:hover { border-color:var(--acc2); transform:translateY(-2px); }
+
+  /* Juego */
+  #game { display:none; }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .whoami { background:var(--pan2); padding:6px 14px; border-radius:20px; font-weight:600; }
+  .whoami b { color:var(--acc); }
+  .myscore { background:linear-gradient(90deg,#ff8a00,#ffd43b); color:#211; padding:6px 16px; border-radius:20px; font-weight:800; }
+
+  .grid { display:grid; grid-template-columns:1.1fr 1.4fr .9fr; gap:12px; }
+  @media(max-width:900px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--pan); border-radius:16px; padding:14px; }
+  .card h3 { margin:0 0 8px; font-size:.95rem; color:#9aa0c8; text-transform:uppercase; letter-spacing:.5px; }
+
+  #target-name { font-size:1.5rem; font-weight:800; margin:4px 0; }
+  #target-pts { display:inline-block; background:var(--acc); color:#211; font-weight:800; padding:4px 12px; border-radius:20px; }
+  #target-info { color:#9aa0c8; font-size:.85rem; margin-top:6px; }
+  .steps { font-size:.9rem; line-height:1.5; margin-top:10px; color:#cdd; }
+  .steps b { color:var(--acc2); }
+
+  input[type=number]{ width:100%; padding:9px; border-radius:8px; border:1px solid #333; background:#0d0e1c; color:var(--txt); }
+  .row { display:flex; gap:8px; margin-top:8px; }
+  .row > div { flex:1; }
+  label { font-size:.75rem; color:#9aa0c8; }
+  button.act { border:none; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer; }
+  .btn-osm { background:var(--acc2); color:#023; width:100%; margin-top:10px; }
+  .btn-map { background:var(--pan2); color:var(--txt); width:100%; margin-top:8px; }
+  .btn-go { background:linear-gradient(90deg,#38d996,#4dd4ff); color:#012; width:100%; margin-top:12px; font-size:1.15rem; padding:14px; }
+  .btn-skip { background:transparent; color:#9aa0c8; width:100%; margin-top:6px; }
+
+  #map { height:340px; border-radius:12px; }
+  #osm-results { margin-top:8px; }
+  .osm-r { background:var(--pan2); padding:8px 10px; border-radius:8px; margin-bottom:6px; cursor:pointer; font-size:.85rem; }
+  .osm-r:hover { background:#2d3160; }
+
+  #rank .rk { display:flex; justify-content:space-between; padding:8px 10px; border-radius:8px; margin-bottom:6px; background:var(--pan2); font-weight:600; }
+  #rank .rk.me { outline:2px solid var(--acc); }
+  .medal { margin-right:6px; }
+
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(120px); background:var(--ok); color:#012; font-weight:800; padding:14px 26px; border-radius:30px; font-size:1.2rem; transition:.35s; z-index:9999; box-shadow:0 8px 30px #0009; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+  #toast.bad { background:var(--bad); color:#fff; }
+  .flag { color:var(--bad); font-size:.8rem; margin-top:6px; }
+</style>
+
+<div id="app">
+  <h1>🏁 Carrera de Cazadores de Paradas</h1>
+  <div class="sub">Localiza paradas reales de buses de Boyacá · ¡las que están en más rutas dan más puntos!</div>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <h2>¿Quién eres? 👋</h2>
+    <p>Toca tu nombre para entrar a la carrera</p>
+    <div class="names" id="names"></div>
+  </div>
+
+  <!-- JUEGO -->
+  <div id="game">
+    <div class="top">
+      <div class="whoami">Jugador: <b id="me">-</b></div>
+      <div class="myscore">⭐ <span id="myscore">0</span> pts (provisional)</div>
+    </div>
+
+    <div class="grid">
+      <!-- PARADA OBJETIVO -->
+      <div class="card">
+        <h3>🎯 Tu parada</h3>
+        <div id="target-name">Cargando…</div>
+        <div><span id="target-pts">0 pts</span></div>
+        <div id="target-info"></div>
+        <div class="steps">
+          <b>1)</b> Búscala con el botón, o en Google Maps (clic derecho → copia lat, long)<br>
+          <b>2)</b> Marca en el mapa o pega lat/long<br>
+          <b>3)</b> ¡Dale LOCALIZAR!
+        </div>
+        <button class="act btn-osm" onclick="buscarOSM()">🔍 Buscar en el mapa (automático)</button>
+        <div id="osm-results"></div>
+        <div class="row">
+          <div><label>Latitud</label><input id="lat" type="number" step="0.000001" placeholder="5.826..."></div>
+          <div><label>Longitud</label><input id="lon" type="number" step="0.000001" placeholder="-73.03..."></div>
+        </div>
+        <div id="flag" class="flag"></div>
+        <button class="act btn-go" onclick="localizar()">🎯 ¡LOCALIZAR!</button>
+        <button class="act btn-skip" onclick="siguienteParada(true)">⏭️ Otra parada</button>
+      </div>
+
+      <!-- MAPA -->
+      <div class="card">
+        <h3>🗺️ Marca aquí (o usa el buscador)</h3>
+        <div id="map"></div>
+      </div>
+
+      <!-- RANKING -->
+      <div class="card">
+        <h3>🏆 Ranking en vivo</h3>
+        <div id="rank"><div style="color:#9aa0c8">Aún no hay puntos…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const NAMES = ["Brayan","Peña","Nadia","Ana María","Yosef","Stefania","Edward","David","Cristian","Santiago"];
+const NTFY = "https://ntfy.envs.net/carrera-paradas-salesiano"; // tópico del juego (ranking + avisos al profe/IA)
+const REGION = "boyaca";
+// Rango grueso de Boyacá para validación local rápida (la revisión fina la hace el profe+IA)
+const BOYACA = { latMin:4.5, latMax:7.6, lonMin:-74.8, lonMax:-71.5 };
+
+let ME = null, SCORE = 0, target = null, pendientes = [], marker = null, map = null;
+
+// ---- Login ----
+const namesBox = document.getElementById('names');
+NAMES.forEach(n => {
+  const b = document.createElement('button');
+  b.className = 'name-btn'; b.textContent = n;
+  b.onclick = () => entrar(n);
+  namesBox.appendChild(b);
+});
+
+function entrar(nombre){
+  ME = nombre;
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  document.getElementById('me').textContent = ME;
+  initMap();
+  cargarPendientes();
+  escucharRanking();
+}
+
+// ---- Mapa ----
+function initMap(){
+  map = L.map('map').setView([5.826,-73.034], 9); // Duitama
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OSM', maxZoom:19 }).addTo(map);
+  map.on('click', e => setCoord(e.latlng.lat, e.latlng.lng));
+}
+function setCoord(lat, lon){
+  document.getElementById('lat').value = (+lat).toFixed(6);
+  document.getElementById('lon').value = (+lon).toFixed(6);
+  if (marker) map.removeLayer(marker);
+  marker = L.marker([lat,lon]).addTo(map);
+  map.setView([lat,lon], 14);
+  validarLocal();
+}
+['lat','lon'].forEach(id => document.getElementById(id).addEventListener('input', ()=>{
+  const la=parseFloat(document.getElementById('lat').value), lo=parseFloat(document.getElementById('lon').value);
+  if(Number.isFinite(la)&&Number.isFinite(lo)){ if(marker)map.removeLayer(marker); marker=L.marker([la,lo]).addTo(map); }
+  validarLocal();
+}));
+
+function validarLocal(){
+  const la=parseFloat(document.getElementById('lat').value), lo=parseFloat(document.getElementById('lon').value);
+  const f = document.getElementById('flag');
+  if(!Number.isFinite(la)||!Number.isFinite(lo)){ f.textContent=''; return true; }
+  if(la<BOYACA.latMin||la>BOYACA.latMax||lo<BOYACA.lonMin||lo>BOYACA.lonMax){
+    f.textContent='⚠️ Ese punto NO parece estar en Boyacá. Revísalo o el profe puede quitarte puntos.'; return false;
+  }
+  f.textContent='✅ Dentro de Boyacá'; return true;
+}
+
+// ---- Pendientes (las que faltan localizar, ordenadas por menciones) ----
+function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,''); }
+async function cargarPendientes(){
+  try{
+    const routes = await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
+    const pend = new Map();
+    const add = (t)=>{ if(!t)return; const k=norm(t); if(!k)return; if(!pend.has(k))pend.set(k,{nombre:t.trim(),count:0}); pend.get(k).count++; };
+    for(const r of routes.routes||[]){
+      if(!r.origen_place_id) add(r.origen_text);
+      if(!r.destino_place_id) add(r.destino_text);
+      for(const w of r.waypoints||[]) if(!w.place_id) add(w.nombre_text);
+    }
+    pendientes = [...pend.values()].sort((a,b)=>b.count-a.count);
+    siguienteParada();
+  }catch(e){ document.getElementById('target-name').textContent='Error cargando: '+e.message; }
+}
+
+function puntos(count){ return 10 + count*10; } // base 10 + 10 por cada ruta donde aparece
+
+function siguienteParada(saltar){
+  if(saltar && pendientes.length>1){ pendientes.push(pendientes.shift()); }
+  target = pendientes[0];
+  document.getElementById('osm-results').innerHTML='';
+  document.getElementById('lat').value=''; document.getElementById('lon').value='';
+  document.getElementById('flag').textContent='';
+  if(marker){ map.removeLayer(marker); marker=null; }
+  if(!target){ document.getElementById('target-name').textContent='¡No quedan pendientes! 🎉'; document.getElementById('target-pts').textContent=''; return; }
+  document.getElementById('target-name').textContent = target.nombre;
+  document.getElementById('target-pts').textContent = puntos(target.count)+' pts';
+  document.getElementById('target-info').textContent = `Aparece en ${target.count} ruta${target.count!==1?'s':''} 🚌`;
+}
+
+// ---- Buscar en OSM (Photon) ----
+async function buscarOSM(){
+  if(!target) return;
+  const box = document.getElementById('osm-results');
+  box.innerHTML = '<div style="color:#9aa0c8">Buscando…</div>';
+  try{
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(target.nombre+', Boyacá, Colombia')}&limit=6&lat=5.826&lon=-73.034`;
+    const data = await fetch(url).then(r=>r.json());
+    const feats = (data.features||[]).filter(f=>f.geometry&&f.geometry.coordinates);
+    if(!feats.length){ box.innerHTML='<div style="color:#9aa0c8">Sin resultados. Búscalo en Google Maps y pega lat/long.</div>'; return; }
+    box.innerHTML='';
+    feats.forEach(f=>{
+      const [lo,la]=f.geometry.coordinates; const p=f.properties||{};
+      const et=[p.name,p.city,p.county,p.state].filter(Boolean).join(', ');
+      const d=document.createElement('div'); d.className='osm-r'; d.textContent='📍 '+et;
+      d.onclick=()=>{ setCoord(la,lo); box.innerHTML=''; };
+      box.appendChild(d);
+    });
+  }catch(e){ box.innerHTML='<div style="color:#9aa0c8">Error de búsqueda. Usa Google Maps.</div>'; }
+}
+
+// ---- Localizar (guardar + avisar) ----
+let enviando=false;
+async function localizar(){
+  if(enviando||!target) return;
+  const lat=parseFloat(document.getElementById('lat').value), lon=parseFloat(document.getElementById('lon').value);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)){ toast('Marca la ubicación primero 📍', true); return; }
+  const dentro = validarLocal();
+  enviando=true;
+  const pts = puntos(target.count);
+  try{
+    // 1) Guardar en la plataforma (queda el rastro con el nombre en notas)
+    const r = await fetch('/api/places',{ method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ region_id:REGION, nombre:target.nombre, lat, lon,
+        notas:`Carrera de paradas · localizada por ${ME}${dentro?'':' · ⚠️ FUERA DE BOYACÁ, revisar'}` }) }).then(r=>r.json());
+    if(r.error && !r.existing){ throw new Error(r.error); }
+    const yaExistia = !!r.existing;
+    // 2) Avisar al chat (ranking + revisión profe/IA)
+    const estado = !dentro ? 'SOSPECHOSA' : (yaExistia ? 'REPETIDA' : 'OK');
+    await fetch(NTFY,{ method:'POST', headers:{'Title':'juego'},
+      body: `${ME}|${target.nombre}|${lat.toFixed(5)},${lon.toFixed(5)}|${pts}|${target.count}|${estado}` }).catch(()=>{});
+    // 3) Puntos provisionales locales
+    if(dentro && !yaExistia){ SCORE += pts; toast('¡+'+pts+' puntos! 🎯'); }
+    else if(yaExistia){ toast('Esa ya estaba localizada 🤔 sin puntos', true); }
+    else { toast('Guardada, pero fuera de Boyacá ⚠️ el profe revisa', true); }
+    document.getElementById('myscore').textContent = SCORE;
+    // quitar de pendientes y siguiente
+    pendientes = pendientes.filter(p=>p!==target);
+    siguienteParada();
+  }catch(e){ toast('Error: '+e.message, true); }
+  finally{ enviando=false; }
+}
+
+// ---- Ranking en vivo (lee el tópico del juego) ----
+const puntajes = {};
+function pintarRanking(){
+  const arr = Object.entries(puntajes).sort((a,b)=>b[1]-a[1]);
+  const box = document.getElementById('rank');
+  if(!arr.length){ box.innerHTML='<div style="color:#9aa0c8">Aún no hay puntos…</div>'; return; }
+  const med=['🥇','🥈','🥉'];
+  box.innerHTML = arr.map(([n,p],i)=>`<div class="rk ${n===ME?'me':''}"><span><span class="medal">${med[i]||'▫️'}</span>${n}</span><b>${p}</b></div>`).join('');
+}
+function escucharRanking(){
+  // historial + vivo
+  fetch(NTFY+'/json?poll=1&since=6h').then(r=>r.text()).then(t=>{
+    t.trim().split(/\n/).forEach(l=>{ if(l){ try{ acumular(JSON.parse(l)); }catch(e){} } }); pintarRanking();
+  }).catch(()=>{});
+  const es = new EventSource(NTFY+'/sse');
+  es.onmessage = ev => { try{ acumular(JSON.parse(ev.data)); pintarRanking(); }catch(e){} };
+}
+function acumular(m){
+  if(m.event!=='message') return;
+  // formato: NOMBRE|parada|lat,lon|pts|menciones|estado    (Title 'juego')  |  o ajustes del profe con Title 'ajuste'
+  const parts = (m.message||'').split('|');
+  if((m.title==='juego') && parts.length>=6){
+    const [nombre,,,pts,,estado]=parts;
+    if(estado==='OK'){ puntajes[nombre]=(puntajes[nombre]||0)+(+pts||0); }
+  }
+  if(m.title==='ajuste' && parts.length>=2){ // formato ajuste: NOMBRE|delta   (profe/IA quita o suma)
+    const [nombre,delta]=parts; puntajes[nombre]=(puntajes[nombre]||0)+(+delta||0);
+  }
+}
+
+// ---- Toast ----
+let tt;
+function toast(msg,bad){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show'+(bad?' bad':''); clearTimeout(tt); tt=setTimeout(()=>t.className='',2200); }
+</script>
