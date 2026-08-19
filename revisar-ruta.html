@@ -15,6 +15,7 @@
   .rt:hover{outline:2px solid var(--acc)}
   .veredicto{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--pan);padding:10px 16px;border-radius:24px;font-size:.9rem;z-index:1000;box-shadow:0 4px 16px #0008}
   .veredicto b{color:var(--acc)}
+  .lbl-parada{background:#fff;color:#111;font-weight:800;font-size:12px;border:none;box-shadow:0 1px 4px #0006;padding:2px 6px}
 </style>
 </head>
 <body>
@@ -66,14 +67,19 @@ async function ver(){
   } else {
     document.getElementById('sub').textContent += ' · ⚠️ sin trazado';
   }
-  // paradas: origen, destino (y waypoints si tienen coords vía places)
-  const pts=[];
-  if(ruta.origen_place_lat) pts.push({n:ruta.origen_text,la:ruta.origen_place_lat,lo:ruta.origen_place_lon});
-  if(ruta.destino_place_lat) pts.push({n:ruta.destino_text,la:ruta.destino_place_lat,lo:ruta.destino_place_lon});
-  pts.forEach(p=>{
-    L.circleMarker([p.la,p.lo],{radius:9,color:'#fff',weight:2,fillColor:'#ffd43b',fillOpacity:1})
-      .bindTooltip(p.n,{permanent:true,direction:'top'}).addTo(map);
+  // TODAS las paradas de la ruta (origen → waypoints en orden → destino), numeradas
+  const placesData = await fetch(`/api/places?region=${REGION}`).then(r=>r.json()).catch(()=>({places:[]}));
+  const porId = {};
+  (placesData.places||[]).forEach(p=>{ porId[p.id]={la:p.lat,lo:p.lon}; });
+  const seq=[];
+  if(ruta.origen_place_id && porId[ruta.origen_place_id]) seq.push({n:ruta.origen_text,...porId[ruta.origen_place_id]});
+  (ruta.waypoints||[]).forEach(w=>{ if(w.place_id && porId[w.place_id]) seq.push({n:w.nombre_text,...porId[w.place_id]}); });
+  if(ruta.destino_place_id && porId[ruta.destino_place_id]) seq.push({n:ruta.destino_text,...porId[ruta.destino_place_id]});
+  seq.forEach((p,i)=>{
+    L.circleMarker([p.la,p.lo],{radius:10,color:'#fff',weight:2,fillColor:'#ffd43b',fillOpacity:1})
+      .bindTooltip(`${i+1}. ${p.n}`,{permanent:true,direction:'top',className:'lbl-parada'}).addTo(map);
   });
+  if(!seq.length) document.getElementById('sub').textContent += ' · (paradas sin ubicar)';
 }
 
 if(id) ver(); else lista();
