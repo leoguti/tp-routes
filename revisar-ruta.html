@@ -16,6 +16,19 @@
   .veredicto{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--pan);padding:10px 16px;border-radius:24px;font-size:.9rem;z-index:1000;box-shadow:0 4px 16px #0008}
   .veredicto b{color:var(--acc)}
   .lbl-parada{background:#fff;color:#111;font-weight:800;font-size:12px;border:none;box-shadow:0 1px 4px #0006;padding:2px 6px}
+  #chat-btn{position:fixed;right:16px;bottom:16px;z-index:1200;background:#4dd4ff;color:#012;border:none;border-radius:50%;width:58px;height:58px;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 16px #0008}
+  #chat-panel{position:fixed;right:16px;bottom:84px;z-index:1200;width:320px;max-width:92vw;height:420px;background:var(--pan);border-radius:14px;box-shadow:0 8px 30px #000a;display:none;flex-direction:column;overflow:hidden}
+  #chat-head{background:#23264a;padding:10px 14px;font-weight:700;font-size:.95rem}
+  #chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .cmsg{max-width:85%;padding:8px 11px;border-radius:12px;font-size:.88rem;line-height:1.35;white-space:pre-wrap}
+  .cmsg.claude{background:#fff;color:#123;align-self:flex-start}
+  .cmsg.yo{background:#4dd4ff;color:#012;align-self:flex-end}
+  #chat-foot{display:flex;gap:6px;padding:8px;background:#15172c}
+  #chat-in{flex:1;padding:9px 12px;border-radius:10px;border:1px solid #334;background:#0d0e1c;color:var(--txt);font-family:inherit}
+  #chat-send{background:#4dd4ff;color:#012;border:none;border-radius:10px;padding:0 14px;font-weight:800;cursor:pointer}
+  #chat-nombres{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto}
+  .cn{background:#23264a;color:var(--txt);border:none;border-radius:10px;padding:12px;cursor:pointer;font-size:.9rem}
+  .cn:hover{outline:2px solid #4dd4ff}
 </style>
 </head>
 <body>
@@ -23,6 +36,16 @@
 <div id="lista" style="display:none"></div>
 <div id="map" style="display:none"></div>
 <div class="veredicto" id="ver" style="display:none">Repórtale a Claude en tu chat CON EL NÚMERO: <b>✅ ruta N bien</b> o <b>🚨 ruta N hace algo raro en…</b></div>
+<button id="chat-btn" title="Chatea con Claude">💬</button>
+<div id="chat-panel">
+  <div id="chat-head">💬 Tutor Claude</div>
+  <div id="chat-nombres"></div>
+  <div id="chat-msgs" style="display:none"></div>
+  <div id="chat-foot" style="display:none">
+    <input id="chat-in" placeholder="Escribe y Enter…">
+    <button id="chat-send">➤</button>
+  </div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 "use strict";
@@ -81,6 +104,64 @@ async function ver(){
   });
   if(!seq.length) document.getElementById('sub').textContent += ' · (paradas sin ubicar)';
 }
+
+// ---- Chat integrado (mismos canales ntfy de siempre) ----
+const CANALES = {
+  "Brayan":"brayan-claude-chat-2026junio10","Peña":"pena-claude-chat-2026junio10",
+  "Nadia":"nadia-claude-chat-2026junio10","Ana María":"anamaria-claude-chat-2026junio10",
+  "Yosef":"yosef-claude-chat-2026junio10","Stefania":"stefania-claude-chat-2026junio10",
+  "Edward":"edward-claude-chat-2026julio17","David":"dai-claude-chat-2026mayo21",
+  "Cristian":"cristian-claude-chat-2026junio10","Santiago":"santiago-claude-chat-2026mayo06"
+};
+const TITULOS = {
+  "Brayan":"brayan","Peña":"pena","Nadia":"nadia","Ana María":"anamaria","Yosef":"yosef",
+  "Stefania":"stefania","Edward":"edward","David":"dai","Cristian":"cristian","Santiago":"santiago"
+};
+let miNombre = localStorage.getItem('tp_chat_nombre') || null;
+let fuente = null;
+const panel=document.getElementById('chat-panel'), msgs=document.getElementById('chat-msgs'),
+      foot=document.getElementById('chat-foot'), nombres=document.getElementById('chat-nombres'),
+      entrada=document.getElementById('chat-in');
+const vistos=new Set();
+function addMsg(cls,txt){ const d=document.createElement('div'); d.className='cmsg '+cls; d.textContent=txt; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
+function pintarChat(m,hist){
+  if(!m||m.event!=='message'||(m.id&&vistos.has(m.id)))return;
+  if(m.id)vistos.add(m.id);
+  const t=(m.title||'').toLowerCase();
+  if(t==='claude') addMsg('claude',m.message);
+  else if(hist&&t===TITULOS[miNombre]) addMsg('yo',m.message);
+}
+function conectarChat(){
+  nombres.style.display='none'; msgs.style.display='flex'; foot.style.display='flex';
+  document.getElementById('chat-head').textContent='💬 '+miNombre+' — Tutor Claude';
+  const base='https://ntfy.envs.net/'+CANALES[miNombre];
+  fetch(base+'/json?poll=1&since=1h').then(r=>r.text()).then(tx=>{
+    tx.trim().split(/\n/).forEach(l=>{ if(l){ try{ pintarChat(JSON.parse(l),true); }catch(e){} } });
+  }).catch(()=>{});
+  if(fuente)fuente.close();
+  fuente=new EventSource(base+'/sse');
+  fuente.onmessage=ev=>{ try{ pintarChat(JSON.parse(ev.data),false); }catch(e){} };
+}
+function elegirNombre(){
+  nombres.style.display='grid'; msgs.style.display='none'; foot.style.display='none';
+  nombres.innerHTML='';
+  Object.keys(CANALES).forEach(n=>{
+    const b=document.createElement('button'); b.className='cn'; b.textContent=n;
+    b.onclick=()=>{ miNombre=n; localStorage.setItem('tp_chat_nombre',n); conectarChat(); };
+    nombres.appendChild(b);
+  });
+}
+async function enviarChat(){
+  const txt=entrada.value.trim(); if(!txt||!miNombre)return;
+  entrada.value=''; addMsg('yo',txt);
+  try{ await fetch('https://ntfy.envs.net/'+CANALES[miNombre],{method:'POST',headers:{'Title':TITULOS[miNombre]},body:txt}); }catch(e){}
+}
+document.getElementById('chat-btn').onclick=()=>{
+  panel.style.display = panel.style.display==='flex' ? 'none' : 'flex';
+  if(panel.style.display==='flex'){ if(miNombre)conectarChat(); else elegirNombre(); }
+};
+document.getElementById('chat-send').onclick=enviarChat;
+entrada.addEventListener('keydown',e=>{ if(e.key==='Enter')enviarChat(); });
 
 if(id) ver(); else lista();
 })();
