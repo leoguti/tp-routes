@@ -154,7 +154,9 @@ function elegirNombre(){
 async function enviarChat(){
   const txt=entrada.value.trim(); if(!txt||!miNombre)return;
   entrada.value=''; addMsg('yo',txt);
-  try{ await fetch('https://ntfy.envs.net/'+CANALES[miNombre],{method:'POST',headers:{'Title':TITULOS[miNombre]},body:txt}); }catch(e){}
+  // contexto automático: el chat sabe en qué ruta está el estudiante
+  const cuerpo = id ? `[Ruta ${id}] ${txt}` : txt;
+  try{ await fetch('https://ntfy.envs.net/'+CANALES[miNombre],{method:'POST',headers:{'Title':TITULOS[miNombre]},body:cuerpo}); }catch(e){}
 }
 document.getElementById('chat-btn').onclick=()=>{
   panel.style.display = panel.style.display==='flex' ? 'none' : 'flex';
