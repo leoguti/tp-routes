@@ -109,7 +109,7 @@ async function lista(){
   if(!box.children.length) box.textContent='No hay rutas trazadas aún.';
 }
 
-let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[];
+let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[], sentido='ida';
 function d2(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
 async function ver(){
   document.getElementById('map').style.display='block';
@@ -234,19 +234,36 @@ function responder(ok){
   const p=paradaActual; p.hecho=true;
   document.getElementById('inspec').style.display='none';
   reportes.push({n:p.n,ok});
-  enviarNtfyViaje(ok ? `✅ Parada "${p.n}" está BIEN ubicada (viaje de inspección)` : `🚨 Parada "${p.n}" está MAL ubicada (viaje de inspección)`);
+  enviarNtfyViaje(ok ? `✅ Parada "${p.n}" está BIEN ubicada (inspección, ${sentido.toUpperCase()})` : `🚨 Parada "${p.n}" está MAL ubicada (inspección, ${sentido.toUpperCase()})`);
   busIdx+=2; setTimeout(pasoBus,400);
 }
 async function finViaje(){
   document.getElementById('btn-alto').style.display='none';
   const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
   const f=document.getElementById('fin');
-  f.innerHTML=`🏁 ¡Viaje completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span><br>
-    <button id="fin-otra" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">🎲 ¡Otra ruta sorpresa!</button>
+  const btnRet = sentido==='ida' ? `<button id="fin-retorno" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#38d996;color:#012">🔁 ¡Hacer el RETORNO!</button> ` : '';
+  f.innerHTML=`🏁 ¡Viaje ${sentido.toUpperCase()} completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span><br>
+    ${btnRet}<button id="fin-otra" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">🎲 ¡Otra ruta sorpresa!</button>
     <button id="fin-lista" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">📋 Ver lista</button>`;
   f.style.display='block';
-  enviarNtfyViaje(`🏁 Viaje de inspección completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
+  enviarNtfyViaje(`🏁 Viaje de inspección ${sentido.toUpperCase()} completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
   document.getElementById('fin-lista').onclick=()=>{ location.href=location.pathname; };
+  const br=document.getElementById('fin-retorno');
+  if(br) br.onclick=()=>{
+    sentido='retorno';
+    coordsRuta.reverse();
+    paradasRuta.forEach(p=>{
+      let best=0,bd=Infinity;
+      coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
+      p.idx=best; p.hecho=false;
+    });
+    paradasRuta.sort((a,b)=>a.idx-b.idx);
+    f.style.display='none';
+    busIdx=0; reportes=[];
+    document.getElementById('btn-alto').style.display='block';
+    mapRef.setView(coordsRuta[0],13);
+    pasoBus();
+  };
   document.getElementById('fin-otra').onclick=async ()=>{
     try{
       const shapes=await fetch(`/api/route-shapes?region=${REGION}`).then(r=>r.json());
@@ -288,7 +305,7 @@ document.getElementById('btn-alto').onclick=()=>{
 document.getElementById('alto-enviar').onclick=()=>{
   const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
   const txt=document.getElementById('alto-txt').value.trim()||'(sin descripción)';
-  enviarNtfyViaje(`🚨 PROBLEMA en el trazado en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${txt}`);
+  enviarNtfyViaje(`🚨 PROBLEMA en el trazado (${sentido.toUpperCase()}) en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${txt}`);
   reportes.push({n:'problema trazado',ok:false});
   document.getElementById('alto-panel').style.display='none';
   enAlto=false; setTimeout(pasoBus,300);
