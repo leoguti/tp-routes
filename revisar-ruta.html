@@ -44,7 +44,6 @@
 <div id="top"><h1>🕵️ Revisar ruta</h1><div class="sub" id="sub">¿El camino tiene sentido? ¿Hace algo raro?</div></div>
 <div id="lista" style="display:none"></div>
 <div id="map" style="display:none"></div>
-<div class="veredicto" id="ver" style="display:none">Repórtale a Claude en tu chat CON EL NÚMERO: <b>✅ ruta N bien</b> o <b>🚨 ruta N hace algo raro en…</b></div>
 <button id="btn-viaje">🚌 ¡Iniciar viaje de inspección!</button>
 <div id="inspec">
   <div>🚏 Llegamos a la parada</div>
@@ -96,7 +95,7 @@ let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual
 function d2(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
 async function ver(){
   document.getElementById('map').style.display='block';
-  document.getElementById('ver').style.display='block';
+  
   const [shape, ruta] = await Promise.all([
     fetch(`/api/route-shapes?route_id=${id}`).then(r=>r.json()),
     fetch(`/api/routes?id=${id}`).then(r=>r.json())
