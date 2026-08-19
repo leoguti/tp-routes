@@ -237,13 +237,24 @@ function responder(ok){
   enviarNtfyViaje(ok ? `✅ Parada "${p.n}" está BIEN ubicada (viaje de inspección)` : `🚨 Parada "${p.n}" está MAL ubicada (viaje de inspección)`);
   busIdx+=2; setTimeout(pasoBus,400);
 }
-function finViaje(){
+async function finViaje(){
   document.getElementById('btn-alto').style.display='none';
   const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
   const f=document.getElementById('fin');
-  f.innerHTML=`🏁 ¡Viaje completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span>`;
+  f.innerHTML=`🏁 ¡Viaje completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span><br>
+    <button id="fin-otra" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">🎲 ¡Otra ruta sorpresa!</button>
+    <button id="fin-lista" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">📋 Ver lista</button>`;
   f.style.display='block';
   enviarNtfyViaje(`🏁 Viaje de inspección completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
+  document.getElementById('fin-lista').onclick=()=>{ location.href=location.pathname; };
+  document.getElementById('fin-otra').onclick=async ()=>{
+    try{
+      const shapes=await fetch(`/api/route-shapes?region=${REGION}`).then(r=>r.json());
+      const ids=[...new Set((shapes.shapes||[]).map(s=>s.route_id))].filter(x=>String(x)!==String(id));
+      if(ids.length){ location.href='?id='+ids[Math.floor(Math.random()*ids.length)]; }
+      else location.href=location.pathname;
+    }catch(e){ location.href=location.pathname; }
+  };
 }
 async function enviarNtfyViaje(texto){
   if(!miNombre)return;
