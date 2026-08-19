@@ -109,7 +109,21 @@ async function lista(){
   if(!box.children.length) box.textContent='No hay rutas trazadas aún.';
 }
 
-let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[], sentido='ida';
+let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[], sentido='ida', capaRetorno=null;
+const VALHALLA='https://valhalla.busboy.app';
+function decodePolyline(encoded){
+  const inv=1.0/1e6, out=[]; let prev=[0,0], i=0;
+  while(i<encoded.length){
+    for(let axis=0;axis<2;axis++){
+      let shift=0,result=0,byte;
+      do{ byte=encoded.charCodeAt(i++)-63; result|=(byte&0x1f)<<shift; shift+=5; }while(byte>=0x20);
+      if(result&1) result=~result;
+      result>>=1; prev[axis]+=result;
+    }
+    out.push([prev[0]*inv, prev[1]*inv]);
+  }
+  return out;
+}
 function d2(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
 async function ver(){
   document.getElementById('map').style.display='block';
@@ -249,20 +263,39 @@ async function finViaje(){
   enviarNtfyViaje(`🏁 Viaje de inspección ${sentido.toUpperCase()} completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
   document.getElementById('fin-lista').onclick=()=>{ location.href=location.pathname; };
   const br=document.getElementById('fin-retorno');
-  if(br) br.onclick=()=>{
-    sentido='retorno';
-    coordsRuta.reverse();
-    paradasRuta.forEach(p=>{
-      let best=0,bd=Infinity;
-      coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
-      p.idx=best; p.hecho=false;
-    });
-    paradasRuta.sort((a,b)=>a.idx-b.idx);
-    f.style.display='none';
-    busIdx=0; reportes=[];
-    document.getElementById('btn-alto').style.display='block';
-    mapRef.setView(coordsRuta[0],13);
-    pasoBus();
+  if(br) br.onclick=async ()=>{
+    br.disabled=true; br.textContent='🧮 Calculando el retorno real…';
+    try{
+      // paradas en orden INVERSO → Valhalla calcula el trazado real de vuelta (respeta sentidos de las vías)
+      const locs=[...paradasRuta].sort((a,b)=>a.idx-b.idx).reverse().map(p=>({lat:p.la,lon:p.lo}));
+      const resp=await fetch(VALHALLA+'/route',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({locations:locs,costing:'auto',directions_options:{units:'kilometers'}})}).then(r=>r.json());
+      if(!resp.trip) throw new Error(resp.error||'Valhalla no respondió');
+      let nuevas=[];
+      for(const leg of resp.trip.legs){
+        const dec=decodePolyline(leg.shape);
+        if(nuevas.length) dec.shift();
+        nuevas=nuevas.concat(dec);
+      }
+      sentido='retorno';
+      coordsRuta=nuevas;
+      if(capaRetorno) mapRef.removeLayer(capaRetorno);
+      capaRetorno=L.polyline(coordsRuta,{color:'#ff8a00',weight:5,opacity:.9}).addTo(mapRef);  // retorno en NARANJA
+      paradasRuta.forEach(p=>{
+        let best=0,bd=Infinity;
+        coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
+        p.idx=best; p.hecho=false;
+      });
+      paradasRuta.sort((a,b)=>a.idx-b.idx);
+      f.style.display='none';
+      busIdx=0; reportes=[];
+      document.getElementById('btn-alto').style.display='block';
+      document.getElementById('sub').textContent += ' · 🔁 RETORNO (trazado naranja recalculado)';
+      mapRef.setView(coordsRuta[0],13);
+      pasoBus();
+    }catch(e){
+      br.textContent='⚠️ No se pudo calcular el retorno';
+    }
   };
   document.getElementById('fin-otra').onclick=async ()=>{
     try{
