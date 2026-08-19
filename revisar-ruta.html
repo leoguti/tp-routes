@@ -94,19 +94,32 @@ const REGION='boyaca';
 async function lista(){
   document.getElementById('lista').style.display='block';
   document.getElementById('sub').textContent='Elige una ruta trazada para revisarla';
-  const [rs, shapes] = await Promise.all([
-    fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
-    fetch(`/api/route-shapes?region=${REGION}`).then(r=>r.json()).catch(()=>({shapes:[]}))
-  ]);
-  const conShape = new Set((shapes.shapes||shapes||[]).map(s=>s.route_id));
+  const rs = await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
+  const todas = (rs.routes||[]).filter(r=>r.has_shape);
   const box=document.getElementById('lista');
-  (rs.routes||[]).filter(r=>conShape.has(r.id)).forEach(r=>{
-    const a=document.createElement('a');
-    a.className='rt'; a.href='?id='+r.id;
-    a.textContent = `Ruta ${r.id} · ${r.origen_text} → ${r.destino_text}  (${r.operator_nombre||''})`;
-    box.appendChild(a);
-  });
-  if(!box.children.length) box.textContent='No hay rutas trazadas aún.';
+  const POR_PAG = 50;
+  let pag = Math.max(1, parseInt(params.get('pag')||'1'));
+  const maxPag = Math.max(1, Math.ceil(todas.length/POR_PAG));
+  if(pag>maxPag) pag=maxPag;
+  function pintarLista(){
+    box.innerHTML='';
+    const nav=document.createElement('div');
+    nav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700';
+    nav.innerHTML=`<a style="cursor:pointer;color:#4dd4ff" id="pg-prev">◀ anterior</a>
+      <span>página ${pag}/${maxPag} · ${todas.length} rutas</span>
+      <a style="cursor:pointer;color:#4dd4ff" id="pg-next">siguiente ▶</a>`;
+    box.appendChild(nav);
+    todas.slice((pag-1)*POR_PAG, pag*POR_PAG).forEach(r=>{
+      const a=document.createElement('a');
+      a.className='rt'; a.href='?id='+r.id;
+      a.textContent = `Ruta ${r.id} · ${r.origen_text} → ${r.destino_text}  (${r.operator_nombre||''})`;
+      box.appendChild(a);
+    });
+    box.querySelector('#pg-prev').onclick=()=>{ if(pag>1){pag--; pintarLista(); window.scrollTo(0,0);} };
+    box.querySelector('#pg-next').onclick=()=>{ if(pag<maxPag){pag++; pintarLista(); window.scrollTo(0,0);} };
+  }
+  if(!todas.length) box.textContent='No hay rutas trazadas aún.';
+  else pintarLista();
 }
 
 let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[], sentido='ida', capaRetorno=null;
@@ -299,8 +312,8 @@ async function finViaje(){
   };
   document.getElementById('fin-otra').onclick=async ()=>{
     try{
-      const shapes=await fetch(`/api/route-shapes?region=${REGION}`).then(r=>r.json());
-      const ids=[...new Set((shapes.shapes||[]).map(s=>s.route_id))].filter(x=>String(x)!==String(id));
+      const rs=await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
+      const ids=(rs.routes||[]).filter(r=>r.has_shape && String(r.id)!==String(id)).map(r=>r.id);
       if(ids.length){ location.href='?id='+ids[Math.floor(Math.random()*ids.length)]; }
       else location.href=location.pathname;
     }catch(e){ location.href=location.pathname; }
