@@ -16,6 +16,15 @@
   .veredicto{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--pan);padding:10px 16px;border-radius:24px;font-size:.9rem;z-index:1000;box-shadow:0 4px 16px #0008}
   .veredicto b{color:var(--acc)}
   .lbl-parada{background:#fff;color:#111;font-weight:800;font-size:12px;border:none;box-shadow:0 1px 4px #0006;padding:2px 6px}
+  #btn-viaje{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1200;background:linear-gradient(90deg,#38d996,#4dd4ff);color:#012;border:none;border-radius:26px;padding:14px 26px;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px #0009;display:none}
+  #inspec{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:var(--pan);border-radius:16px;padding:16px 18px;width:340px;max-width:92vw;box-shadow:0 8px 30px #000b;display:none;text-align:center}
+  #inspec .pn{font-size:1.25rem;font-weight:800;margin:4px 0 10px}
+  #inspec .pregunta{color:#9aa0c8;font-size:.9rem;margin-bottom:12px}
+  #inspec .botones{display:flex;gap:10px}
+  #inspec .botones button{flex:1;border:none;border-radius:12px;padding:12px;font-weight:800;font-size:.95rem;cursor:pointer}
+  .b-ok{background:#38d996;color:#012} .b-mal{background:#ff5d6c;color:#fff}
+  #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
+  .bus-icon{font-size:26px;filter:drop-shadow(0 2px 3px #0009)}
   #chat-btn{position:fixed;right:16px;bottom:16px;z-index:1200;background:#4dd4ff;color:#012;border:none;border-radius:50%;width:58px;height:58px;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 16px #0008}
   #chat-panel{position:fixed;right:16px;bottom:84px;z-index:1200;width:320px;max-width:92vw;height:420px;background:var(--pan);border-radius:14px;box-shadow:0 8px 30px #000a;display:none;flex-direction:column;overflow:hidden}
   #chat-head{background:#23264a;padding:10px 14px;font-weight:700;font-size:.95rem}
@@ -36,6 +45,17 @@
 <div id="lista" style="display:none"></div>
 <div id="map" style="display:none"></div>
 <div class="veredicto" id="ver" style="display:none">Repórtale a Claude en tu chat CON EL NÚMERO: <b>✅ ruta N bien</b> o <b>🚨 ruta N hace algo raro en…</b></div>
+<button id="btn-viaje">🚌 ¡Iniciar viaje de inspección!</button>
+<div id="inspec">
+  <div>🚏 Llegamos a la parada</div>
+  <div class="pn" id="inspec-nombre">…</div>
+  <div class="pregunta">Mira el mapa: ¿la parada está en el punto correcto de la ruta?</div>
+  <div class="botones">
+    <button class="b-ok" id="b-ok">✅ Está bien</button>
+    <button class="b-mal" id="b-mal">🚨 Está mal</button>
+  </div>
+</div>
+<div id="fin"></div>
 <button id="chat-btn" title="Chatea con Claude">💬</button>
 <div id="chat-panel">
   <div id="chat-head">💬 Tutor Claude</div>
@@ -72,6 +92,8 @@ async function lista(){
   if(!box.children.length) box.textContent='No hay rutas trazadas aún.';
 }
 
+let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[];
+function d2(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
 async function ver(){
   document.getElementById('map').style.display='block';
   document.getElementById('ver').style.display='block';
@@ -81,12 +103,13 @@ async function ver(){
   ]);
   document.querySelector('#top h1').textContent = `🕵️ Ruta ${id}`;
   document.getElementById('sub').textContent = `${ruta.origen_text} → ${ruta.destino_text} (${ruta.operator_nombre||''})`;
-  const map=L.map('map');
+  const map=L.map('map'); mapRef=map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM',maxZoom:19}).addTo(map);
   const gj = shape.geojson || (shape.shapes&&shape.shapes[0]&&shape.shapes[0].geojson);
   if(gj){
     const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
     map.fitBounds(capa.getBounds(),{padding:[30,30]});
+    coordsRuta = gj.geometry.coordinates.map(c=>[c[1],c[0]]);
   } else {
     document.getElementById('sub').textContent += ' · ⚠️ sin trazado';
   }
@@ -103,6 +126,14 @@ async function ver(){
       .bindTooltip(`${i+1}. ${p.n}`,{permanent:true,direction:'top',className:'lbl-parada'}).addTo(map);
   });
   if(!seq.length) document.getElementById('sub').textContent += ' · (paradas sin ubicar)';
+  if(coordsRuta.length && seq.length){
+    paradasRuta = seq.map(p=>{
+      let best=0,bd=Infinity;
+      coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
+      return {...p, idx:best, hecho:false};
+    }).sort((a,b)=>a.idx-b.idx);
+    document.getElementById('btn-viaje').style.display='block';
+  }
 }
 
 // ---- Chat integrado (mismos canales ntfy de siempre) ----
@@ -142,12 +173,15 @@ function conectarChat(){
   fuente=new EventSource(base+'/sse');
   fuente.onmessage=ev=>{ try{ pintarChat(JSON.parse(ev.data),false); }catch(e){} };
 }
-function elegirNombre(){
+let alElegir=null;
+function elegirNombre(cb){
+  alElegir = cb || null;
+  panel.style.display='flex';
   nombres.style.display='grid'; msgs.style.display='none'; foot.style.display='none';
   nombres.innerHTML='';
   Object.keys(CANALES).forEach(n=>{
     const b=document.createElement('button'); b.className='cn'; b.textContent=n;
-    b.onclick=()=>{ miNombre=n; localStorage.setItem('tp_chat_nombre',n); conectarChat(); };
+    b.onclick=()=>{ miNombre=n; localStorage.setItem('tp_chat_nombre',n); conectarChat(); if(alElegir){const f=alElegir; alElegir=null; f();} };
     nombres.appendChild(b);
   });
 }
@@ -164,6 +198,52 @@ document.getElementById('chat-btn').onclick=()=>{
 };
 document.getElementById('chat-send').onclick=enviarChat;
 entrada.addEventListener('keydown',e=>{ if(e.key==='Enter')enviarChat(); });
+
+// ---- Viaje de inspección (bus animado) ----
+function pasoBus(){
+  if(busIdx>=coordsRuta.length){ finViaje(); return; }
+  bus.setLatLng(coordsRuta[busIdx]);
+  mapRef.panTo(coordsRuta[busIdx],{animate:false});
+  const p=paradasRuta.find(q=>!q.hecho && busIdx>=q.idx);
+  if(p){ paradaActual=p; mapRef.setView([p.la,p.lo],14);
+    document.getElementById('inspec-nombre').textContent=p.n;
+    document.getElementById('inspec').style.display='block'; return; }
+  busIdx+=2;
+  setTimeout(pasoBus,30);
+}
+function responder(ok){
+  const p=paradaActual; p.hecho=true;
+  document.getElementById('inspec').style.display='none';
+  reportes.push({n:p.n,ok});
+  enviarNtfyViaje(ok ? `✅ Parada "${p.n}" está BIEN ubicada (viaje de inspección)` : `🚨 Parada "${p.n}" está MAL ubicada (viaje de inspección)`);
+  busIdx+=2; setTimeout(pasoBus,400);
+}
+function finViaje(){
+  const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
+  const f=document.getElementById('fin');
+  f.innerHTML=`🏁 ¡Viaje completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span>`;
+  f.style.display='block';
+  enviarNtfyViaje(`🏁 Viaje de inspección completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
+}
+async function enviarNtfyViaje(texto){
+  if(!miNombre)return;
+  const cuerpo = id ? `[Ruta ${id}] ${texto}` : texto;
+  try{ await fetch('https://ntfy.envs.net/'+CANALES[miNombre],{method:'POST',headers:{'Title':TITULOS[miNombre]},body:cuerpo}); }catch(e){}
+}
+document.getElementById('btn-viaje').onclick=()=>{
+  const arrancar=()=>{
+    document.getElementById('btn-viaje').style.display='none';
+    document.getElementById('fin').style.display='none';
+    if(!bus) bus=L.marker(coordsRuta[0],{icon:L.divIcon({className:'bus-icon',html:'🚌',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(mapRef);
+    busIdx=0; reportes=[]; paradasRuta.forEach(p=>p.hecho=false);
+    mapRef.setView(coordsRuta[0],13);
+    pasoBus();
+  };
+  if(!miNombre){ elegirNombre(()=>{ panel.style.display='none'; arrancar(); }); }
+  else arrancar();
+};
+document.getElementById('b-ok').onclick=()=>responder(true);
+document.getElementById('b-mal').onclick=()=>responder(false);
 
 if(id) ver(); else lista();
 })();
