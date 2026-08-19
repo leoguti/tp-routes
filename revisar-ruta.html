@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🕵️ Revisar ruta</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  :root{--bg:#0f1020;--pan:#1a1c34;--acc:#4dd4ff;--txt:#eef}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt)}
+  #top{padding:10px 14px;text-align:center}
+  #top h1{margin:0;font-size:1.15rem} #top .sub{color:#9aa0c8;font-size:.85rem}
+  #map{height:calc(100vh - 120px)}
+  #lista{max-width:760px;margin:10px auto;padding:0 12px}
+  .rt{display:block;background:var(--pan);border-radius:10px;padding:12px 14px;margin-bottom:8px;color:var(--txt);text-decoration:none;font-weight:600}
+  .rt:hover{outline:2px solid var(--acc)}
+  .veredicto{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--pan);padding:10px 16px;border-radius:24px;font-size:.9rem;z-index:1000;box-shadow:0 4px 16px #0008}
+  .veredicto b{color:var(--acc)}
+</style>
+</head>
+<body>
+<div id="top"><h1>🕵️ Revisar ruta</h1><div class="sub" id="sub">¿El camino tiene sentido? ¿Hace algo raro?</div></div>
+<div id="lista" style="display:none"></div>
+<div id="map" style="display:none"></div>
+<div class="veredicto" id="ver" style="display:none">Mira el trazado y repórtale a Claude en tu chat: <b>✅ bien</b> o <b>🚨 hace algo raro en…</b></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+(function(){
+const params = new URLSearchParams(location.search);
+const id = params.get('id');
+const REGION='boyaca';
+
+async function lista(){
+  document.getElementById('lista').style.display='block';
+  document.getElementById('sub').textContent='Elige una ruta trazada para revisarla';
+  const [rs, shapes] = await Promise.all([
+    fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
+    fetch(`/api/route-shapes?region=${REGION}`).then(r=>r.json()).catch(()=>({shapes:[]}))
+  ]);
+  const conShape = new Set((shapes.shapes||shapes||[]).map(s=>s.route_id));
+  const box=document.getElementById('lista');
+  (rs.routes||[]).filter(r=>conShape.has(r.id)).forEach(r=>{
+    const a=document.createElement('a');
+    a.className='rt'; a.href='?id='+r.id;
+    a.textContent = `🚌 ${r.origen_text} → ${r.destino_text}  (${r.operator_nombre||''})`;
+    box.appendChild(a);
+  });
+  if(!box.children.length) box.textContent='No hay rutas trazadas aún.';
+}
+
+async function ver(){
+  document.getElementById('map').style.display='block';
+  document.getElementById('ver').style.display='block';
+  const [shape, ruta] = await Promise.all([
+    fetch(`/api/route-shapes?route_id=${id}`).then(r=>r.json()),
+    fetch(`/api/routes?id=${id}`).then(r=>r.json())
+  ]);
+  document.getElementById('sub').textContent = `${ruta.origen_text} → ${ruta.destino_text} (${ruta.operator_nombre||''})`;
+  const map=L.map('map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM',maxZoom:19}).addTo(map);
+  const gj = shape.geojson || (shape.shapes&&shape.shapes[0]&&shape.shapes[0].geojson);
+  if(gj){
+    const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
+    map.fitBounds(capa.getBounds(),{padding:[30,30]});
+  } else {
+    document.getElementById('sub').textContent += ' · ⚠️ sin trazado';
+  }
+  // paradas: origen, destino (y waypoints si tienen coords vía places)
+  const pts=[];
+  if(ruta.origen_place_lat) pts.push({n:ruta.origen_text,la:ruta.origen_place_lat,lo:ruta.origen_place_lon});
+  if(ruta.destino_place_lat) pts.push({n:ruta.destino_text,la:ruta.destino_place_lat,lo:ruta.destino_place_lon});
+  pts.forEach(p=>{
+    L.circleMarker([p.la,p.lo],{radius:9,color:'#fff',weight:2,fillColor:'#ffd43b',fillOpacity:1})
+      .bindTooltip(p.n,{permanent:true,direction:'top'}).addTo(map);
+  });
+}
+
+if(id) ver(); else lista();
+})();
+</script>
+</body>
+</html>
