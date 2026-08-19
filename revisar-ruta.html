@@ -25,6 +25,14 @@
   .b-ok{background:#38d996;color:#012} .b-mal{background:#ff5d6c;color:#fff}
   #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
   .bus-icon{font-size:26px;filter:drop-shadow(0 2px 3px #0009)}
+  #btn-alto{position:fixed;left:16px;bottom:16px;z-index:1250;background:#ff5d6c;color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
+  #alto-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1350;background:var(--pan);border-radius:16px;padding:16px;width:360px;max-width:94vw;box-shadow:0 8px 30px #000b;display:none}
+  #alto-panel h3{margin:0 0 4px;font-size:1rem;color:#ff5d6c}
+  #alto-panel .pos{color:#9aa0c8;font-size:.78rem;margin-bottom:8px}
+  #alto-panel textarea{width:100%;height:64px;border-radius:10px;border:1px solid #334;background:#0d0e1c;color:var(--txt);padding:8px;font-family:inherit;font-size:.9rem;resize:none}
+  #alto-panel .fila{display:flex;gap:8px;margin-top:8px}
+  #alto-panel .fila button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer}
+  .b-enviar{background:#ff5d6c;color:#fff} .b-seguir{background:#23264a;color:var(--txt)}
   #chat-btn{position:fixed;right:16px;bottom:16px;z-index:1200;background:#4dd4ff;color:#012;border:none;border-radius:50%;width:58px;height:58px;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 16px #0008}
   #chat-panel{position:fixed;right:16px;bottom:84px;z-index:1200;width:320px;max-width:92vw;height:420px;background:var(--pan);border-radius:14px;box-shadow:0 8px 30px #000a;display:none;flex-direction:column;overflow:hidden}
   #chat-head{background:#23264a;padding:10px 14px;font-weight:700;font-size:.95rem}
@@ -55,6 +63,16 @@
   </div>
 </div>
 <div id="fin"></div>
+<button id="btn-alto">🚨 ¡Alto! Aquí hay un problema</button>
+<div id="alto-panel">
+  <h3>🚨 Problema en el trazado</h3>
+  <div class="pos" id="alto-pos">posición: …</div>
+  <textarea id="alto-txt" placeholder="¿Qué ves mal aquí? (ej: se mete por una calle que no es, da una vuelta rara…)"></textarea>
+  <div class="fila">
+    <button class="b-enviar" id="alto-enviar">📨 Reportar</button>
+    <button class="b-seguir" id="alto-seguir">▶️ Seguir sin reportar</button>
+  </div>
+</div>
 <button id="chat-btn" title="Chatea con Claude">💬</button>
 <div id="chat-panel">
   <div id="chat-head">💬 Tutor Claude</div>
@@ -199,7 +217,9 @@ document.getElementById('chat-send').onclick=enviarChat;
 entrada.addEventListener('keydown',e=>{ if(e.key==='Enter')enviarChat(); });
 
 // ---- Viaje de inspección (bus animado) ----
+let enAlto=false;
 function pasoBus(){
+  if(enAlto) return;
   if(busIdx>=coordsRuta.length){ finViaje(); return; }
   bus.setLatLng(coordsRuta[busIdx]);
   mapRef.panTo(coordsRuta[busIdx],{animate:false});
@@ -218,6 +238,7 @@ function responder(ok){
   busIdx+=2; setTimeout(pasoBus,400);
 }
 function finViaje(){
+  document.getElementById('btn-alto').style.display='none';
   const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
   const f=document.getElementById('fin');
   f.innerHTML=`🏁 ¡Viaje completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span>`;
@@ -235,6 +256,7 @@ document.getElementById('btn-viaje').onclick=()=>{
     document.getElementById('fin').style.display='none';
     if(!bus) bus=L.marker(coordsRuta[0],{icon:L.divIcon({className:'bus-icon',html:'🚌',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(mapRef);
     busIdx=0; reportes=[]; paradasRuta.forEach(p=>p.hecho=false);
+    document.getElementById('btn-alto').style.display='block';
     mapRef.setView(coordsRuta[0],13);
     pasoBus();
   };
@@ -243,6 +265,27 @@ document.getElementById('btn-viaje').onclick=()=>{
 };
 document.getElementById('b-ok').onclick=()=>responder(true);
 document.getElementById('b-mal').onclick=()=>responder(false);
+
+document.getElementById('btn-alto').onclick=()=>{
+  enAlto=true;
+  const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
+  document.getElementById('alto-pos').textContent=`posición capturada: ${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}`;
+  document.getElementById('alto-txt').value='';
+  document.getElementById('alto-panel').style.display='block';
+  document.getElementById('inspec').style.display='none';
+};
+document.getElementById('alto-enviar').onclick=()=>{
+  const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
+  const txt=document.getElementById('alto-txt').value.trim()||'(sin descripción)';
+  enviarNtfyViaje(`🚨 PROBLEMA en el trazado en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${txt}`);
+  reportes.push({n:'problema trazado',ok:false});
+  document.getElementById('alto-panel').style.display='none';
+  enAlto=false; setTimeout(pasoBus,300);
+};
+document.getElementById('alto-seguir').onclick=()=>{
+  document.getElementById('alto-panel').style.display='none';
+  enAlto=false; setTimeout(pasoBus,300);
+};
 
 if(id) ver(); else lista();
 })();
