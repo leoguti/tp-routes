@@ -125,6 +125,14 @@
     <button class="b-ok" data-v="arreglada">✅ La ruta está BIEN</button>
     <button data-v="problemas" style="background:var(--bad);color:#fff;text-align:center">🚨 Tiene PROBLEMAS</button>
   </div>
+  <div id="veredicto-detalle" style="display:none">
+    <div style="color:#ffd43b;font-weight:700;font-size:.85rem;margin-top:10px">¿Cuál es el problema? Cuenta qué pasó (obligatorio):</div>
+    <textarea id="veredicto-txt" placeholder="Ej: el trazado se mete por una vereda; la parada de X está en otro pueblo…"></textarea>
+    <div id="veredicto-error" style="color:var(--bad);font-size:.8rem;display:none">✋ Escribe el problema para poder reportar</div>
+    <div class="opciones" style="margin-top:8px">
+      <button class="b-ok" id="veredicto-enviar" style="background:var(--bad);color:#fff">📨 Reportar veredicto</button>
+    </div>
+  </div>
 </div>
 
 <div id="fin"></div>
@@ -493,16 +501,27 @@ function pedirVeredicto(){
     : 'No reportaste problemas — sugerencia: ✅ Está bien';
   document.getElementById('veredicto-panel').style.display='block';
 }
-document.querySelectorAll('#veredicto-panel .opciones button').forEach(b=>{
+function emitirVeredicto(v, comentario){
+  document.getElementById('veredicto-panel').style.display='none';
+  guardarInspeccion({tipo:'veredicto',veredicto:v,comentario:comentario||null});
+  const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
+  enviarNtfy(`⚖️ VEREDICTO ${sentido.toUpperCase()}: ${v==='arreglada'?'✅ RUTA BIEN':'🚨 CON PROBLEMAS'}${comentario?' — '+comentario:''} · ${reportes.length} revisiones (✅${ok} 🚨${mal})`);
+  finViaje(v);
+}
+document.querySelectorAll('#veredicto-panel > .opciones button').forEach(b=>{
   b.onclick=()=>{
     const v=b.dataset.v;
-    document.getElementById('veredicto-panel').style.display='none';
-    guardarInspeccion({tipo:'veredicto',veredicto:v});
-    const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
-    enviarNtfy(`⚖️ VEREDICTO ${sentido.toUpperCase()}: ${v==='arreglada'?'✅ RUTA BIEN':'🚨 CON PROBLEMAS'} · ${reportes.length} revisiones (✅${ok} 🚨${mal})`);
-    finViaje(v);
+    if(v==='arreglada'){ emitirVeredicto('arreglada', null); return; }
+    // problemas: comentario OBLIGATORIO
+    document.getElementById('veredicto-detalle').style.display='block';
+    document.getElementById('veredicto-txt').focus();
   };
 });
+document.getElementById('veredicto-enviar').onclick=()=>{
+  const txt=document.getElementById('veredicto-txt').value.trim();
+  if(!txt){ document.getElementById('veredicto-error').style.display='block'; return; }
+  emitirVeredicto('problemas', txt);
+};
 
 function finViaje(veredicto){
   const f=document.getElementById('fin');
