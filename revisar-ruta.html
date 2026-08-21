@@ -215,7 +215,7 @@ entrada.addEventListener('keydown',e=>{ if(e.key==='Enter')enviarChat(); });
 // ---------- registro en BD ----------
 let sentido='ida';
 async function guardarInspeccion(datos){
-  try{ await fetch('/api/inspecciones',{method:'POST',headers:{'content-type':'application/json'},
+  try{ await fetch('/api/route-shapes?insp=1',{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({route_id:parseInt(id),inspector:miNombre,sentido,...datos})}); }catch(e){}
 }
 
@@ -238,7 +238,7 @@ async function lista(){
   document.getElementById('sub').textContent='Elige una ruta para inspeccionarla en bus 🚌';
   const [rs, est] = await Promise.all([
     fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
-    fetch(`/api/inspecciones?estados=1`).then(r=>r.json()).catch(()=>({veredictos:[]}))
+    fetch(`/api/route-shapes?insp=1&estados=1`).then(r=>r.json()).catch(()=>({veredictos:[]}))
   ]);
   const V = est.veredictos||[];
   const conShape = (rs.routes||[]).filter(r=>r.has_shape);
@@ -321,7 +321,7 @@ async function ver(){
     fetch(`/api/route-shapes?route_id=${id}`).then(r=>r.json()),
     fetch(`/api/routes?id=${id}`).then(r=>r.json()),
     fetch(`/api/places?region=${REGION}`).then(r=>r.json()).catch(()=>({places:[]})),
-    fetch(`/api/inspecciones?estados=1`).then(r=>r.json()).catch(()=>({veredictos:[]}))
+    fetch(`/api/route-shapes?insp=1&estados=1`).then(r=>r.json()).catch(()=>({veredictos:[]}))
   ]);
   veredictosGlobal = est.veredictos||[];
   const par = (ruta.pair||[]).find(p=>p.id!==ruta.id);

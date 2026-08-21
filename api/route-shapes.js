@@ -15,6 +15,7 @@ const { neon } = require('@neondatabase/serverless');
 
 module.exports = async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
+    if (req.query && req.query.insp) return handleInspecciones(sql, req, res);
     if (req.method === 'GET')    return handleGet(sql, req, res);
     if (req.method === 'POST')   return handlePost(sql, req, res);
     if (req.method === 'DELETE') return handleDelete(sql, req, res);
@@ -91,4 +92,67 @@ async function handleDelete(sql, req, res) {
     } catch (e) {
         return res.status(500).json({ error: e.message });
     }
+}
+
+// ---- Inspecciones del "Viaje de Inspección" (?insp=1) ----
+// Fusionadas aquí por el límite de 12 funciones de Vercel.
+async function ensureInspTable(sql) {
+    await sql`
+        CREATE TABLE IF NOT EXISTS route_inspections (
+            id          SERIAL PRIMARY KEY,
+            route_id    INTEGER NOT NULL,
+            inspector   TEXT,
+            sentido     TEXT,
+            tipo        TEXT,
+            parada      TEXT,
+            veredicto   TEXT,
+            comentario  TEXT,
+            lat         DOUBLE PRECISION,
+            lon         DOUBLE PRECISION,
+            lat_ok      DOUBLE PRECISION,
+            lon_ok      DOUBLE PRECISION,
+            creada_en   TIMESTAMPTZ DEFAULT NOW()
+        )
+    `;
+}
+
+async function handleInspecciones(sql, req, res) {
+    await ensureInspTable(sql);
+    if (req.method === 'GET') {
+        const { resumen, estados, route_id } = req.query;
+        if (resumen) {
+            const rows = await sql`SELECT DISTINCT route_id FROM route_inspections`;
+            return res.json({ route_ids: rows.map(r => r.route_id) });
+        }
+        if (estados) {
+            const rows = await sql`
+                SELECT route_id, sentido, inspector, veredicto
+                FROM route_inspections WHERE tipo = 'veredicto'`;
+            return res.json({ veredictos: rows });
+        }
+        if (route_id) {
+            const rows = await sql`
+                SELECT * FROM route_inspections WHERE route_id = ${route_id} ORDER BY creada_en`;
+            return res.json({ inspecciones: rows });
+        }
+        const rows = await sql`SELECT * FROM route_inspections ORDER BY creada_en DESC LIMIT 200`;
+        return res.json({ inspecciones: rows });
+    }
+    if (req.method === 'POST') {
+        const { route_id, inspector, sentido, tipo, parada, veredicto, comentario, lat, lon, lat_ok, lon_ok } = req.body || {};
+        if (!route_id) return res.status(400).json({ error: 'Falta route_id' });
+        try {
+            const [row] = await sql`
+                INSERT INTO route_inspections
+                    (route_id, inspector, sentido, tipo, parada, veredicto, comentario, lat, lon, lat_ok, lon_ok)
+                VALUES (${route_id}, ${inspector || null}, ${sentido || null}, ${tipo || null},
+                        ${parada || null}, ${veredicto || null}, ${comentario || null},
+                        ${lat ?? null}, ${lon ?? null}, ${lat_ok ?? null}, ${lon_ok ?? null})
+                RETURNING id`;
+            return res.json({ ok: true, id: row.id });
+        } catch (e) {
+            return res.status(500).json({ error: e.message });
+        }
+    }
+    return res.status(405).json({ error: 'Método no permitido' });
 }
