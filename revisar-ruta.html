@@ -79,6 +79,7 @@
     <button data-v="corrida">📍 Está corrida — el punto real queda lejos</button>
     <button data-v="equivocada">❌ Está en el lugar equivocado</button>
     <button data-v="sobra">🚫 El bus no para aquí — sobra</button>
+    <button data-v="duda" style="background:#5a4d1a;color:#ffd43b">🤔 No estoy seguro — que alguien revise</button>
     <button data-v="otro">✍️ Otro problema</button>
   </div>
   <textarea id="inspec-txt" placeholder="Cuéntame qué pasa…" style="display:none"></textarea>
@@ -124,6 +125,7 @@
   <div class="opciones">
     <button class="b-ok" data-v="arreglada">✅ La ruta está BIEN</button>
     <button data-v="problemas" style="background:var(--bad);color:#fff;text-align:center">🚨 Tiene PROBLEMAS</button>
+    <button data-v="duda" style="background:#5a4d1a;color:#ffd43b;text-align:center">🤔 No estoy seguro — que alguien más revise</button>
   </div>
   <div id="veredicto-detalle" style="display:none">
     <div style="color:#ffd43b;font-weight:700;font-size:.85rem;margin-top:10px">¿Cuál es el problema? Cuenta qué pasó (obligatorio):</div>
@@ -238,10 +240,11 @@ function calcEstado(veredictos, rid, sent){
   const insps = new Set(vs.filter(v=>v.veredicto==='arreglada').map(v=>v.inspector));
   if(insps.size>=2) return 'arreglada';
   if(insps.size===1) return 'media';
+  if(vs.some(v=>v.veredicto==='duda')) return 'duda';
   return 'nueva';
 }
 function badgeSentido(st){
-  return st==='arreglada' ? '✅' : st==='media' ? '⏳1/2' : st==='problemas' ? '🚨' : '—';
+  return st==='arreglada' ? '✅' : st==='media' ? '⏳1/2' : st==='problemas' ? '🚨' : st==='duda' ? '🤔' : '—';
 }
 
 // ---------- lista en 3 fases ----------
@@ -414,7 +417,7 @@ document.getElementById('pin-ok').onclick=()=>cerrarPin(true);
 document.getElementById('pin-saltar').onclick=()=>cerrarPin(false);
 
 // ---------- menú B: parada ----------
-const TXT_PARADA={ok:'BIEN ubicada',corrida:'CORRIDA (el punto real queda lejos)',equivocada:'en el LUGAR EQUIVOCADO',sobra:'SOBRA (el bus no para aquí)',otro:'con problema'};
+const TXT_PARADA={ok:'BIEN ubicada',corrida:'CORRIDA (el punto real queda lejos)',equivocada:'en el LUGAR EQUIVOCADO',sobra:'SOBRA (el bus no para aquí)',duda:'con DUDA 🤔 — que alguien más la revise',otro:'con problema'};
 function resetPanelParada(){
   document.getElementById('inspec-txt').style.display='none';
   document.getElementById('inspec-txt-btns').style.display='none';
@@ -439,7 +442,7 @@ function cerrarParada(v, comentario){
   document.getElementById('inspec').style.display='none';
   const fin=(pin)=>{
     p.hecho=true;
-    reportes.push({n:p.n, ok:v==='ok'});
+    reportes.push({n:p.n, ok:v==='ok'||v==='duda', duda:v==='duda'});
     guardarInspeccion({tipo:'parada',parada:p.n,veredicto:v,comentario:comentario||null,lat:p.la,lon:p.lo,...(pin||{})});
     enviarNtfy(`${v==='ok'?'✅':'🚨'} Parada "${p.n}" ${TXT_PARADA[v]}${comentario?' — '+comentario:''}${pin?' · punto correcto señalado: '+pin.lat_ok.toFixed(5)+','+pin.lon_ok.toFixed(5):''} (inspección, ${sentido.toUpperCase()})`);
     busIdx+=2; seguir(400);
@@ -496,8 +499,11 @@ function pedirVeredicto(){
   document.getElementById('btn-turbo').style.display='none';
   document.getElementById('btn-atras').style.display='none';
   const mal=reportes.filter(r=>!r.ok).length;
-  document.getElementById('veredicto-sug').textContent = mal
-    ? `Reportaste ${mal} problema(s) — sugerencia: 🚨 Con problemas`
+  const dudas=reportes.filter(r=>r.duda).length;
+  const malReal=reportes.filter(r=>!r.ok).length;
+  document.getElementById('veredicto-sug').textContent = malReal
+    ? `Reportaste ${malReal} problema(s) — sugerencia: 🚨 Con problemas`
+    : dudas ? `Tuviste ${dudas} duda(s) — sugerencia: 🤔 No estoy seguro`
     : 'No reportaste problemas — sugerencia: ✅ Está bien';
   document.getElementById('veredicto-panel').style.display='block';
 }
@@ -505,13 +511,14 @@ function emitirVeredicto(v, comentario){
   document.getElementById('veredicto-panel').style.display='none';
   guardarInspeccion({tipo:'veredicto',veredicto:v,comentario:comentario||null});
   const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
-  enviarNtfy(`⚖️ VEREDICTO ${sentido.toUpperCase()}: ${v==='arreglada'?'✅ RUTA BIEN':'🚨 CON PROBLEMAS'}${comentario?' — '+comentario:''} · ${reportes.length} revisiones (✅${ok} 🚨${mal})`);
+  enviarNtfy(`⚖️ VEREDICTO ${sentido.toUpperCase()}: ${v==='arreglada'?'✅ RUTA BIEN':v==='duda'?'🤔 NO ESTOY SEGURO — pide otra revisión':'🚨 CON PROBLEMAS'}${comentario?' — '+comentario:''} · ${reportes.length} revisiones (✅${ok} 🚨${mal})`);
   finViaje(v);
 }
 document.querySelectorAll('#veredicto-panel > .opciones button').forEach(b=>{
   b.onclick=()=>{
     const v=b.dataset.v;
     if(v==='arreglada'){ emitirVeredicto('arreglada', null); return; }
+    if(v==='duda'){ emitirVeredicto('duda', null); return; }
     // problemas: comentario OBLIGATORIO
     document.getElementById('veredicto-detalle').style.display='block';
     document.getElementById('veredicto-txt').focus();
@@ -527,7 +534,7 @@ function finViaje(veredicto){
   const f=document.getElementById('fin');
   const puedeRetorno = sentido==='ida';
   f.innerHTML=`🏁 ¡Viaje ${sentido.toUpperCase()} completado!<br>
-    Veredicto: ${veredicto==='arreglada'?'✅ Ruta bien':'🚨 Con problemas'}<br>
+    Veredicto: ${veredicto==='arreglada'?'✅ Ruta bien':veredicto==='duda'?'🤔 En duda — otra persona la revisará':'🚨 Con problemas'}<br>
     <span style="font-size:.75rem">Tus puntos se confirman cuando otro inspector coincida 🤝</span><br>
     ${puedeRetorno?'<button id="fin-retorno" style="background:#38d996;color:#012">🔁 ¡Hacer el RETORNO!</button> ':''}
     <button id="fin-otra">🎲 Otra ruta</button>
