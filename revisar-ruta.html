@@ -94,8 +94,19 @@ const REGION='boyaca';
 async function lista(){
   document.getElementById('lista').style.display='block';
   document.getElementById('sub').textContent='Elige una ruta trazada para revisarla';
-  const rs = await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
-  const todas = (rs.routes||[]).filter(r=>r.has_shape);
+  const [rs, insp] = await Promise.all([
+    fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
+    fetch(`/api/inspecciones?resumen=1`).then(r=>r.json()).catch(()=>({route_ids:[]}))
+  ]);
+  const abiertas = new Set(insp.route_ids||[]);
+  const conShape = (rs.routes||[]).filter(r=>r.has_shape);
+  let fase = params.get('fase')||'1';
+  const todas = conShape.filter(r=> fase==='1' ? !abiertas.has(r.id) : abiertas.has(r.id));
+  const tabs=document.createElement('div');
+  tabs.style.cssText='display:flex;gap:8px;justify-content:center;margin-bottom:10px';
+  tabs.innerHTML=`<a href="?fase=1" style="padding:8px 16px;border-radius:20px;font-weight:800;text-decoration:none;background:${fase==='1'?'#4dd4ff':'#1a1c34'};color:${fase==='1'?'#012':'#eef'}">🆕 Primera revisión (${conShape.length-abiertas.size})</a>
+    <a href="?fase=2" style="padding:8px 16px;border-radius:20px;font-weight:800;text-decoration:none;background:${fase==='2'?'#ffd43b':'#1a1c34'};color:${fase==='2'?'#211':'#eef'}">🔁 Segunda revisión (${abiertas.size})</a>`;
+  document.getElementById('lista').appendChild(tabs);
   const box=document.getElementById('lista');
   const POR_PAG = 50;
   let pag = Math.max(1, parseInt(params.get('pag')||'1'));
@@ -261,6 +272,7 @@ function responder(ok){
   const p=paradaActual; p.hecho=true;
   document.getElementById('inspec').style.display='none';
   reportes.push({n:p.n,ok});
+  guardarInspeccion({tipo:'parada',parada:p.n,veredicto:ok?'ok':'mal',lat:p.la,lon:p.lo});
   enviarNtfyViaje(ok ? `✅ Parada "${p.n}" está BIEN ubicada (inspección, ${sentido.toUpperCase()})` : `🚨 Parada "${p.n}" está MAL ubicada (inspección, ${sentido.toUpperCase()})`);
   busIdx+=2; setTimeout(pasoBus,400);
 }
@@ -273,6 +285,7 @@ async function finViaje(){
     ${btnRet}<button id="fin-otra" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">🎲 ¡Otra ruta sorpresa!</button>
     <button id="fin-lista" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">📋 Ver lista</button>`;
   f.style.display='block';
+  guardarInspeccion({tipo:'fin',comentario:`${reportes.length} paradas ✅${ok} 🚨${mal}`});
   enviarNtfyViaje(`🏁 Viaje de inspección ${sentido.toUpperCase()} completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
   document.getElementById('fin-lista').onclick=()=>{ location.href=location.pathname; };
   const br=document.getElementById('fin-retorno');
@@ -319,6 +332,10 @@ async function finViaje(){
     }catch(e){ location.href=location.pathname; }
   };
 }
+async function guardarInspeccion(datos){
+  try{ await fetch('/api/inspecciones',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({route_id:parseInt(id),inspector:miNombre,sentido,...datos})}); }catch(e){}
+}
 async function enviarNtfyViaje(texto){
   if(!miNombre)return;
   const cuerpo = id ? `[Ruta ${id}] ${texto}` : texto;
@@ -351,6 +368,7 @@ document.getElementById('btn-alto').onclick=()=>{
 document.getElementById('alto-enviar').onclick=()=>{
   const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
   const txt=document.getElementById('alto-txt').value.trim()||'(sin descripción)';
+  guardarInspeccion({tipo:'problema',comentario:txt,lat:pos[0],lon:pos[1]});
   enviarNtfyViaje(`🚨 PROBLEMA en el trazado (${sentido.toUpperCase()}) en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${txt}`);
   reportes.push({n:'problema trazado',ok:false});
   document.getElementById('alto-panel').style.display='none';
