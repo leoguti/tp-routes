@@ -7,7 +7,7 @@
 <style>
   :root{--bg:#0f1020;--pan:#1a1c34;--pan2:#23264a;--acc:#4dd4ff;--ok:#38d996;--bad:#ff5d6c;--amar:#ffd43b;--txt:#eef}
   *{box-sizing:border-box} body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt)}
-  #top{padding:10px 14px;text-align:center;position:relative}
+  #top{padding:10px 14px;text-align:center;position:relative;z-index:1100}
   #top h1{margin:0;font-size:1.15rem} #top .sub{color:#9aa0c8;font-size:.85rem}
   #btn-volver{position:absolute;left:12px;top:12px;background:var(--pan2);color:var(--txt);border:none;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;text-decoration:none;font-size:.85rem}
   #sentido-chip{position:absolute;right:12px;top:12px;border-radius:20px;padding:8px 14px;font-weight:800;font-size:.85rem;display:none}
@@ -29,7 +29,7 @@
   #btn-alto{position:fixed;left:16px;bottom:16px;z-index:1250;background:var(--bad);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
   #btn-atras{position:fixed;left:16px;bottom:124px;z-index:1250;background:var(--pan2);color:var(--txt);border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
   #btn-turbo{position:fixed;left:16px;bottom:70px;z-index:1250;background:var(--amar);color:#211;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
-  #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
+  #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1450;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
   #fin button{margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef}
   #chat-btn{position:fixed;right:16px;bottom:16px;z-index:1200;background:var(--acc);color:#012;border:none;border-radius:50%;width:58px;height:58px;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 16px #0008}
   #chat-panel{position:fixed;right:16px;bottom:84px;z-index:1400;width:320px;max-width:92vw;height:420px;background:var(--pan);border-radius:14px;box-shadow:0 8px 30px #000a;display:none;flex-direction:column;overflow:hidden}
@@ -51,7 +51,7 @@
   <a id="btn-volver" href="revisar-ruta">← Rutas</a>
   <h1>🚌 Viaje de Inspección</h1><div class="sub" id="sub">Revisa que la ruta esté bien</div>
   <div id="sentido-chip"></div>
-  <div id="inspector-chip" style="position:absolute;right:12px;top:52px;border-radius:20px;padding:8px 14px;font-weight:800;font-size:.9rem;background:#ffd43b;color:#211;display:none"></div>
+  <div id="inspector-chip" style="position:absolute;right:12px;top:54px;border-radius:20px;padding:8px 14px;font-weight:800;font-size:.9rem;background:#ffd43b;color:#211;box-shadow:0 3px 10px #0007;display:none"></div>
 </div>
 <div id="lista" style="display:none"></div>
 <div id="map" style="display:none"></div>
