@@ -51,6 +51,7 @@
   <a id="btn-volver" href="revisar-ruta">← Rutas</a>
   <h1>🚌 Viaje de Inspección</h1><div class="sub" id="sub">Revisa que la ruta esté bien</div>
   <div id="sentido-chip"></div>
+  <div id="inspector-chip" style="position:absolute;right:12px;top:52px;border-radius:20px;padding:8px 14px;font-weight:800;font-size:.9rem;background:#ffd43b;color:#211;display:none"></div>
 </div>
 <div id="lista" style="display:none"></div>
 <div id="map" style="display:none"></div>
@@ -127,6 +128,7 @@
 </div>
 
 <div id="fin"></div>
+<div id="reversa-banner" style="position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:1350;background:#ff8a00;color:#211;font-weight:900;border-radius:14px;padding:12px 22px;font-size:1.05rem;box-shadow:0 6px 20px #0009;display:none">⏪ ¡BIP! ¡BIP! ¡BIP! — Reversa…</div>
 
 <button id="chat-btn" title="Chatea con Claude">💬</button>
 <div id="chat-panel">
@@ -309,6 +311,11 @@ function decodePolyline(encoded){
     out.push([prev[0]*inv, prev[1]*inv]);
   }
   return out;
+}
+function chipInspector(){
+  const c=document.getElementById('inspector-chip');
+  c.style.display='block';
+  c.textContent='👤 '+(miNombre||'?');
 }
 function chipSentido(){
   const c=document.getElementById('sentido-chip');
@@ -588,18 +595,32 @@ document.getElementById('btn-atras').onclick=()=>{
   // cerrar paneles abiertos
   ['inspec','alto-panel','pin-panel'].forEach(x=>document.getElementById(x).style.display='none');
   if(pinCb){ mapRef.off('click', pinClick); pinCb=null; if(pinMarker){mapRef.removeLayer(pinMarker); pinMarker=null;} }
-  // deshacer su reporte local y reabrir la parada
+  // deshacer su reporte local
   ult.hecho=false;
   const i = reportes.map(r=>r.n).lastIndexOf(ult.n);
   if(i>=0) reportes.splice(i,1);
-  busIdx = ult.idx;
-  bus.setLatLng(coordsRuta[busIdx]);
   enPausa=true; paradaActual=ult;
-  mapRef.setView([ult.la,ult.lo],14); mapRef.panBy([-120,0],{animate:false});
-  document.getElementById('inspec-nombre').textContent=ult.n+' (corrección)';
-  resetPanelParada();
-  document.getElementById('inspec').style.display='block';
   guardarInspeccion({tipo:'parada',parada:ult.n,veredicto:'correccion',comentario:'el inspector regresó a corregir esta parada'});
+  // 🚨 animación de REVERSA: el bus retrocede por el trazado con bip-bip
+  document.getElementById('reversa-banner').style.display='block';
+  const destino = ult.idx;
+  function pasoReversa(){
+    if(busIdx<=destino){
+      document.getElementById('reversa-banner').style.display='none';
+      busIdx=destino;
+      bus.setLatLng(coordsRuta[busIdx]);
+      mapRef.setView([ult.la,ult.lo],14); mapRef.panBy([-120,0],{animate:false});
+      document.getElementById('inspec-nombre').textContent=ult.n+' (corrección)';
+      resetPanelParada();
+      document.getElementById('inspec').style.display='block';
+      return;
+    }
+    busIdx-=6;
+    bus.setLatLng(coordsRuta[Math.max(busIdx,destino)]);
+    mapRef.panTo(coordsRuta[Math.max(busIdx,destino)],{animate:false});
+    setTimeout(pasoReversa,20);
+  }
+  pasoReversa();
 };
 
 // ---------- turbo ----------
@@ -621,7 +642,7 @@ function arrancarViaje(){
   document.getElementById('fin').style.display='none';
   if(!bus) bus=L.marker(coordsRuta[0],{icon:L.divIcon({className:'bus-icon',html:'🚌',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(mapRef);
   busIdx=0; reportes=[]; enPausa=false; paradasRuta.forEach(p=>p.hecho=false);
-  chipSentido();
+  chipSentido(); chipInspector();
   document.getElementById('btn-alto').style.display='block';
   document.getElementById('btn-turbo').style.display='block';
   document.getElementById('btn-atras').style.display='block';
