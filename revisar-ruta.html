@@ -18,7 +18,7 @@
   .rt .est{float:right;font-size:.75rem;color:#9aa0c8}
   .lbl-parada{background:#fff;color:#111;font-weight:800;font-size:12px;border:none;box-shadow:0 1px 4px #0006;padding:2px 6px}
   .bus-icon{font-size:26px;filter:drop-shadow(0 2px 3px #0009)}
-  .panel{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:var(--pan);border-radius:16px;padding:16px;width:360px;max-width:94vw;box-shadow:0 8px 30px #000b;display:none;text-align:center}
+  .panel{position:fixed;left:12px;bottom:70px;z-index:1300;background:var(--pan);border-radius:16px;padding:14px;width:290px;max-width:82vw;max-height:70vh;overflow-y:auto;box-shadow:0 8px 30px #000b;display:none;text-align:center}
   .panel h3{margin:0 0 8px;font-size:1.05rem}
   .panel .opciones{display:flex;flex-direction:column;gap:8px}
   .panel .opciones button{border:none;border-radius:12px;padding:12px;font-weight:800;font-size:.92rem;cursor:pointer;background:var(--pan2);color:var(--txt);text-align:left}
@@ -362,7 +362,7 @@ function pasoBus(){
   bus.setLatLng(coordsRuta[busIdx]);
   mapRef.panTo(coordsRuta[busIdx],{animate:false});
   const p=paradasRuta.find(q=>!q.hecho && busIdx>=q.idx);
-  if(p){ enPausa=true; paradaActual=p; mapRef.setView([p.la,p.lo],14);
+  if(p){ enPausa=true; paradaActual=p; mapRef.setView([p.la,p.lo],14); mapRef.panBy([-120,0],{animate:false});
     document.getElementById('inspec-nombre').textContent=p.n;
     resetPanelParada();
     document.getElementById('inspec').style.display='block'; return; }
