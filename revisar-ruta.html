@@ -423,19 +423,25 @@ function resetPanelParada(){
   document.getElementById('inspec-txt-btns').style.display='none';
   document.getElementById('inspec-txt').value='';
 }
+let inspecPendiente=null;
 document.querySelectorAll('#inspec .opciones button').forEach(b=>{
   b.onclick=()=>{
     const v=b.dataset.v;
-    if(v==='otro'){
+    if(v==='otro'||v==='duda'){
+      inspecPendiente=v;
+      document.getElementById('inspec-txt').placeholder = v==='duda' ? '¿Cuál es tu duda? (obligatorio)' : 'Cuéntame qué pasa… (obligatorio)';
       document.getElementById('inspec-txt').style.display='block';
       document.getElementById('inspec-txt-btns').style.display='flex';
+      document.getElementById('inspec-txt').focus();
       return;
     }
     cerrarParada(v, null);
   };
 });
 document.getElementById('inspec-txt-enviar').onclick=()=>{
-  cerrarParada('otro', document.getElementById('inspec-txt').value.trim()||'(sin descripción)');
+  const txt=document.getElementById('inspec-txt').value.trim();
+  if(!txt) return;  // obligatorio
+  cerrarParada(inspecPendiente||'otro', txt);
 };
 function cerrarParada(v, comentario){
   const p=paradaActual;
@@ -518,16 +524,24 @@ document.querySelectorAll('#veredicto-panel > .opciones button').forEach(b=>{
   b.onclick=()=>{
     const v=b.dataset.v;
     if(v==='arreglada'){ emitirVeredicto('arreglada', null); return; }
-    if(v==='duda'){ emitirVeredicto('duda', null); return; }
+    if(v==='duda'){
+      vereDictoPendiente='duda';
+      document.querySelector('#veredicto-detalle div').textContent='¿Cuál es tu duda? ¿Qué debería mirar el que revise? (obligatorio):';
+      document.getElementById('veredicto-detalle').style.display='block';
+      document.getElementById('veredicto-txt').focus();
+      return;
+    }
+    vereDictoPendiente='problemas';
     // problemas: comentario OBLIGATORIO
     document.getElementById('veredicto-detalle').style.display='block';
     document.getElementById('veredicto-txt').focus();
   };
 });
+let vereDictoPendiente='problemas';
 document.getElementById('veredicto-enviar').onclick=()=>{
   const txt=document.getElementById('veredicto-txt').value.trim();
   if(!txt){ document.getElementById('veredicto-error').style.display='block'; return; }
-  emitirVeredicto('problemas', txt);
+  emitirVeredicto(vereDictoPendiente, txt);
 };
 
 function finViaje(veredicto){
