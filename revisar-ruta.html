@@ -27,6 +27,7 @@
   .panel textarea{width:100%;height:56px;border-radius:10px;border:1px solid #334;background:#0d0e1c;color:var(--txt);padding:8px;font-family:inherit;font-size:.9rem;resize:none;margin-top:8px}
   #btn-viaje{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1200;background:linear-gradient(90deg,#38d996,#4dd4ff);color:#012;border:none;border-radius:26px;padding:14px 26px;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px #0009;display:none}
   #btn-alto{position:fixed;left:16px;bottom:16px;z-index:1250;background:var(--bad);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
+  #btn-atras{position:fixed;left:16px;bottom:124px;z-index:1250;background:var(--pan2);color:var(--txt);border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
   #btn-turbo{position:fixed;left:16px;bottom:70px;z-index:1250;background:var(--amar);color:#211;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
   #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
   #fin button{margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef}
@@ -56,6 +57,7 @@
 
 <button id="btn-viaje">🚌 ¡Iniciar viaje de inspección!</button>
 <button id="btn-turbo">⏩ Turbo</button>
+<button id="btn-atras">⏪ Parada anterior</button>
 <button id="btn-alto">🚨 ¡Alto! Hay un problema</button>
 
 <!-- identidad -->
@@ -477,6 +479,7 @@ function cerrarAlto(v, comentario){
 function pedirVeredicto(){
   document.getElementById('btn-alto').style.display='none';
   document.getElementById('btn-turbo').style.display='none';
+  document.getElementById('btn-atras').style.display='none';
   const mal=reportes.filter(r=>!r.ok).length;
   document.getElementById('veredicto-sug').textContent = mal
     ? `Reportaste ${mal} problema(s) — sugerencia: 🚨 Con problemas`
@@ -572,9 +575,32 @@ async function iniciarRetorno(btn){
   busIdx=0; reportes=[]; enPausa=false;
   document.getElementById('btn-alto').style.display='block';
   document.getElementById('btn-turbo').style.display='block';
+  document.getElementById('btn-atras').style.display='block';
   mapRef.setView(coordsRuta[0],13);
   pasoBus();
 }
+
+// ---------- rebobinar a la última parada ----------
+document.getElementById('btn-atras').onclick=()=>{
+  const hechas = paradasRuta.filter(p=>p.hecho).sort((a,b)=>a.idx-b.idx);
+  if(!hechas.length) return;
+  const ult = hechas[hechas.length-1];
+  // cerrar paneles abiertos
+  ['inspec','alto-panel','pin-panel'].forEach(x=>document.getElementById(x).style.display='none');
+  if(pinCb){ mapRef.off('click', pinClick); pinCb=null; if(pinMarker){mapRef.removeLayer(pinMarker); pinMarker=null;} }
+  // deshacer su reporte local y reabrir la parada
+  ult.hecho=false;
+  const i = reportes.map(r=>r.n).lastIndexOf(ult.n);
+  if(i>=0) reportes.splice(i,1);
+  busIdx = ult.idx;
+  bus.setLatLng(coordsRuta[busIdx]);
+  enPausa=true; paradaActual=ult;
+  mapRef.setView([ult.la,ult.lo],14); mapRef.panBy([-120,0],{animate:false});
+  document.getElementById('inspec-nombre').textContent=ult.n+' (corrección)';
+  resetPanelParada();
+  document.getElementById('inspec').style.display='block';
+  guardarInspeccion({tipo:'parada',parada:ult.n,veredicto:'correccion',comentario:'el inspector regresó a corregir esta parada'});
+};
 
 // ---------- turbo ----------
 document.getElementById('btn-turbo').onclick=()=>{
@@ -598,6 +624,7 @@ function arrancarViaje(){
   chipSentido();
   document.getElementById('btn-alto').style.display='block';
   document.getElementById('btn-turbo').style.display='block';
+  document.getElementById('btn-atras').style.display='block';
   mapRef.setView(coordsRuta[0],13);
   pasoBus();
 }
