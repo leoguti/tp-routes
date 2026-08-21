@@ -2,77 +2,130 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🕵️ Revisar ruta</title>
+<title>🚌 Viaje de Inspección</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  :root{--bg:#0f1020;--pan:#1a1c34;--acc:#4dd4ff;--txt:#eef}
+  :root{--bg:#0f1020;--pan:#1a1c34;--pan2:#23264a;--acc:#4dd4ff;--ok:#38d996;--bad:#ff5d6c;--amar:#ffd43b;--txt:#eef}
   *{box-sizing:border-box} body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt)}
-  #top{padding:10px 14px;text-align:center}
+  #top{padding:10px 14px;text-align:center;position:relative}
   #top h1{margin:0;font-size:1.15rem} #top .sub{color:#9aa0c8;font-size:.85rem}
-  #map{height:calc(100vh - 120px)}
-  #lista{max-width:760px;margin:10px auto;padding:0 12px}
+  #btn-volver{position:absolute;left:12px;top:12px;background:var(--pan2);color:var(--txt);border:none;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;text-decoration:none;font-size:.85rem}
+  #sentido-chip{position:absolute;right:12px;top:12px;border-radius:20px;padding:8px 14px;font-weight:800;font-size:.85rem;display:none}
+  #map{height:calc(100vh - 78px)}
+  #lista{max-width:780px;margin:10px auto;padding:0 12px}
   .rt{display:block;background:var(--pan);border-radius:10px;padding:12px 14px;margin-bottom:8px;color:var(--txt);text-decoration:none;font-weight:600}
   .rt:hover{outline:2px solid var(--acc)}
-  .veredicto{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--pan);padding:10px 16px;border-radius:24px;font-size:.9rem;z-index:1000;box-shadow:0 4px 16px #0008}
-  .veredicto b{color:var(--acc)}
+  .rt .est{float:right;font-size:.75rem;color:#9aa0c8}
   .lbl-parada{background:#fff;color:#111;font-weight:800;font-size:12px;border:none;box-shadow:0 1px 4px #0006;padding:2px 6px}
-  #btn-viaje{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1200;background:linear-gradient(90deg,#38d996,#4dd4ff);color:#012;border:none;border-radius:26px;padding:14px 26px;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px #0009;display:none}
-  #inspec{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:var(--pan);border-radius:16px;padding:16px 18px;width:340px;max-width:92vw;box-shadow:0 8px 30px #000b;display:none;text-align:center}
-  #inspec .pn{font-size:1.25rem;font-weight:800;margin:4px 0 10px}
-  #inspec .pregunta{color:#9aa0c8;font-size:.9rem;margin-bottom:12px}
-  #inspec .botones{display:flex;gap:10px}
-  #inspec .botones button{flex:1;border:none;border-radius:12px;padding:12px;font-weight:800;font-size:.95rem;cursor:pointer}
-  .b-ok{background:#38d996;color:#012} .b-mal{background:#ff5d6c;color:#fff}
-  #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
   .bus-icon{font-size:26px;filter:drop-shadow(0 2px 3px #0009)}
-  #btn-alto{position:fixed;left:16px;bottom:16px;z-index:1250;background:#ff5d6c;color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
-  #alto-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1350;background:var(--pan);border-radius:16px;padding:16px;width:360px;max-width:94vw;box-shadow:0 8px 30px #000b;display:none}
-  #alto-panel h3{margin:0 0 4px;font-size:1rem;color:#ff5d6c}
-  #alto-panel .pos{color:#9aa0c8;font-size:.78rem;margin-bottom:8px}
-  #alto-panel textarea{width:100%;height:64px;border-radius:10px;border:1px solid #334;background:#0d0e1c;color:var(--txt);padding:8px;font-family:inherit;font-size:.9rem;resize:none}
-  #alto-panel .fila{display:flex;gap:8px;margin-top:8px}
-  #alto-panel .fila button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer}
-  .b-enviar{background:#ff5d6c;color:#fff} .b-seguir{background:#23264a;color:var(--txt)}
-  #chat-btn{position:fixed;right:16px;bottom:16px;z-index:1200;background:#4dd4ff;color:#012;border:none;border-radius:50%;width:58px;height:58px;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 16px #0008}
-  #chat-panel{position:fixed;right:16px;bottom:84px;z-index:1200;width:320px;max-width:92vw;height:420px;background:var(--pan);border-radius:14px;box-shadow:0 8px 30px #000a;display:none;flex-direction:column;overflow:hidden}
-  #chat-head{background:#23264a;padding:10px 14px;font-weight:700;font-size:.95rem}
+  .panel{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:var(--pan);border-radius:16px;padding:16px;width:360px;max-width:94vw;box-shadow:0 8px 30px #000b;display:none;text-align:center}
+  .panel h3{margin:0 0 8px;font-size:1.05rem}
+  .panel .opciones{display:flex;flex-direction:column;gap:8px}
+  .panel .opciones button{border:none;border-radius:12px;padding:12px;font-weight:800;font-size:.92rem;cursor:pointer;background:var(--pan2);color:var(--txt);text-align:left}
+  .panel .opciones button:hover{outline:2px solid var(--acc)}
+  .panel .opciones button.b-ok{background:var(--ok);color:#012;text-align:center}
+  .panel textarea{width:100%;height:56px;border-radius:10px;border:1px solid #334;background:#0d0e1c;color:var(--txt);padding:8px;font-family:inherit;font-size:.9rem;resize:none;margin-top:8px}
+  #btn-viaje{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1200;background:linear-gradient(90deg,#38d996,#4dd4ff);color:#012;border:none;border-radius:26px;padding:14px 26px;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px #0009;display:none}
+  #btn-alto{position:fixed;left:16px;bottom:16px;z-index:1250;background:var(--bad);color:#fff;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
+  #btn-turbo{position:fixed;left:16px;bottom:70px;z-index:1250;background:var(--amar);color:#211;border:none;border-radius:14px;padding:12px 16px;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 16px #0008;display:none}
+  #fin{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1300;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#211;border-radius:16px;padding:16px 22px;font-weight:800;display:none;text-align:center;box-shadow:0 8px 30px #000b}
+  #fin button{margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef}
+  #chat-btn{position:fixed;right:16px;bottom:16px;z-index:1200;background:var(--acc);color:#012;border:none;border-radius:50%;width:58px;height:58px;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 16px #0008}
+  #chat-panel{position:fixed;right:16px;bottom:84px;z-index:1400;width:320px;max-width:92vw;height:420px;background:var(--pan);border-radius:14px;box-shadow:0 8px 30px #000a;display:none;flex-direction:column;overflow:hidden}
+  #chat-head{background:var(--pan2);padding:10px 14px;font-weight:700;font-size:.95rem}
   #chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
   .cmsg{max-width:85%;padding:8px 11px;border-radius:12px;font-size:.88rem;line-height:1.35;white-space:pre-wrap}
   .cmsg.claude{background:#fff;color:#123;align-self:flex-start}
-  .cmsg.yo{background:#4dd4ff;color:#012;align-self:flex-end}
+  .cmsg.yo{background:var(--acc);color:#012;align-self:flex-end}
   #chat-foot{display:flex;gap:6px;padding:8px;background:#15172c}
   #chat-in{flex:1;padding:9px 12px;border-radius:10px;border:1px solid #334;background:#0d0e1c;color:var(--txt);font-family:inherit}
-  #chat-send{background:#4dd4ff;color:#012;border:none;border-radius:10px;padding:0 14px;font-weight:800;cursor:pointer}
+  #chat-send{background:var(--acc);color:#012;border:none;border-radius:10px;padding:0 14px;font-weight:800;cursor:pointer}
   #chat-nombres{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto}
-  .cn{background:#23264a;color:var(--txt);border:none;border-radius:10px;padding:12px;cursor:pointer;font-size:.9rem}
-  .cn:hover{outline:2px solid #4dd4ff}
+  .cn{background:var(--pan2);color:var(--txt);border:none;border-radius:10px;padding:12px;cursor:pointer;font-size:.9rem}
+  .cn:hover{outline:2px solid var(--acc)}
 </style>
 </head>
 <body>
-<div id="top"><h1>🕵️ Revisar ruta</h1><div class="sub" id="sub">¿El camino tiene sentido? ¿Hace algo raro?</div></div>
+<div id="top">
+  <a id="btn-volver" href="revisar-ruta">← Rutas</a>
+  <h1>🚌 Viaje de Inspección</h1><div class="sub" id="sub">Revisa que la ruta esté bien</div>
+  <div id="sentido-chip"></div>
+</div>
 <div id="lista" style="display:none"></div>
 <div id="map" style="display:none"></div>
+
 <button id="btn-viaje">🚌 ¡Iniciar viaje de inspección!</button>
-<div id="inspec">
-  <div>🚏 Llegamos a la parada</div>
-  <div class="pn" id="inspec-nombre">…</div>
-  <div class="pregunta">Mira el mapa: ¿la parada está en el punto correcto de la ruta?</div>
-  <div class="botones">
-    <button class="b-ok" id="b-ok">✅ Está bien</button>
-    <button class="b-mal" id="b-mal">🚨 Está mal</button>
+<button id="btn-turbo">⏩ Turbo</button>
+<button id="btn-alto">🚨 ¡Alto! Hay un problema</button>
+
+<!-- identidad -->
+<div class="panel" id="quien-panel">
+  <h3 id="quien-titulo">Inspector</h3>
+  <div class="opciones">
+    <button class="b-ok" id="quien-si">✅ Sí, soy yo</button>
+    <button id="quien-cambiar" style="text-align:center">👤 No, cambiar de nombre</button>
   </div>
 </div>
+
+<!-- menú B: parada -->
+<div class="panel" id="inspec">
+  <h3>🚏 <span id="inspec-nombre">…</span></h3>
+  <div style="color:#9aa0c8;font-size:.85rem;margin-bottom:8px">¿La parada está bien en el mapa?</div>
+  <div class="opciones">
+    <button class="b-ok" data-v="ok">✅ Está bien</button>
+    <button data-v="corrida">📍 Está corrida — el punto real queda lejos</button>
+    <button data-v="equivocada">❌ Está en el lugar equivocado</button>
+    <button data-v="sobra">🚫 El bus no para aquí — sobra</button>
+    <button data-v="otro">✍️ Otro problema</button>
+  </div>
+  <textarea id="inspec-txt" placeholder="Cuéntame qué pasa…" style="display:none"></textarea>
+  <div class="opciones" id="inspec-txt-btns" style="display:none;margin-top:8px">
+    <button class="b-ok" id="inspec-txt-enviar">📨 Reportar</button>
+  </div>
+</div>
+
+<!-- menú A: alto en el camino -->
+<div class="panel" id="alto-panel">
+  <h3>🚨 Problema en el camino</h3>
+  <div class="pos" id="alto-pos" style="color:#9aa0c8;font-size:.78rem;margin-bottom:8px">posición: …</div>
+  <div class="opciones">
+    <button data-v="otro_camino">🛣️ El bus no va por aquí — va por otro camino</button>
+    <button data-v="vuelta_rara">🌀 Da una vuelta rara / desvío innecesario</button>
+    <button data-v="falta_parada">🚏 Aquí DEBERÍA haber una parada</button>
+    <button data-v="contravia">🚫↩️ Va en contravía / calle imposible</button>
+    <button data-v="otro">✍️ Otro problema</button>
+  </div>
+  <textarea id="alto-txt" placeholder="Cuéntame qué ves…" style="display:none"></textarea>
+  <div class="opciones" id="alto-txt-btns" style="display:none;margin-top:8px">
+    <button class="b-ok" id="alto-txt-enviar">📨 Reportar</button>
+  </div>
+  <div class="opciones" style="margin-top:8px">
+    <button id="alto-seguir" style="text-align:center">▶️ Seguir sin reportar</button>
+  </div>
+</div>
+
+<!-- pin del punto correcto -->
+<div class="panel" id="pin-panel">
+  <h3>📍 ¿Sabes dónde es?</h3>
+  <div style="color:#9aa0c8;font-size:.85rem;margin-bottom:8px">TOCA el mapa en el punto correcto (puedes tocar varias veces para ajustar)</div>
+  <div class="opciones">
+    <button class="b-ok" id="pin-ok" style="display:none">✅ Aquí es</button>
+    <button id="pin-saltar" style="text-align:center">No sé — seguir viaje ▶️</button>
+  </div>
+</div>
+
+<!-- veredicto final -->
+<div class="panel" id="veredicto-panel">
+  <h3>⚖️ Tu veredicto de este sentido</h3>
+  <div id="veredicto-sug" style="color:#9aa0c8;font-size:.85rem;margin-bottom:8px"></div>
+  <div class="opciones">
+    <button class="b-ok" data-v="arreglada">✅ La ruta está BIEN</button>
+    <button data-v="problemas" style="background:var(--bad);color:#fff;text-align:center">🚨 Tiene PROBLEMAS</button>
+  </div>
+</div>
+
 <div id="fin"></div>
-<button id="btn-alto">🚨 ¡Alto! Aquí hay un problema</button>
-<div id="alto-panel">
-  <h3>🚨 Problema en el trazado</h3>
-  <div class="pos" id="alto-pos">posición: …</div>
-  <textarea id="alto-txt" placeholder="¿Qué ves mal aquí? (ej: se mete por una calle que no es, da una vuelta rara…)"></textarea>
-  <div class="fila">
-    <button class="b-enviar" id="alto-enviar">📨 Reportar</button>
-    <button class="b-seguir" id="alto-seguir">▶️ Seguir sin reportar</button>
-  </div>
-</div>
+
 <button id="chat-btn" title="Chatea con Claude">💬</button>
 <div id="chat-panel">
   <div id="chat-head">💬 Tutor Claude</div>
@@ -83,6 +136,7 @@
     <button id="chat-send">➤</button>
   </div>
 </div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 "use strict";
@@ -90,108 +144,9 @@
 const params = new URLSearchParams(location.search);
 const id = params.get('id');
 const REGION='boyaca';
-
-async function lista(){
-  document.getElementById('lista').style.display='block';
-  document.getElementById('sub').textContent='Elige una ruta trazada para revisarla';
-  const [rs, insp] = await Promise.all([
-    fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
-    fetch(`/api/inspecciones?resumen=1`).then(r=>r.json()).catch(()=>({route_ids:[]}))
-  ]);
-  const abiertas = new Set(insp.route_ids||[]);
-  const conShape = (rs.routes||[]).filter(r=>r.has_shape);
-  let fase = params.get('fase')||'1';
-  const todas = conShape.filter(r=> fase==='1' ? !abiertas.has(r.id) : abiertas.has(r.id));
-  const tabs=document.createElement('div');
-  tabs.style.cssText='display:flex;gap:8px;justify-content:center;margin-bottom:10px';
-  tabs.innerHTML=`<a href="?fase=1" style="padding:8px 16px;border-radius:20px;font-weight:800;text-decoration:none;background:${fase==='1'?'#4dd4ff':'#1a1c34'};color:${fase==='1'?'#012':'#eef'}">🆕 Primera revisión (${conShape.length-abiertas.size})</a>
-    <a href="?fase=2" style="padding:8px 16px;border-radius:20px;font-weight:800;text-decoration:none;background:${fase==='2'?'#ffd43b':'#1a1c34'};color:${fase==='2'?'#211':'#eef'}">🔁 Segunda revisión (${abiertas.size})</a>`;
-  document.getElementById('lista').appendChild(tabs);
-  const box=document.getElementById('lista');
-  const POR_PAG = 50;
-  let pag = Math.max(1, parseInt(params.get('pag')||'1'));
-  const maxPag = Math.max(1, Math.ceil(todas.length/POR_PAG));
-  if(pag>maxPag) pag=maxPag;
-  function pintarLista(){
-    box.innerHTML='';
-    const nav=document.createElement('div');
-    nav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700';
-    nav.innerHTML=`<a style="cursor:pointer;color:#4dd4ff" id="pg-prev">◀ anterior</a>
-      <span>página ${pag}/${maxPag} · ${todas.length} rutas</span>
-      <a style="cursor:pointer;color:#4dd4ff" id="pg-next">siguiente ▶</a>`;
-    box.appendChild(nav);
-    todas.slice((pag-1)*POR_PAG, pag*POR_PAG).forEach(r=>{
-      const a=document.createElement('a');
-      a.className='rt'; a.href='?id='+r.id;
-      a.textContent = `Ruta ${r.id} · ${r.origen_text} → ${r.destino_text}  (${r.operator_nombre||''})`;
-      box.appendChild(a);
-    });
-    box.querySelector('#pg-prev').onclick=()=>{ if(pag>1){pag--; pintarLista(); window.scrollTo(0,0);} };
-    box.querySelector('#pg-next').onclick=()=>{ if(pag<maxPag){pag++; pintarLista(); window.scrollTo(0,0);} };
-  }
-  if(!todas.length) box.textContent='No hay rutas trazadas aún.';
-  else pintarLista();
-}
-
-let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null, reportes=[], sentido='ida', capaRetorno=null;
 const VALHALLA='https://valhalla.busboy.app';
-function decodePolyline(encoded){
-  const inv=1.0/1e6, out=[]; let prev=[0,0], i=0;
-  while(i<encoded.length){
-    for(let axis=0;axis<2;axis++){
-      let shift=0,result=0,byte;
-      do{ byte=encoded.charCodeAt(i++)-63; result|=(byte&0x1f)<<shift; shift+=5; }while(byte>=0x20);
-      if(result&1) result=~result;
-      result>>=1; prev[axis]+=result;
-    }
-    out.push([prev[0]*inv, prev[1]*inv]);
-  }
-  return out;
-}
-function d2(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
-async function ver(){
-  document.getElementById('map').style.display='block';
-  
-  const [shape, ruta] = await Promise.all([
-    fetch(`/api/route-shapes?route_id=${id}`).then(r=>r.json()),
-    fetch(`/api/routes?id=${id}`).then(r=>r.json())
-  ]);
-  document.querySelector('#top h1').textContent = `🕵️ Ruta ${id}`;
-  document.getElementById('sub').textContent = `${ruta.origen_text} → ${ruta.destino_text} (${ruta.operator_nombre||''})`;
-  const map=L.map('map'); mapRef=map;
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM',maxZoom:19}).addTo(map);
-  const gj = shape.geojson || (shape.shapes&&shape.shapes[0]&&shape.shapes[0].geojson);
-  if(gj){
-    const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
-    map.fitBounds(capa.getBounds(),{padding:[30,30]});
-    coordsRuta = gj.geometry.coordinates.map(c=>[c[1],c[0]]);
-  } else {
-    document.getElementById('sub').textContent += ' · ⚠️ sin trazado';
-  }
-  // TODAS las paradas de la ruta (origen → waypoints en orden → destino), numeradas
-  const placesData = await fetch(`/api/places?region=${REGION}`).then(r=>r.json()).catch(()=>({places:[]}));
-  const porId = {};
-  (placesData.places||[]).forEach(p=>{ porId[p.id]={la:p.lat,lo:p.lon}; });
-  const seq=[];
-  if(ruta.origen_place_id && porId[ruta.origen_place_id]) seq.push({n:ruta.origen_text,...porId[ruta.origen_place_id]});
-  (ruta.waypoints||[]).forEach(w=>{ if(w.place_id && porId[w.place_id]) seq.push({n:w.nombre_text,...porId[w.place_id]}); });
-  if(ruta.destino_place_id && porId[ruta.destino_place_id]) seq.push({n:ruta.destino_text,...porId[ruta.destino_place_id]});
-  seq.forEach((p,i)=>{
-    L.circleMarker([p.la,p.lo],{radius:10,color:'#fff',weight:2,fillColor:'#ffd43b',fillOpacity:1})
-      .bindTooltip(`${i+1}. ${p.n}`,{permanent:true,direction:'top',className:'lbl-parada'}).addTo(map);
-  });
-  if(!seq.length) document.getElementById('sub').textContent += ' · (paradas sin ubicar)';
-  if(coordsRuta.length && seq.length){
-    paradasRuta = seq.map(p=>{
-      let best=0,bd=Infinity;
-      coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
-      return {...p, idx:best, hecho:false};
-    }).sort((a,b)=>a.idx-b.idx);
-    document.getElementById('btn-viaje').style.display='block';
-  }
-}
 
-// ---- Chat integrado (mismos canales ntfy de siempre) ----
+// ---------- chat (mismos canales de siempre) ----------
 const CANALES = {
   "Brayan":"brayan-claude-chat-2026junio10","Peña":"pena-claude-chat-2026junio10",
   "Nadia":"nadia-claude-chat-2026junio10","Ana María":"anamaria-claude-chat-2026junio10",
@@ -204,7 +159,7 @@ const TITULOS = {
   "Stefania":"stefania","Edward":"edward","David":"dai","Cristian":"cristian","Santiago":"santiago"
 };
 let miNombre = localStorage.getItem('tp_chat_nombre') || null;
-let fuente = null;
+let fuente=null, alElegir=null;
 const panel=document.getElementById('chat-panel'), msgs=document.getElementById('chat-msgs'),
       foot=document.getElementById('chat-foot'), nombres=document.getElementById('chat-nombres'),
       entrada=document.getElementById('chat-in');
@@ -228,24 +183,27 @@ function conectarChat(){
   fuente=new EventSource(base+'/sse');
   fuente.onmessage=ev=>{ try{ pintarChat(JSON.parse(ev.data),false); }catch(e){} };
 }
-let alElegir=null;
 function elegirNombre(cb){
-  alElegir = cb || null;
+  alElegir=cb||null;
   panel.style.display='flex';
   nombres.style.display='grid'; msgs.style.display='none'; foot.style.display='none';
-  nombres.innerHTML='';
+  nombres.innerHTML='<div style="grid-column:1/-1;color:#9aa0c8;font-size:.85rem">¿Quién eres? Toca tu nombre:</div>';
   Object.keys(CANALES).forEach(n=>{
     const b=document.createElement('button'); b.className='cn'; b.textContent=n;
     b.onclick=()=>{ miNombre=n; localStorage.setItem('tp_chat_nombre',n); conectarChat(); if(alElegir){const f=alElegir; alElegir=null; f();} };
     nombres.appendChild(b);
   });
 }
-async function enviarChat(){
-  const txt=entrada.value.trim(); if(!txt||!miNombre)return;
-  entrada.value=''; addMsg('yo',txt);
-  // contexto automático: el chat sabe en qué ruta está el estudiante
-  const cuerpo = id ? `[Ruta ${id}] ${txt}` : txt;
+async function enviarNtfy(texto){
+  if(!miNombre)return;
+  const cuerpo = id ? `[Ruta ${id}] ${texto}` : texto;
   try{ await fetch('https://ntfy.envs.net/'+CANALES[miNombre],{method:'POST',headers:{'Title':TITULOS[miNombre]},body:cuerpo}); }catch(e){}
+}
+async function enviarChat(){
+  const txt=entrada.value.trim(); if(!txt)return;
+  if(!miNombre){ elegirNombre(()=>{}); return; }
+  entrada.value=''; addMsg('yo',txt);
+  enviarNtfy(txt);
 }
 document.getElementById('chat-btn').onclick=()=>{
   panel.style.display = panel.style.display==='flex' ? 'none' : 'flex';
@@ -254,129 +212,424 @@ document.getElementById('chat-btn').onclick=()=>{
 document.getElementById('chat-send').onclick=enviarChat;
 entrada.addEventListener('keydown',e=>{ if(e.key==='Enter')enviarChat(); });
 
-// ---- Viaje de inspección (bus animado) ----
-let enAlto=false;
+// ---------- registro en BD ----------
+let sentido='ida';
+async function guardarInspeccion(datos){
+  try{ await fetch('/api/inspecciones',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({route_id:parseInt(id),inspector:miNombre,sentido,...datos})}); }catch(e){}
+}
+
+// ---------- estados por ruta+sentido (para las 3 listas y bloqueos) ----------
+function calcEstado(veredictos, rid, sent){
+  const vs = veredictos.filter(v=>v.route_id===rid && v.sentido===sent);
+  if(vs.some(v=>v.veredicto==='problemas')) return 'problemas';
+  const insps = new Set(vs.filter(v=>v.veredicto==='arreglada').map(v=>v.inspector));
+  if(insps.size>=2) return 'arreglada';
+  if(insps.size===1) return 'media';
+  return 'nueva';
+}
+function badgeSentido(st){
+  return st==='arreglada' ? '✅' : st==='media' ? '⏳1/2' : st==='problemas' ? '🚨' : '—';
+}
+
+// ---------- lista en 3 fases ----------
+async function lista(){
+  document.getElementById('lista').style.display='block';
+  document.getElementById('sub').textContent='Elige una ruta para inspeccionarla en bus 🚌';
+  const [rs, est] = await Promise.all([
+    fetch(`/api/routes?region=${REGION}`).then(r=>r.json()),
+    fetch(`/api/inspecciones?estados=1`).then(r=>r.json()).catch(()=>({veredictos:[]}))
+  ]);
+  const V = est.veredictos||[];
+  const conShape = (rs.routes||[]).filter(r=>r.has_shape);
+  const clasif = conShape.map(r=>{
+    const sIda=calcEstado(V,r.id,'ida'), sRet=calcEstado(V,r.id,'retorno');
+    let grupo='porrevisar';
+    if(sIda==='problemas'||sRet==='problemas') grupo='problemas';
+    else if(sIda==='arreglada') grupo='arreglada';
+    return {...r, sIda, sRet, grupo};
+  });
+  const grupos={porrevisar:clasif.filter(r=>r.grupo==='porrevisar'),
+                arreglada:clasif.filter(r=>r.grupo==='arreglada'),
+                problemas:clasif.filter(r=>r.grupo==='problemas')};
+  let fase = params.get('fase')||'porrevisar';
+  if(!grupos[fase]) fase='porrevisar';
+  const box=document.getElementById('lista');
+  const todas = grupos[fase];
+  const POR_PAG=50;
+  let pag=1;
+  const maxPag=Math.max(1,Math.ceil(todas.length/POR_PAG));
+  const tabs=document.createElement('div');
+  tabs.style.cssText='display:flex;gap:6px;justify-content:center;margin-bottom:10px;flex-wrap:wrap';
+  const mk=(f,txt,col,fg)=>`<a href="?fase=${f}" style="padding:8px 14px;border-radius:20px;font-weight:800;text-decoration:none;background:${fase===f?col:'#1a1c34'};color:${fase===f?fg:'#eef'}">${txt}</a>`;
+  tabs.innerHTML = mk('porrevisar',`🆕 Por revisar (${grupos.porrevisar.length})`,'#4dd4ff','#012')
+                 + mk('arreglada',`✅ Arregladas (${grupos.arreglada.length})`,'#38d996','#012')
+                 + mk('problemas',`🚨 Con problemas (${grupos.problemas.length})`,'#ff5d6c','#fff');
+  box.appendChild(tabs);
+  const cont=document.createElement('div');
+  box.appendChild(cont);
+  function pintar(){
+    cont.innerHTML='';
+    const nav=document.createElement('div');
+    nav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700';
+    nav.innerHTML=`<a style="cursor:pointer;color:#4dd4ff" id="pg-prev">◀</a>
+      <span>página ${pag}/${maxPag}</span>
+      <a style="cursor:pointer;color:#4dd4ff" id="pg-next">▶</a>`;
+    cont.appendChild(nav);
+    todas.slice((pag-1)*POR_PAG, pag*POR_PAG).forEach(r=>{
+      const a=document.createElement('a');
+      a.className='rt'; a.href='?id='+r.id;
+      a.innerHTML = `Ruta ${r.id} · ${r.origen_text} → ${r.destino_text} <span style="color:#9aa0c8;font-size:.8rem">(${r.operator_nombre||''})</span>
+        <span class="est">IDA ${badgeSentido(r.sIda)} · RET ${badgeSentido(r.sRet)}</span>`;
+      cont.appendChild(a);
+    });
+    cont.querySelector('#pg-prev').onclick=()=>{ if(pag>1){pag--; pintar(); window.scrollTo(0,0);} };
+    cont.querySelector('#pg-next').onclick=()=>{ if(pag<maxPag){pag++; pintar(); window.scrollTo(0,0);} };
+  }
+  if(!todas.length) cont.textContent='(no hay rutas en esta lista)';
+  else pintar();
+}
+
+// ---------- visor + viaje ----------
+let mapRef=null, coordsRuta=[], paradasRuta=[], bus=null, busIdx=0, paradaActual=null,
+    reportes=[], capaRetorno=null, turbo=false, enPausa=false, veredictosGlobal=[], vueltaId=null;
+
+function d2(a,b){ const dx=a[0]-b[0], dy=a[1]-b[1]; return dx*dx+dy*dy; }
+function decodePolyline(encoded){
+  const inv=1.0/1e6, out=[]; let prev=[0,0], i=0;
+  while(i<encoded.length){
+    for(let axis=0;axis<2;axis++){
+      let shift=0,result=0,byte;
+      do{ byte=encoded.charCodeAt(i++)-63; result|=(byte&0x1f)<<shift; shift+=5; }while(byte>=0x20);
+      if(result&1) result=~result;
+      result>>=1; prev[axis]+=result;
+    }
+    out.push([prev[0]*inv, prev[1]*inv]);
+  }
+  return out;
+}
+function chipSentido(){
+  const c=document.getElementById('sentido-chip');
+  c.style.display='block';
+  if(sentido==='ida'){ c.textContent='➡️ IDA'; c.style.background='#4dd4ff'; c.style.color='#012'; }
+  else { c.textContent='🔄 RETORNO'; c.style.background='#ff8a00'; c.style.color='#211'; }
+}
+
+async function ver(){
+  document.getElementById('map').style.display='block';
+  const [shape, ruta, placesData, est] = await Promise.all([
+    fetch(`/api/route-shapes?route_id=${id}`).then(r=>r.json()),
+    fetch(`/api/routes?id=${id}`).then(r=>r.json()),
+    fetch(`/api/places?region=${REGION}`).then(r=>r.json()).catch(()=>({places:[]})),
+    fetch(`/api/inspecciones?estados=1`).then(r=>r.json()).catch(()=>({veredictos:[]}))
+  ]);
+  veredictosGlobal = est.veredictos||[];
+  const par = (ruta.pair||[]).find(p=>p.id!==ruta.id);
+  vueltaId = par ? par.id : null;
+  document.querySelector('#top h1').textContent = `🚌 Ruta ${id}`;
+  document.getElementById('sub').textContent = `${ruta.origen_text} → ${ruta.destino_text} (${ruta.operator_nombre||''})`;
+  const map=L.map('map'); mapRef=map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM',maxZoom:19}).addTo(map);
+  const gj = shape.geojson;
+  if(!gj){ document.getElementById('sub').textContent+=' · ⚠️ sin trazado'; return; }
+  const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
+  map.fitBounds(capa.getBounds(),{padding:[30,30]});
+  coordsRuta = gj.geometry.coordinates.map(c=>[c[1],c[0]]);
+  const porId={};
+  (placesData.places||[]).forEach(p=>{ porId[p.id]={la:p.lat,lo:p.lon}; });
+  const seq=[];
+  if(ruta.origen_place_id && porId[ruta.origen_place_id]) seq.push({n:ruta.origen_text,...porId[ruta.origen_place_id]});
+  (ruta.waypoints||[]).forEach(w=>{ if(w.place_id && porId[w.place_id]) seq.push({n:w.nombre_text,...porId[w.place_id]}); });
+  if(ruta.destino_place_id && porId[ruta.destino_place_id]) seq.push({n:ruta.destino_text,...porId[ruta.destino_place_id]});
+  seq.forEach((p,i)=>{
+    L.circleMarker([p.la,p.lo],{radius:10,color:'#fff',weight:2,fillColor:'#ffd43b',fillOpacity:1})
+      .bindTooltip(`${i+1}. ${p.n}`,{permanent:true,direction:'top',className:'lbl-parada'}).addTo(map);
+  });
+  if(coordsRuta.length && seq.length){
+    paradasRuta = seq.map(p=>{
+      let best=0,bd=Infinity;
+      coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
+      return {...p, idx:best, hecho:false};
+    }).sort((a,b)=>a.idx-b.idx);
+    document.getElementById('btn-viaje').style.display='block';
+  }
+}
+
+// ---------- motor del bus ----------
 function pasoBus(){
-  if(enAlto) return;
-  if(busIdx>=coordsRuta.length){ finViaje(); return; }
+  if(enPausa) return;
+  if(busIdx>=coordsRuta.length){ pedirVeredicto(); return; }
   bus.setLatLng(coordsRuta[busIdx]);
   mapRef.panTo(coordsRuta[busIdx],{animate:false});
   const p=paradasRuta.find(q=>!q.hecho && busIdx>=q.idx);
-  if(p){ paradaActual=p; mapRef.setView([p.la,p.lo],14);
+  if(p){ enPausa=true; paradaActual=p; mapRef.setView([p.la,p.lo],14);
     document.getElementById('inspec-nombre').textContent=p.n;
+    resetPanelParada();
     document.getElementById('inspec').style.display='block'; return; }
-  busIdx+=2;
-  setTimeout(pasoBus,30);
+  busIdx += turbo ? 8 : 2;
+  setTimeout(pasoBus, turbo ? 15 : 30);
 }
-function responder(ok){
-  const p=paradaActual; p.hecho=true;
+function seguir(delay){ enPausa=false; setTimeout(pasoBus, delay||300); }
+
+// ---------- pin del punto correcto ----------
+let pinMarker=null, pinCb=null;
+function pedirPin(cb){
+  pinCb=cb;
+  document.getElementById('pin-ok').style.display='none';
+  document.getElementById('pin-panel').style.display='block';
+  mapRef.on('click', pinClick);
+}
+function pinClick(e){
+  if(pinMarker) mapRef.removeLayer(pinMarker);
+  pinMarker=L.circleMarker([e.latlng.lat,e.latlng.lng],{radius:11,color:'#fff',weight:2,fillColor:'#38d996',fillOpacity:1}).addTo(mapRef);
+  document.getElementById('pin-ok').style.display='block';
+}
+function cerrarPin(conPin){
+  mapRef.off('click', pinClick);
+  document.getElementById('pin-panel').style.display='none';
+  let res=null;
+  if(conPin && pinMarker){ const ll=pinMarker.getLatLng(); res={lat_ok:ll.lat, lon_ok:ll.lng}; }
+  if(pinMarker){ setTimeout(()=>{ if(pinMarker){mapRef.removeLayer(pinMarker); pinMarker=null;} }, 1500); }
+  const cb=pinCb; pinCb=null;
+  cb(res);
+}
+document.getElementById('pin-ok').onclick=()=>cerrarPin(true);
+document.getElementById('pin-saltar').onclick=()=>cerrarPin(false);
+
+// ---------- menú B: parada ----------
+const TXT_PARADA={ok:'BIEN ubicada',corrida:'CORRIDA (el punto real queda lejos)',equivocada:'en el LUGAR EQUIVOCADO',sobra:'SOBRA (el bus no para aquí)',otro:'con problema'};
+function resetPanelParada(){
+  document.getElementById('inspec-txt').style.display='none';
+  document.getElementById('inspec-txt-btns').style.display='none';
+  document.getElementById('inspec-txt').value='';
+}
+document.querySelectorAll('#inspec .opciones button').forEach(b=>{
+  b.onclick=()=>{
+    const v=b.dataset.v;
+    if(v==='otro'){
+      document.getElementById('inspec-txt').style.display='block';
+      document.getElementById('inspec-txt-btns').style.display='flex';
+      return;
+    }
+    cerrarParada(v, null);
+  };
+});
+document.getElementById('inspec-txt-enviar').onclick=()=>{
+  cerrarParada('otro', document.getElementById('inspec-txt').value.trim()||'(sin descripción)');
+};
+function cerrarParada(v, comentario){
+  const p=paradaActual;
   document.getElementById('inspec').style.display='none';
-  reportes.push({n:p.n,ok});
-  guardarInspeccion({tipo:'parada',parada:p.n,veredicto:ok?'ok':'mal',lat:p.la,lon:p.lo});
-  enviarNtfyViaje(ok ? `✅ Parada "${p.n}" está BIEN ubicada (inspección, ${sentido.toUpperCase()})` : `🚨 Parada "${p.n}" está MAL ubicada (inspección, ${sentido.toUpperCase()})`);
-  busIdx+=2; setTimeout(pasoBus,400);
+  const fin=(pin)=>{
+    p.hecho=true;
+    reportes.push({n:p.n, ok:v==='ok'});
+    guardarInspeccion({tipo:'parada',parada:p.n,veredicto:v,comentario:comentario||null,lat:p.la,lon:p.lo,...(pin||{})});
+    enviarNtfy(`${v==='ok'?'✅':'🚨'} Parada "${p.n}" ${TXT_PARADA[v]}${comentario?' — '+comentario:''}${pin?' · punto correcto señalado: '+pin.lat_ok.toFixed(5)+','+pin.lon_ok.toFixed(5):''} (inspección, ${sentido.toUpperCase()})`);
+    busIdx+=2; seguir(400);
+  };
+  if(v==='corrida'||v==='equivocada') pedirPin(fin);
+  else fin(null);
 }
-async function finViaje(){
+
+// ---------- menú A: alto ----------
+const TXT_ALTO={otro_camino:'el bus NO va por aquí (va por otro camino)',vuelta_rara:'da una vuelta rara / desvío innecesario',falta_parada:'aquí DEBERÍA haber una parada',contravia:'va en CONTRAVÍA / calle imposible',otro:'problema'};
+document.getElementById('btn-alto').onclick=()=>{
+  enPausa=true;
+  const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
+  document.getElementById('alto-pos').textContent=`posición capturada: ${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}`;
+  document.getElementById('alto-txt').style.display='none';
+  document.getElementById('alto-txt-btns').style.display='none';
+  document.getElementById('alto-txt').value='';
+  document.getElementById('alto-panel').style.display='block';
+};
+document.querySelectorAll('#alto-panel .opciones button[data-v]').forEach(b=>{
+  b.onclick=()=>{
+    const v=b.dataset.v;
+    if(v==='otro'){
+      document.getElementById('alto-txt').style.display='block';
+      document.getElementById('alto-txt-btns').style.display='flex';
+      return;
+    }
+    cerrarAlto(v, null);
+  };
+});
+document.getElementById('alto-txt-enviar').onclick=()=>{
+  cerrarAlto('otro', document.getElementById('alto-txt').value.trim()||'(sin descripción)');
+};
+document.getElementById('alto-seguir').onclick=()=>{
+  document.getElementById('alto-panel').style.display='none';
+  seguir(300);
+};
+function cerrarAlto(v, comentario){
+  document.getElementById('alto-panel').style.display='none';
+  const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
+  const fin=(pin)=>{
+    reportes.push({n:'camino', ok:false});
+    guardarInspeccion({tipo:'problema',veredicto:v,comentario:comentario||null,lat:pos[0],lon:pos[1],...(pin||{})});
+    enviarNtfy(`🚨 PROBLEMA (${sentido.toUpperCase()}) en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${TXT_ALTO[v]}${comentario?' — '+comentario:''}${pin?' · punto correcto: '+pin.lat_ok.toFixed(5)+','+pin.lon_ok.toFixed(5):''}`);
+    seguir(300);
+  };
+  if(v==='otro_camino'||v==='falta_parada') pedirPin(fin);
+  else fin(null);
+}
+
+// ---------- veredicto final ----------
+function pedirVeredicto(){
   document.getElementById('btn-alto').style.display='none';
-  const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
+  document.getElementById('btn-turbo').style.display='none';
+  const mal=reportes.filter(r=>!r.ok).length;
+  document.getElementById('veredicto-sug').textContent = mal
+    ? `Reportaste ${mal} problema(s) — sugerencia: 🚨 Con problemas`
+    : 'No reportaste problemas — sugerencia: ✅ Está bien';
+  document.getElementById('veredicto-panel').style.display='block';
+}
+document.querySelectorAll('#veredicto-panel .opciones button').forEach(b=>{
+  b.onclick=()=>{
+    const v=b.dataset.v;
+    document.getElementById('veredicto-panel').style.display='none';
+    guardarInspeccion({tipo:'veredicto',veredicto:v});
+    const ok=reportes.filter(r=>r.ok).length, mal=reportes.length-ok;
+    enviarNtfy(`⚖️ VEREDICTO ${sentido.toUpperCase()}: ${v==='arreglada'?'✅ RUTA BIEN':'🚨 CON PROBLEMAS'} · ${reportes.length} revisiones (✅${ok} 🚨${mal})`);
+    finViaje(v);
+  };
+});
+
+function finViaje(veredicto){
   const f=document.getElementById('fin');
-  const btnRet = sentido==='ida' ? `<button id="fin-retorno" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#38d996;color:#012">🔁 ¡Hacer el RETORNO!</button> ` : '';
-  f.innerHTML=`🏁 ¡Viaje ${sentido.toUpperCase()} completado!<br>Inspeccionaste ${reportes.length} paradas: ✅ ${ok} bien · 🚨 ${mal} con problema<br><span style="font-size:.8rem">Tu reporte ya le llegó a Claude 💬</span><br>
-    ${btnRet}<button id="fin-otra" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">🎲 ¡Otra ruta sorpresa!</button>
-    <button id="fin-lista" style="margin-top:10px;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#1a1c34;color:#eef">📋 Ver lista</button>`;
+  const puedeRetorno = sentido==='ida';
+  f.innerHTML=`🏁 ¡Viaje ${sentido.toUpperCase()} completado!<br>
+    Veredicto: ${veredicto==='arreglada'?'✅ Ruta bien':'🚨 Con problemas'}<br>
+    <span style="font-size:.75rem">Tus puntos se confirman cuando otro inspector coincida 🤝</span><br>
+    ${puedeRetorno?'<button id="fin-retorno" style="background:#38d996;color:#012">🔁 ¡Hacer el RETORNO!</button> ':''}
+    <button id="fin-otra">🎲 Otra ruta</button>
+    <button id="fin-lista" onclick="location.href='revisar-ruta'">📋 Lista</button>`;
   f.style.display='block';
-  guardarInspeccion({tipo:'fin',comentario:`${reportes.length} paradas ✅${ok} 🚨${mal}`});
-  enviarNtfyViaje(`🏁 Viaje de inspección ${sentido.toUpperCase()} completado: ${reportes.length} paradas (✅${ok} 🚨${mal})`);
-  document.getElementById('fin-lista').onclick=()=>{ location.href=location.pathname; };
-  const br=document.getElementById('fin-retorno');
-  if(br) br.onclick=async ()=>{
-    br.disabled=true; br.textContent='🧮 Calculando el retorno real…';
+  const bo=document.getElementById('fin-otra');
+  bo.onclick=async ()=>{
     try{
-      // paradas en orden INVERSO → Valhalla calcula el trazado real de vuelta (respeta sentidos de las vías)
-      const locs=[...paradasRuta].sort((a,b)=>a.idx-b.idx).reverse().map(p=>({lat:p.la,lon:p.lo}));
-      const resp=await fetch(VALHALLA+'/route',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({locations:locs,costing:'auto',directions_options:{units:'kilometers'}})}).then(r=>r.json());
-      if(!resp.trip) throw new Error(resp.error||'Valhalla no respondió');
-      let nuevas=[];
+      const rs=await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
+      const ids=(rs.routes||[]).filter(r=>r.has_shape && String(r.id)!==String(id)).map(r=>r.id);
+      if(ids.length) location.href='?id='+ids[Math.floor(Math.random()*ids.length)];
+      else location.href='revisar-ruta';
+    }catch(e){ location.href='revisar-ruta'; }
+  };
+  const br=document.getElementById('fin-retorno');
+  if(br) br.onclick=()=>iniciarRetorno(br);
+}
+
+// ---------- retorno real (Valhalla → OSRM fallback) ----------
+async function iniciarRetorno(btn){
+  btn.disabled=true; btn.textContent='🧮 Calculando retorno…';
+  const locs=[...paradasRuta].sort((a,b)=>a.idx-b.idx).reverse().map(p=>({lat:p.la,lon:p.lo}));
+  let nuevas=null, kmTot=0;
+  try{
+    const resp=await fetch(VALHALLA+'/route',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({locations:locs,costing:'auto',directions_options:{units:'kilometers'}})}).then(r=>r.json());
+    if(resp.trip){
+      nuevas=[];
       for(const leg of resp.trip.legs){
         const dec=decodePolyline(leg.shape);
         if(nuevas.length) dec.shift();
         nuevas=nuevas.concat(dec);
       }
-      sentido='retorno';
-      coordsRuta=nuevas;
-      if(capaRetorno) mapRef.removeLayer(capaRetorno);
-      capaRetorno=L.polyline(coordsRuta,{color:'#ff8a00',weight:5,opacity:.9}).addTo(mapRef);  // retorno en NARANJA
-      paradasRuta.forEach(p=>{
-        let best=0,bd=Infinity;
-        coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
-        p.idx=best; p.hecho=false;
-      });
-      paradasRuta.sort((a,b)=>a.idx-b.idx);
-      f.style.display='none';
-      busIdx=0; reportes=[];
-      document.getElementById('btn-alto').style.display='block';
-      document.getElementById('sub').textContent += ' · 🔁 RETORNO (trazado naranja recalculado)';
-      mapRef.setView(coordsRuta[0],13);
-      pasoBus();
-    }catch(e){
-      br.textContent='⚠️ No se pudo calcular el retorno';
+      kmTot=resp.trip.summary.length;
     }
-  };
-  document.getElementById('fin-otra').onclick=async ()=>{
+  }catch(e){}
+  if(!nuevas){
     try{
-      const rs=await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
-      const ids=(rs.routes||[]).filter(r=>r.has_shape && String(r.id)!==String(id)).map(r=>r.id);
-      if(ids.length){ location.href='?id='+ids[Math.floor(Math.random()*ids.length)]; }
-      else location.href=location.pathname;
-    }catch(e){ location.href=location.pathname; }
+      const cs=locs.map(l=>`${l.lon.toFixed(6)},${l.lat.toFixed(6)}`).join(';');
+      const r2=await fetch(`https://router.project-osrm.org/route/v1/driving/${cs}?overview=full&geometries=geojson`).then(r=>r.json());
+      if(r2.code==='Ok'){
+        nuevas=r2.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+        kmTot=r2.routes[0].distance/1000;
+      }
+    }catch(e){}
+  }
+  if(!nuevas || nuevas.length<2){
+    btn.textContent='🛣️ Ruta muy larga — retorno no disponible';
+    return;
+  }
+  // guardar el trazado del retorno como shape de la ruta VUELTA (si existe el par)
+  if(vueltaId){
+    try{
+      await fetch('/api/route-shapes',{method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({route_id:vueltaId,
+          geojson:{type:'Feature',geometry:{type:'LineString',coordinates:nuevas.map(c=>[c[1],c[0]])},properties:{}},
+          distancia_km:Math.round(kmTot*100)/100, generado_con:'retorno-juego'})});
+    }catch(e){}
+  }
+  sentido='retorno'; chipSentido();
+  coordsRuta=nuevas;
+  if(capaRetorno) mapRef.removeLayer(capaRetorno);
+  capaRetorno=L.polyline(coordsRuta,{color:'#ff8a00',weight:5,opacity:.9}).addTo(mapRef);
+  paradasRuta.forEach(p=>{
+    let best=0,bd=Infinity;
+    coordsRuta.forEach((c,i)=>{ const dd=d2(c,[p.la,p.lo]); if(dd<bd){bd=dd;best=i;} });
+    p.idx=best; p.hecho=false;
+  });
+  paradasRuta.sort((a,b)=>a.idx-b.idx);
+  document.getElementById('fin').style.display='none';
+  busIdx=0; reportes=[]; enPausa=false;
+  document.getElementById('btn-alto').style.display='block';
+  document.getElementById('btn-turbo').style.display='block';
+  mapRef.setView(coordsRuta[0],13);
+  pasoBus();
+}
+
+// ---------- turbo ----------
+document.getElementById('btn-turbo').onclick=()=>{
+  turbo=!turbo;
+  document.getElementById('btn-turbo').textContent = turbo ? '🐢 Normal' : '⏩ Turbo';
+};
+
+// ---------- inicio del viaje (identidad + bloqueo de repetición) ----------
+function yaHizo(rid, sent, quien){
+  return veredictosGlobal.some(v=>v.route_id===parseInt(rid) && v.sentido===sent && v.inspector===quien);
+}
+function arrancarViaje(){
+  if(yaHizo(id, sentido, miNombre)){
+    alertaFin(`Ya inspeccionaste la ${sentido.toUpperCase()} de esta ruta, ${miNombre} 😄 — elige otra con 🎲 o vuelve a la lista.`);
+    return;
+  }
+  document.getElementById('btn-viaje').style.display='none';
+  document.getElementById('fin').style.display='none';
+  if(!bus) bus=L.marker(coordsRuta[0],{icon:L.divIcon({className:'bus-icon',html:'🚌',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(mapRef);
+  busIdx=0; reportes=[]; enPausa=false; paradasRuta.forEach(p=>p.hecho=false);
+  chipSentido();
+  document.getElementById('btn-alto').style.display='block';
+  document.getElementById('btn-turbo').style.display='block';
+  mapRef.setView(coordsRuta[0],13);
+  pasoBus();
+}
+function alertaFin(txt){
+  const f=document.getElementById('fin');
+  f.innerHTML=`${txt}<br><button id="fin-otra2">🎲 Otra ruta</button> <button onclick="location.href='revisar-ruta'">📋 Lista</button>`;
+  f.style.display='block';
+  document.getElementById('fin-otra2').onclick=async ()=>{
+    const rs=await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
+    const ids=(rs.routes||[]).filter(r=>r.has_shape && String(r.id)!==String(id)).map(r=>r.id);
+    if(ids.length) location.href='?id='+ids[Math.floor(Math.random()*ids.length)];
   };
-}
-async function guardarInspeccion(datos){
-  try{ await fetch('/api/inspecciones',{method:'POST',headers:{'content-type':'application/json'},
-    body:JSON.stringify({route_id:parseInt(id),inspector:miNombre,sentido,...datos})}); }catch(e){}
-}
-async function enviarNtfyViaje(texto){
-  if(!miNombre)return;
-  const cuerpo = id ? `[Ruta ${id}] ${texto}` : texto;
-  try{ await fetch('https://ntfy.envs.net/'+CANALES[miNombre],{method:'POST',headers:{'Title':TITULOS[miNombre]},body:cuerpo}); }catch(e){}
 }
 document.getElementById('btn-viaje').onclick=()=>{
-  const arrancar=()=>{
-    document.getElementById('btn-viaje').style.display='none';
-    document.getElementById('fin').style.display='none';
-    if(!bus) bus=L.marker(coordsRuta[0],{icon:L.divIcon({className:'bus-icon',html:'🚌',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(mapRef);
-    busIdx=0; reportes=[]; paradasRuta.forEach(p=>p.hecho=false);
-    document.getElementById('btn-alto').style.display='block';
-    mapRef.setView(coordsRuta[0],13);
-    pasoBus();
+  const continuar=()=>{
+    // verificación "¿eres tú?" (sala compartida)
+    document.getElementById('quien-titulo').textContent=`Inspector: ${miNombre} — ¿eres tú?`;
+    document.getElementById('quien-panel').style.display='block';
   };
-  if(!miNombre){ elegirNombre(()=>{ panel.style.display='none'; arrancar(); }); }
-  else arrancar();
+  if(!miNombre){ elegirNombre(()=>{ panel.style.display='none'; continuar(); }); }
+  else continuar();
 };
-document.getElementById('b-ok').onclick=()=>responder(true);
-document.getElementById('b-mal').onclick=()=>responder(false);
-
-document.getElementById('btn-alto').onclick=()=>{
-  enAlto=true;
-  const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
-  document.getElementById('alto-pos').textContent=`posición capturada: ${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}`;
-  document.getElementById('alto-txt').value='';
-  document.getElementById('alto-panel').style.display='block';
-  document.getElementById('inspec').style.display='none';
+document.getElementById('quien-si').onclick=()=>{
+  document.getElementById('quien-panel').style.display='none';
+  arrancarViaje();
 };
-document.getElementById('alto-enviar').onclick=()=>{
-  const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
-  const txt=document.getElementById('alto-txt').value.trim()||'(sin descripción)';
-  guardarInspeccion({tipo:'problema',comentario:txt,lat:pos[0],lon:pos[1]});
-  enviarNtfyViaje(`🚨 PROBLEMA en el trazado (${sentido.toUpperCase()}) en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${txt}`);
-  reportes.push({n:'problema trazado',ok:false});
-  document.getElementById('alto-panel').style.display='none';
-  enAlto=false; setTimeout(pasoBus,300);
-};
-document.getElementById('alto-seguir').onclick=()=>{
-  document.getElementById('alto-panel').style.display='none';
-  enAlto=false; setTimeout(pasoBus,300);
+document.getElementById('quien-cambiar').onclick=()=>{
+  document.getElementById('quien-panel').style.display='none';
+  elegirNombre(()=>{ panel.style.display='none';
+    document.getElementById('quien-titulo').textContent=`Inspector: ${miNombre} — ¿eres tú?`;
+    document.getElementById('quien-panel').style.display='block';
+  });
 };
 
 if(id) ver(); else lista();
