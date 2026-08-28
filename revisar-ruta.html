@@ -360,10 +360,11 @@ async function ver(){
   document.querySelector('#top h1').textContent = `🚌 Ruta ${id}`;
   document.getElementById('sub').textContent = `${ruta.origen_text} → ${ruta.destino_text} (${ruta.operator_nombre||''})`;
   const map=L.map('map'); mapRef=map;
-  // Esri World Street Map: sin API key y tolera más tráfico que tile.osm.org (el colegio recibía 429 por IP compartida; CARTO pedía API key). Fallback a OSM si falla.
-  const capaBase=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri, © OpenStreetMap contributors',maxZoom:19}).addTo(map);
+  // Mapa base estilo OSM desde OSM France (tile.osm.org devolvía 429 por la IP compartida del colegio; CARTO pedía API key;
+  // Esri no muestra nombres de terminales/lugares). Si falla, cae a Esri World Street Map.
+  const capaBase=L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors · OSM France',subdomains:'abc',maxZoom:19}).addTo(map);
   let fallosTiles=0;
-  capaBase.on('tileerror',()=>{ if(++fallosTiles===8){ capaBase.setUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'); } });
+  capaBase.on('tileerror',()=>{ if(++fallosTiles===8){ capaBase.setUrl('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'); } });
   const gj = shape.geojson;
   if(!gj){ document.getElementById('sub').textContent+=' · ⚠️ sin trazado'; return; }
   const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
