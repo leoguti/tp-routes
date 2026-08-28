@@ -360,7 +360,10 @@ async function ver(){
   document.querySelector('#top h1').textContent = `🚌 Ruta ${id}`;
   document.getElementById('sub').textContent = `${ruta.origen_text} → ${ruta.destino_text} (${ruta.operator_nombre||''})`;
   const map=L.map('map'); mapRef=map;
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM',maxZoom:19}).addTo(map);
+  // CARTO Voyager: tolera más tráfico que tile.osm.org (el colegio recibía 429 por IP compartida). Fallback a OSM si falla.
+  const capaBase=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap, © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+  let fallosTiles=0;
+  capaBase.on('tileerror',()=>{ if(++fallosTiles===8){ capaBase.setUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'); } });
   const gj = shape.geojson;
   if(!gj){ document.getElementById('sub').textContent+=' · ⚠️ sin trazado'; return; }
   const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
