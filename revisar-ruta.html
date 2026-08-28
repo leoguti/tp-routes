@@ -127,6 +127,15 @@
     <button data-v="problemas" style="background:var(--bad);color:#fff;text-align:center">🚨 Tiene PROBLEMAS</button>
     <button data-v="duda" style="background:#5a4d1a;color:#ffd43b;text-align:center">🤔 No estoy seguro — que alguien más revise</button>
   </div>
+  <div id="veredicto-confirm" style="display:none">
+    <div style="color:#ff6b6b;font-weight:700;font-size:.9rem;margin-top:10px">⚠️ ¡Espera! En este viaje marcaste:</div>
+    <ul id="veredicto-confirm-lista" style="margin:6px 0 8px 18px;padding:0;font-size:.82rem;color:#ffd43b"></ul>
+    <div style="font-size:.85rem;margin-bottom:8px">¿Seguro que la ruta está <b>BIEN</b>?</div>
+    <div class="opciones">
+      <button id="veredicto-confirm-no" style="background:var(--bad);color:#fff;text-align:center">🚨 No — reportarla con problemas</button>
+      <button id="veredicto-confirm-si" class="b-ok">✅ Sí, está bien — explico por qué</button>
+    </div>
+  </div>
   <div id="veredicto-detalle" style="display:none">
     <div style="color:#ffd43b;font-weight:700;font-size:.85rem;margin-top:10px">¿Cuál es el problema? Cuenta qué pasó (obligatorio):</div>
     <textarea id="veredicto-txt" placeholder="Ej: el trazado se mete por una vereda; la parada de X está en otro pueblo…"></textarea>
@@ -448,7 +457,7 @@ function cerrarParada(v, comentario){
   document.getElementById('inspec').style.display='none';
   const fin=(pin)=>{
     p.hecho=true;
-    reportes.push({n:p.n, ok:v==='ok'||v==='duda', duda:v==='duda'});
+    reportes.push({n:p.n, ok:v==='ok'||v==='duda', duda:v==='duda', cat:v, txt:TXT_PARADA[v]});
     guardarInspeccion({tipo:'parada',parada:p.n,veredicto:v,comentario:comentario||null,lat:p.la,lon:p.lo,...(pin||{})});
     enviarNtfy(`${v==='ok'?'✅':'🚨'} Parada "${p.n}" ${TXT_PARADA[v]}${comentario?' — '+comentario:''}${pin?' · punto correcto señalado: '+pin.lat_ok.toFixed(5)+','+pin.lon_ok.toFixed(5):''} (inspección, ${sentido.toUpperCase()})`);
     busIdx+=2; seguir(400);
@@ -490,7 +499,7 @@ function cerrarAlto(v, comentario){
   document.getElementById('alto-panel').style.display='none';
   const pos=coordsRuta[Math.min(busIdx,coordsRuta.length-1)];
   const fin=(pin)=>{
-    reportes.push({n:'camino', ok:false});
+    reportes.push({n:'camino', ok:false, cat:v, txt:TXT_ALTO[v]});
     guardarInspeccion({tipo:'problema',veredicto:v,comentario:comentario||null,lat:pos[0],lon:pos[1],...(pin||{})});
     enviarNtfy(`🚨 PROBLEMA (${sentido.toUpperCase()}) en (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}): ${TXT_ALTO[v]}${comentario?' — '+comentario:''}${pin?' · punto correcto: '+pin.lat_ok.toFixed(5)+','+pin.lon_ok.toFixed(5):''}`);
     seguir(300);
@@ -523,7 +532,17 @@ function emitirVeredicto(v, comentario){
 document.querySelectorAll('#veredicto-panel > .opciones button').forEach(b=>{
   b.onclick=()=>{
     const v=b.dataset.v;
-    if(v==='arreglada'){ emitirVeredicto('arreglada', null); return; }
+    document.getElementById('veredicto-confirm').style.display='none';
+    document.getElementById('veredicto-detalle').style.display='none';
+    if(v==='arreglada'){
+      const malos=reportes.filter(r=>!r.ok);
+      if(!malos.length){ emitirVeredicto('arreglada', null); return; }
+      // marcó problemas y quiere dar ✅ → confirmar
+      document.getElementById('veredicto-confirm-lista').innerHTML =
+        malos.map(r=>`<li>${r.n==='camino'?'🛑 En el camino: ':'🚏 '+r.n+': '}${r.txt||r.cat}</li>`).join('');
+      document.getElementById('veredicto-confirm').style.display='block';
+      return;
+    }
     if(v==='duda'){
       vereDictoPendiente='duda';
       document.querySelector('#veredicto-detalle div').textContent='¿Cuál es tu duda? ¿Qué debería mirar el que revise? (obligatorio):';
@@ -538,6 +557,20 @@ document.querySelectorAll('#veredicto-panel > .opciones button').forEach(b=>{
   };
 });
 let vereDictoPendiente='problemas';
+document.getElementById('veredicto-confirm-no').onclick=()=>{
+  document.getElementById('veredicto-confirm').style.display='none';
+  vereDictoPendiente='problemas';
+  document.querySelector('#veredicto-detalle div').textContent='¿Cuál es el problema? Cuenta qué pasó (obligatorio):';
+  document.getElementById('veredicto-detalle').style.display='block';
+  document.getElementById('veredicto-txt').focus();
+};
+document.getElementById('veredicto-confirm-si').onclick=()=>{
+  document.getElementById('veredicto-confirm').style.display='none';
+  vereDictoPendiente='arreglada';
+  document.querySelector('#veredicto-detalle div').textContent='Marcaste problemas pero dices que está bien. Explica por qué (obligatorio):';
+  document.getElementById('veredicto-detalle').style.display='block';
+  document.getElementById('veredicto-txt').focus();
+};
 document.getElementById('veredicto-enviar').onclick=()=>{
   const txt=document.getElementById('veredicto-txt').value.trim();
   if(!txt){ document.getElementById('veredicto-error').style.display='block'; return; }
