@@ -363,8 +363,11 @@ async function ver(){
   // Mapa base estilo OSM desde OSM France (tile.osm.org devolvía 429 por la IP compartida del colegio; CARTO pedía API key;
   // Esri no muestra nombres de terminales/lugares). Si falla, cae a Esri World Street Map.
   const capaBase=L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors · OSM France',subdomains:'abc',maxZoom:19}).addTo(map);
+  // Cadena de respaldo: OSM France → OSM oficial → Esri (último recurso, sin nombres de lugares)
+  const RESPALDOS=['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'];
   let fallosTiles=0;
-  capaBase.on('tileerror',()=>{ if(++fallosTiles===8){ capaBase.setUrl('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'); } });
+  capaBase.on('tileerror',()=>{ if(++fallosTiles>=8 && RESPALDOS.length){ fallosTiles=0; capaBase.setUrl(RESPALDOS.shift()); } });
   const gj = shape.geojson;
   if(!gj){ document.getElementById('sub').textContent+=' · ⚠️ sin trazado'; return; }
   const capa=L.geoJSON(gj,{style:{color:'#4dd4ff',weight:5,opacity:.9}}).addTo(map);
