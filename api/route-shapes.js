@@ -126,8 +126,10 @@ async function handleInspecciones(sql, req, res) {
         }
         if (estados) {
             const rows = await sql`
-                SELECT route_id, sentido, inspector, veredicto
-                FROM route_inspections WHERE tipo = 'veredicto'`;
+                SELECT DISTINCT ON (route_id, sentido, inspector)
+                       route_id, sentido, inspector, veredicto
+                FROM route_inspections WHERE tipo = 'veredicto'
+                ORDER BY route_id, sentido, inspector, creada_en DESC`;
             return res.json({ veredictos: rows });
         }
         if (route_id) {

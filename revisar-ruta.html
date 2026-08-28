@@ -706,9 +706,25 @@ document.getElementById('btn-turbo').onclick=()=>{
 function yaHizo(rid, sent, quien){
   return veredictosGlobal.some(v=>v.route_id===parseInt(rid) && v.sentido===sent && v.inspector===quien);
 }
-function arrancarViaje(){
-  if(yaHizo(id, sentido, miNombre)){
-    alertaFin(`Ya inspeccionaste la ${sentido.toUpperCase()} de esta ruta, ${miNombre} 😄 — elige otra con 🎲 o vuelve a la lista.`);
+function miVeredictoPrevio(rid, sent, quien){
+  const v=veredictosGlobal.find(v=>v.route_id===parseInt(rid) && v.sentido===sent && v.inspector===quien);
+  return v ? (v.veredicto==='arreglada'?'✅ bien':v.veredicto==='duda'?'🤔 no seguro':'🚨 con problemas') : '';
+}
+function arrancarViaje(otraVez){
+  if(!otraVez && yaHizo(id, sentido, miNombre)){
+    // Segunda revisión: se puede repetir; el nuevo veredicto REEMPLAZA al anterior (no suma puntos)
+    const f=document.getElementById('fin');
+    f.innerHTML=`Ya inspeccionaste la ${sentido.toUpperCase()} de esta ruta, ${miNombre} (tu veredicto: ${miVeredictoPrevio(id,sentido,miNombre)}).<br>
+      <span style="font-size:.8rem">Si la revisas otra vez, tu nuevo veredicto <b>reemplaza</b> al anterior (no da puntos extra).</span><br>
+      <button id="fin-otravez" style="background:#ffd43b;color:#1a1a1a">🔁 Revisarla de nuevo</button>
+      <button id="fin-otra2">🎲 Otra ruta</button> <button onclick="location.href='revisar-ruta'">📋 Lista</button>`;
+    f.style.display='block';
+    document.getElementById('fin-otravez').onclick=()=>{ f.style.display='none'; arrancarViaje(true); };
+    document.getElementById('fin-otra2').onclick=async ()=>{
+      const rs=await fetch(`/api/routes?region=${REGION}`).then(r=>r.json());
+      const ids=(rs.routes||[]).filter(r=>r.has_shape && String(r.id)!==String(id)).map(r=>r.id);
+      if(ids.length) location.href='?id='+ids[Math.floor(Math.random()*ids.length)];
+    };
     return;
   }
   document.getElementById('btn-viaje').style.display='none';
